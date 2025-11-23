@@ -60,30 +60,54 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
           <label className="form-label fw-medium small">
             Your {numberLength}-digit secret number
           </label>
-          <input
-            type="number"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            value={secretNumber}
-            onChange={(e) => {
-              const value = e.target.value.replace(/\D/g, '');
-              if (value.length <= numberLength) {
-                setSecretNumber(value);
-              }
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && secretNumber.length === numberLength) {
-                handleSetSecretNumber();
-              }
-            }}
-            className="form-control form-control-lg text-center font-monospace fs-5"
-            placeholder={`Enter ${numberLength} digits`}
-            maxLength={numberLength}
-            min={10 ** (numberLength - 1)}
-            max={10 ** numberLength - 1}
-          />
+          <div className="d-flex justify-content-center gap-2 mb-3">
+            {Array.from({ length: numberLength }, (_, i) => (
+              <input
+                key={i}
+                type="tel"
+                inputMode="numeric"
+                pattern="[0-9]"
+                maxLength={1}
+                value={secretNumber[i] || ''}
+                onChange={(e) => {
+                  const digit = e.target.value.replace(/\D/g, '');
+                  const newSecret = secretNumber.split('');
+                  newSecret[i] = digit;
+                  const updatedSecret = newSecret.join('');
+
+                  // Only allow updating if it's a valid digit
+                  if (digit === '' || /\d/.test(digit)) {
+                    setSecretNumber(updatedSecret);
+
+                    // Auto-focus next box
+                    if (digit !== '' && i < numberLength - 1) {
+                      const nextInput = e.target.nextElementSibling as HTMLInputElement;
+                      if (nextInput && nextInput.tagName === 'INPUT') {
+                        nextInput.focus();
+                      }
+                    }
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Backspace' && !secretNumber[i] && i > 0) {
+                    // Focus previous box on backspace
+                    const target = e.target as HTMLElement;
+                    const prevInput = target.previousElementSibling as HTMLInputElement;
+                    if (prevInput && prevInput.tagName === 'INPUT') {
+                      prevInput.focus();
+                    }
+                  } else if (e.key === 'Enter' && secretNumber.length === numberLength) {
+                    handleSetSecretNumber();
+                  }
+                }}
+                className="form-control form-control-lg text-center font-monospace fs-5"
+                style={{ width: '60px', height: '60px' }}
+                required
+              />
+            ))}
+          </div>
           <div className="form-text text-center">
-            Must be {numberLength} digits ({10 ** (numberLength - 1)} to {10 ** numberLength - 1})
+            Enter each digit in the boxes - cursor moves automatically
           </div>
         </div>
 
@@ -165,29 +189,56 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
             <label className="form-label fw-medium small text-center text-md-start">
               Enter your {numberLength}-digit guess
             </label>
-            <input
-              type="number"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={guess}
-              onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, '');
-                if (value.length <= numberLength) {
-                  setGuess(value);
-                }
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && guess.length === numberLength) {
-                  handleMakeGuess();
-                }
-              }}
-              className="form-control form-control-lg text-center font-monospace fs-5"
-              placeholder={`Enter ${numberLength} digits`}
-              maxLength={numberLength}
-              min={10 ** (numberLength - 1)}
-              max={10 ** numberLength - 1}
-              autoFocus
-            />
+            <div className="d-flex justify-content-center gap-2 mb-3">
+              {Array.from({ length: numberLength }, (_, i) => (
+                <input
+                  key={i}
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]"
+                  maxLength={1}
+                  value={guess[i] || ''}
+                  onChange={(e) => {
+                    const digit = e.target.value.replace(/\D/g, '');
+                    const newGuess = guess.split('');
+                    newGuess[i] = digit;
+                    const updatedGuess = newGuess.join('');
+
+                    // Only allow updating if it's a valid digit
+                    if (digit === '' || /\d/.test(digit)) {
+                      setGuess(updatedGuess);
+
+                      // Auto-focus next box
+                      if (digit !== '' && i < numberLength - 1) {
+                        const nextInput = e.target.nextElementSibling as HTMLInputElement;
+                        if (nextInput && nextInput.tagName === 'INPUT') {
+                          nextInput.focus();
+                        }
+                      }
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Backspace' && !guess[i] && i > 0) {
+                      // Focus previous box on backspace
+                      const target = e.target as HTMLElement;
+                      const prevInput = target.previousElementSibling as HTMLInputElement;
+                      if (prevInput && prevInput.tagName === 'INPUT') {
+                        prevInput.focus();
+                      }
+                    } else if (e.key === 'Enter' && guess.length === numberLength) {
+                      handleMakeGuess();
+                    }
+                  }}
+                  className="form-control form-control-lg text-center font-monospace fs-5"
+                  style={{ width: '60px', height: '60px' }}
+                  autoFocus={i === 0}
+                  required
+                />
+              ))}
+            </div>
+            <div className="form-text text-center">
+              Enter each digit in the boxes - cursor moves automatically
+            </div>
           </div>
 
           <button
