@@ -8,9 +8,11 @@ A real-time multiplayer number guessing game built with Next.js and Socket.io. P
 - Dynamic game rooms with unique IDs
 - Player management and lobby system
 - Spectator mode: Watch games in read-only mode
+- Celebration animations: Epic win/loss effects with falling animated emojis
 - Responsive UI with Tailwind CSS and Bootstrap
 - Server-side logic for fair and secure gaming
 - Keyboard shortcuts for desktop users (Enter to submit)
+- Individual digit input with auto-focus navigation
 
 ## Installation
 

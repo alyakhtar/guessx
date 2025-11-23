@@ -7,6 +7,7 @@ import { GameRoom as GameRoomType, Player } from '../types/game';
 import PlayerList from './PlayerList';
 import GuessInput from './GuessInput';
 import GameHistory from './GameHistory';
+import Celebration from './Celebration';
 
 export default function GameRoom() {
   const params = useParams();
@@ -17,6 +18,7 @@ export default function GameRoom() {
   const [currentPlayerId, setCurrentPlayerId] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [darkMode, setDarkMode] = useState(true);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-bs-theme', darkMode ? 'dark' : 'light');
@@ -37,6 +39,11 @@ export default function GameRoom() {
     const handleRoomUpdated = (updatedRoom: GameRoomType) => {
       setRoom(updatedRoom);
       setError('');
+
+      // Show celebration when game ends
+      if (updatedRoom.gameStatus === 'finished') {
+        setShowCelebration(true);
+      }
     };
 
     const handleError = (errorMessage: string) => {
@@ -85,7 +92,13 @@ export default function GameRoom() {
     );
   }
 
+  // Determine celebration type
+  const celebrationType = room?.gameStatus === 'finished' && room?.winner && currentPlayer?.name
+    ? (room.winner === currentPlayer.name ? 'win' : 'lose')
+    : null;
+
   const handleNewGame = () => {
+    setShowCelebration(false); // Hide celebration before starting new game
     socketService.disconnect();
     router.push('/');
   };
@@ -161,6 +174,11 @@ export default function GameRoom() {
           </div>
         </div>
       </div>
+
+      {/* Celebration Animation */}
+      {celebrationType && showCelebration && (
+        <Celebration type={celebrationType} show={showCelebration} />
+      )}
     </div>
   );
 }
