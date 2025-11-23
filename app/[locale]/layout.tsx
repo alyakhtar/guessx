@@ -21,13 +21,16 @@ export default async function RootLayout({ children, params }: LayoutProps) {
 
     console.log('🏴 Layout debug: rendering with locale:', locale);
 
+    // Validate locale and fallback to default if needed
+    const validLocale = ['en', 'fr'].includes(locale) ? locale : 'en';
+
     // Load messages directly on server
-    const messages = (await import(`../../messages/${locale}.json`)).default;
+    const messages = (await import(`../../messages/${validLocale}.json`)).default;
 
     return (
-        <html lang={locale} suppressHydrationWarning>
+        <html lang={validLocale} suppressHydrationWarning>
             <body className={inter.className}>
-                <NextIntlClientProvider locale={locale} messages={messages}>
+                <NextIntlClientProvider locale={validLocale} messages={messages}>
                     {children}
                 </NextIntlClientProvider>
                 <Script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" />
