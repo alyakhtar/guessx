@@ -71,6 +71,11 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
                 setSecretNumber(value);
               }
             }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && secretNumber.length === numberLength) {
+                handleSetSecretNumber();
+              }
+            }}
             className="form-control form-control-lg text-center font-monospace fs-5"
             placeholder={`Enter ${numberLength} digits`}
             maxLength={numberLength}
@@ -169,6 +174,11 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
                 const value = e.target.value.replace(/\D/g, '');
                 if (value.length <= numberLength) {
                   setGuess(value);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && guess.length === numberLength) {
+                  handleMakeGuess();
                 }
               }}
               className="form-control form-control-lg text-center font-monospace fs-5"

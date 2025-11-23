@@ -7,8 +7,10 @@ A real-time multiplayer number guessing game built with Next.js and Socket.io. P
 - Real-time multiplayer gameplay using Socket.io
 - Dynamic game rooms with unique IDs
 - Player management and lobby system
+- Spectator mode: Watch games in read-only mode
 - Responsive UI with Tailwind CSS and Bootstrap
 - Server-side logic for fair and secure gaming
+- Keyboard shortcuts for desktop users (Enter to submit)
 
 ## Installation
 
@@ -50,6 +52,30 @@ This will run the server at `http://localhost:3000` (or configured port).
 
 - `NODE_ENV`: Set to `production` for production builds
 - `PORT`: Server port (default: 8082 for production, 3000 for dev)
+
+## Spectator Mode
+
+GuessX supports spectator mode, allowing players to watch ongoing games in read-only mode.
+
+### Enabling Spectator Mode
+
+When creating a new game room, you can enable spectator mode by toggling "Enable Spectator Mode" in the room creation form. This feature is disabled by default.
+
+### Spectating a Game
+
+- Rooms with two active players and spectator mode enabled will show a "👁️ Spectate" button in the lobby instead of "Join"
+- Clicking "Spectate" takes you to a dedicated spectator view
+- Spectators can watch:
+  - Real-time game progress
+  - Correctly guessed digits revealed in secret number boxes
+  - Player guess history
+  - Game status and turn indicators
+
+### Security
+
+- Spectator mode can only be accessed if enabled during room creation
+- Direct URL access is blocked if spectator mode is not enabled for that room
+- Spectators have no ability to interact with the game
 
 ## Deployment as Systemd Service (Linux)
 

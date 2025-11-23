@@ -50,9 +50,9 @@ class GameServer {
         this.sendRoomList(socket);
       });
 
-      socket.on('create_room', (playerName, numberLength = 4) => {
-        console.log('Create room request:', playerName, numberLength);
-        this.createRoom(socket, playerName, numberLength);
+      socket.on('create_room', (playerName, numberLength = 4, spectatorModeEnabled = false) => {
+        console.log('Create room request:', playerName, numberLength, spectatorModeEnabled);
+        this.createRoom(socket, playerName, numberLength, spectatorModeEnabled);
       });
 
       socket.on('join_room', (roomId, playerName) => {
@@ -64,6 +64,9 @@ class GameServer {
       socket.on('get_room_state', (roomId) => {
         const room = this.rooms.get(roomId);
         if (room) {
+          // Join spectator channel for this room
+          const spectatorRoomId = `${roomId}_spectators`;
+          socket.join(spectatorRoomId);
           socket.emit('room_updated', room);
         }
       });
@@ -92,7 +95,7 @@ class GameServer {
     });
   }
 
-  createRoom(socket, playerName, numberLength) {
+  createRoom(socket, playerName, numberLength, spectatorModeEnabled = false) {
     try {
       const roomId = generateRoomId();
       const player = {
@@ -108,7 +111,8 @@ class GameServer {
         currentTurn: socket.id,
         gameHistory: [],
         gameStatus: 'waiting',
-        numberLength: numberLength
+        numberLength: numberLength,
+        spectatorModeEnabled: spectatorModeEnabled
       };
 
       this.rooms.set(roomId, room);
@@ -278,13 +282,25 @@ class GameServer {
       room.gameStatus = 'finished';
       room.winner = guessingPlayer.name;
       this.io.to(roomId).emit('game_won', room, guessingPlayer.name);
+      // Also emit to spectators if spectator mode is enabled
+      if (room.spectatorModeEnabled) {
+        this.io.to(`${roomId}_spectators`).emit('game_won', room, guessingPlayer.name);
+      }
     } else {
       // Switch turns
       room.currentTurn = opponent.id;
       this.io.to(roomId).emit('guess_made', room, guessRecord);
+      // Also emit to spectators if spectator mode is enabled
+      if (room.spectatorModeEnabled) {
+        this.io.to(`${roomId}_spectators`).emit('guess_made', room, guessRecord);
+      }
     }
 
     this.io.to(roomId).emit('room_updated', room);
+    // Also emit to spectators if spectator mode is enabled
+    if (room.spectatorModeEnabled) {
+      this.io.to(`${roomId}_spectators`).emit('room_updated', room);
+    }
   }
 
   handleDisconnect(socket) {
@@ -338,18 +354,24 @@ class GameServer {
   }
 
   sendRoomList(socket) {
-    const openRooms = Array.from(this.rooms.values()).filter(room =>
-      room.players.filter(p => p.isConnected).length < 2 &&
-      (room.gameStatus === 'waiting' || room.gameStatus === 'setup' || room.gameStatus === 'playing')
-    );
+    const openRooms = Array.from(this.rooms.values()).filter(room => {
+      const connectedPlayersCount = room.players.filter(p => p.isConnected).length;
+      const hasSpaceForJoin = connectedPlayersCount < 2;
+      const canSpectate = connectedPlayersCount === 2 && room.spectatorModeEnabled;
+      return (hasSpaceForJoin || canSpectate) &&
+        (room.gameStatus === 'waiting' || room.gameStatus === 'setup' || room.gameStatus === 'playing');
+    });
     socket.emit('room_list', openRooms);
   }
 
   broadcastRoomList() {
-    const openRooms = Array.from(this.rooms.values()).filter(room =>
-      room.players.filter(p => p.isConnected).length < 2 &&
-      (room.gameStatus === 'waiting' || room.gameStatus === 'setup' || room.gameStatus === 'playing')
-    );
+    const openRooms = Array.from(this.rooms.values()).filter(room => {
+      const connectedPlayersCount = room.players.filter(p => p.isConnected).length;
+      const hasSpaceForJoin = connectedPlayersCount < 2;
+      const canSpectate = connectedPlayersCount === 2 && room.spectatorModeEnabled;
+      return (hasSpaceForJoin || canSpectate) &&
+        (room.gameStatus === 'waiting' || room.gameStatus === 'setup' || room.gameStatus === 'playing');
+    });
     this.io.emit('room_list', openRooms);
   }
 }

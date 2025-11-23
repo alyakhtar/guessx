@@ -21,6 +21,7 @@ export interface GameRoom {
   gameStatus: 'waiting' | 'setup' | 'playing' | 'finished';
   winner?: string;
   numberLength: number;
+  spectatorModeEnabled: boolean;
 }
 
 export interface GameState {

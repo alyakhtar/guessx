@@ -8,6 +8,7 @@ import { GameRoom } from '../types/game';
 export default function Lobby() {
   const [playerName, setPlayerName] = useState('');
   const [numberLength, setNumberLength] = useState(4);
+  const [spectatorModeEnabled, setSpectatorModeEnabled] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [socket, setSocket] = useState<any>(null);
   const [darkMode, setDarkMode] = useState(true);
@@ -58,7 +59,7 @@ export default function Lobby() {
     setIsCreating(true);
 
     // Set up one-time listeners
-    socket.emit('create_room', trimmedName, numberLength);
+    socket.emit('create_room', trimmedName, numberLength, spectatorModeEnabled);
 
     const handleRoomCreated = (newRoomId: string, room: any) => {
       console.log('Room created, navigating to:', newRoomId);
@@ -129,6 +130,10 @@ export default function Lobby() {
     }
   };
 
+  const handleSpectateRoomTable = (roomId: string) => {
+    router.push(`/game/${roomId}/spectate`);
+  };
+
   return (
     <div className="card p-4 shadow position-relative">
       <button className="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 m-2" onClick={() => setDarkMode(!darkMode)}>
@@ -176,6 +181,25 @@ export default function Lobby() {
           </select>
         </div>
 
+        <div className="mb-3">
+          <div className="form-check form-switch">
+            <input
+              className="form-check-input"
+              type="checkbox"
+              role="switch"
+              id="spectatorModeToggle"
+              checked={spectatorModeEnabled}
+              onChange={(e) => setSpectatorModeEnabled(e.target.checked)}
+            />
+            <label className="form-check-label fw-medium small" htmlFor="spectatorModeToggle">
+              Enable Spectator Mode
+            </label>
+          </div>
+          <div className="form-text small text-muted">
+            Allow others to watch the game in read-only mode
+          </div>
+        </div>
+
         <button
           onClick={handleCreateRoom}
           disabled={isCreating || !socket?.connected}
@@ -205,12 +229,37 @@ export default function Lobby() {
                 {rooms.map(room => {
                   const p1 = room.players[0];
                   const p2 = room.players[1];
+                  const bothPlayersActive = p1?.isConnected && p2?.isConnected;
+                  const currentPlayerName = playerName.trim();
+
+                  // Determine if player can join as a player
+                  const canRejoinAsPlayer1 = currentPlayerName === p1?.name;
+                  const canRejoinAsPlayer2 = currentPlayerName === p2?.name;
+                  const canJoinAsPlayer = bothPlayersActive && room.players.length < 2;
+
+                  // Show spectate if:
+                  // - Room has both players active AND spectator mode is enabled AND user is not one of the existing players
+                  const shouldShowSpectate = room.spectatorModeEnabled &&
+                    bothPlayersActive &&
+                    !canRejoinAsPlayer1 &&
+                    !canRejoinAsPlayer2;
+
                   return (
                     <tr key={room.id}>
                       <td>{room.id}</td>
                       <td>{p1?.name} {p1?.isConnected ? '' : '(disconnected)'}</td>
                       <td>{p2?.name} {p2?.isConnected ? '' : '(disconnected)'}</td>
-                      <td><button className="btn btn-secondary btn-sm" onClick={() => handleJoinRoomTable(room.id)}>Join</button></td>
+                      <td>
+                        {shouldShowSpectate ? (
+                          <button className="btn btn-info btn-sm" onClick={() => handleSpectateRoomTable(room.id)}>
+                            👁️ Spectate
+                          </button>
+                        ) : (
+                          <button className="btn btn-secondary btn-sm" onClick={() => handleJoinRoomTable(room.id)}>
+                            Join
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
