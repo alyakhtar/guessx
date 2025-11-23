@@ -243,10 +243,10 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
 
           <button
             onClick={handleMakeGuess}
-            disabled={guess.length !== numberLength}
+            disabled={guess.length !== numberLength || room.gameStatus !== 'playing'}
             className="btn btn-success btn-lg w-100"
           >
-            ✅ Submit Guess
+            {room.gameStatus === 'playing' ? '✅ Submit Guess' : '⏳ Waiting for both players...'}
           </button>
         </div>
       ) : (
