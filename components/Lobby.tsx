@@ -237,12 +237,21 @@ export default function Lobby() {
                   const canRejoinAsPlayer2 = currentPlayerName === p2?.name;
                   const canJoinAsPlayer = bothPlayersActive && room.players.length < 2;
 
+                  // Check if user is one of the registered players for this room
+                  const isRegisteredPlayer = canRejoinAsPlayer1 || canRejoinAsPlayer2;
+
+                  // Check if there are actually two players registered in the room
+                  const hasTwoPlayers = room.players.length >= 2;
+
+                  // Check if there's an active game happening (at least one connected player)
+                  const hasActiveGame = p1?.isConnected || p2?.isConnected;
+
                   // Show spectate if:
-                  // - Room has both players active AND spectator mode is enabled AND user is not one of the existing players
+                  // - Room has 2 registered players AND spectator mode enabled AND has active game AND user is NOT a registered player
                   const shouldShowSpectate = room.spectatorModeEnabled &&
-                    bothPlayersActive &&
-                    !canRejoinAsPlayer1 &&
-                    !canRejoinAsPlayer2;
+                    hasTwoPlayers &&
+                    hasActiveGame &&
+                    !isRegisteredPlayer;
 
                   return (
                     <tr key={room.id}>
