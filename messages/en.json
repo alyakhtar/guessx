@@ -1,0 +1,179 @@
+{
+    "app": {
+        "title": "GuessX - Number Guessing Game",
+        "description": "A real-time number guessing game for two players"
+    },
+    "lobby": {
+        "title": "GuessX",
+        "subtitle": "A real-time number guessing game for two players",
+        "connectionStatus": {
+            "connected": "Connected",
+            "connecting": "Connecting...",
+            "disconnected": "Disconnected"
+        },
+        "createGame": {
+            "heading": "Create New Game",
+            "nameLabel": "Your Name",
+            "namePlaceholder": "Enter your name",
+            "numberLengthLabel": "Number Length",
+            "numberLengthOptions": {
+                "4": "4 Digits (1000-9999)",
+                "5": "5 Digits (10000-99999)",
+                "6": "6 Digits (100000-999999)"
+            },
+            "spectatorMode": {
+                "label": "Enable Spectator Mode",
+                "description": "Allow others to watch the game in read-only mode"
+            },
+            "buttons": {
+                "create": "Create New Game",
+                "creating": "Creating room...",
+                "connecting": "Connecting..."
+            }
+        },
+        "joinGame": {
+            "heading": "Join Existing Game",
+            "table": {
+                "roomId": "Room ID",
+                "player1": "Player 1",
+                "player2": "Player 2",
+                "action": "Action"
+            },
+            "statuses": {
+                "disconnected": "(disconnected)",
+                "spectate": "👁️ Spectate",
+                "join": "Join"
+            },
+            "noRooms": "No open rooms available."
+        },
+        "errors": {
+            "nameRequired": "Please enter your name",
+            "connectionError": "Not connected to server. Please refresh the page.",
+            "roomCreationError": "Error",
+            "roomJoinError": "Error"
+        }
+    },
+    "localeSelector": {
+        "english": "English",
+        "french": "French"
+    },
+    "gameRoom": {
+        "loading": {
+            "title": "Loading game room...",
+            "roomId": "Room ID",
+            "shareMessage": "Share this ID with your friend!"
+        },
+        "header": {
+            "room": "Room",
+            "digits": "Digits"
+        },
+        "status": {
+            "yourTurn": "Your Turn!",
+            "playerTurn": "{name}'s Turn",
+            "winner": "Winner"
+        }
+    },
+    "guessInput": {
+        "secretNumber": {
+            "title": "Set Your Secret Number",
+            "label": "Your {length}-digit secret number",
+            "help": "Enter each digit in the boxes - cursor moves automatically",
+            "button": "Set Secret Number & Start Game"
+        },
+        "gameRules": {
+            "title": "Game Rules",
+            "rule1": "Choose a {length}-digit number between {min} and {max}",
+            "rule2": "Take turns guessing your opponent's number",
+            "rule3": "Get feedback on how many digits are in the correct position",
+            "rule4": "First to guess the exact number wins!"
+        },
+        "gameOver": {
+            "title": "Game Over!",
+            "winnerText": "{name} won the game!",
+            "newGameButton": "🎮 Start New Game"
+        },
+        "turn": {
+            "yourTurn": "🎯 Your Turn - Make a Guess!",
+            "waitingFor": "⏳ Waiting for {name}",
+            "guessLabel": "Enter your {length}-digit guess",
+            "submitGuess": "✅ Submit Guess",
+            "waitingForBoth": "⏳ Waiting for both players...",
+            "waitingForGuess": "Waiting for {name} to make a guess..."
+        },
+        "progress": {
+            "title": "Game Progress",
+            "yourGuesses": "Your Guesses",
+            "opponentGuesses": "Opponent's Guesses"
+        },
+        "validation": {
+            "invalidNumber": "Please enter a valid {length}-digit number"
+        }
+    },
+    "spectator": {
+        "loading": {
+            "title": "Loading spectator view...",
+            "roomId": "Room ID"
+        },
+        "access": {
+            "denied": "Access Denied",
+            "disabled": "Spectator mode is not enabled for this room.",
+            "backHome": "🏠 Back to Home"
+        },
+        "header": {
+            "mode": "👁️ Spectator Mode",
+            "room": "Room",
+            "digits": "Digits",
+            "turn": "⏳ {name}'s Turn",
+            "winner": "Winner"
+        },
+        "player": {
+            "status": {
+                "disconnected": "(disconnected)",
+                "settingUp": "Setting up..."
+            },
+            "secretNumber": "Secret Number",
+            "guesses": "Guesses",
+            "noGuesses": "No guesses yet",
+            "correct": "correct"
+        }
+    },
+    "playerList": {
+        "title": "Players",
+        "status": {
+            "ready": "Ready",
+            "settingUp": "Setting up...",
+            "waiting": "Waiting",
+            "setup": "Setup",
+            "playing": "Playing",
+            "finished": "Finished"
+        },
+        "indicators": {
+            "you": "(You)",
+            "thinking": "Thinking...",
+            "yourSecret": "Your secret:",
+            "playerSecret": "{player}'s secret:"
+        },
+        "roomStatus": {
+            "title": "Room Status",
+            "status": "Status:",
+            "players": "Players:",
+            "waitingForPlayer": "Waiting for another player to join..."
+        }
+    },
+    "gameHistory": {
+        "title": "Your Guesses",
+        "empty": {
+            "title": "No guesses yet",
+            "subtitle": "Your guesses will appear here"
+        },
+        "table": {
+            "number": "#",
+            "guess": "Guess",
+            "correct": "Correct"
+        },
+        "summary": {
+            "total": "Total Guesses:",
+            "last": "Last Guess:"
+        }
+    }
+}

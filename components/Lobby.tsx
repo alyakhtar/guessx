@@ -2,10 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
 import { socketService } from '../lib/socket';
 import { GameRoom } from '../types/game';
+import LocaleSelector from './LocaleSelector';
 
 export default function Lobby() {
+  const t = useTranslations('lobby');
+  const locale = useLocale();
+
+  console.log('🏴 Lobby debug: current locale:', locale);
   const [playerName, setPlayerName] = useState('');
   const [numberLength, setNumberLength] = useState(4);
   const [spectatorModeEnabled, setSpectatorModeEnabled] = useState(true);
@@ -44,7 +50,7 @@ export default function Lobby() {
   const handleCreateRoom = () => {
     const trimmedName = playerName.trim();
     if (!trimmedName) {
-      alert('Please enter your name');
+      alert(t('errors.nameRequired'));
       return;
     }
 
@@ -52,7 +58,7 @@ export default function Lobby() {
     localStorage.setItem('playerName', trimmedName);
 
     if (!socket) {
-      alert('Not connected to server. Please refresh the page.');
+      alert(t('errors.connectionError'));
       return;
     }
 
@@ -64,7 +70,7 @@ export default function Lobby() {
     const handleRoomCreated = (newRoomId: string, room: any) => {
       console.log('Room created, navigating to:', newRoomId);
       setIsCreating(false);
-      router.push(`/game/${newRoomId}`);
+      router.push(`/${locale}/game/${newRoomId}`);
     };
 
     const handleError = (error: string) => {
@@ -91,7 +97,7 @@ export default function Lobby() {
   const handleJoinRoomTable = (roomId: string) => {
     const trimmedName = playerName.trim();
     if (!trimmedName) {
-      alert('Please enter your name');
+      alert(t('errors.nameRequired'));
       return;
     }
 
@@ -99,7 +105,7 @@ export default function Lobby() {
     localStorage.setItem('playerName', trimmedName);
 
     if (!socket) {
-      alert('Not connected to server. Please refresh the page.');
+      alert(t('errors.connectionError'));
       return;
     }
 
@@ -107,7 +113,7 @@ export default function Lobby() {
 
     const handleRoomUpdated = (room: any) => {
       console.log('Joined room, navigating to:', room.id);
-      router.push(`/game/${room.id}`);
+      router.push(`/${locale}/game/${room.id}`);
     };
 
     const handleError = (error: string) => {
@@ -131,53 +137,56 @@ export default function Lobby() {
   };
 
   const handleSpectateRoomTable = (roomId: string) => {
-    router.push(`/game/${roomId}/spectate`);
+    router.push(`/${locale}/game/${roomId}/spectate`);
   };
 
   return (
     <div className="card p-4 shadow position-relative">
-      <button className="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 m-2" onClick={() => setDarkMode(!darkMode)}>
-        {darkMode ? '🌞' : '🌙'}
-      </button>
+      <div className="d-flex justify-content-end gap-2 position-absolute top-0 end-0 m-2">
+        <LocaleSelector />
+        <button className="btn btn-sm btn-outline-secondary" onClick={() => setDarkMode(!darkMode)}>
+          {darkMode ? '🌞' : '🌙'}
+        </button>
+      </div>
       <div className="text-center mb-4">
         <h1 className="display-4 fw-bold text-primary mb-2">
           Guess<span className="text-info">X</span>
         </h1>
         <p className="text-muted mb-3 small">
-          A real-time number guessing game for two players
+          {t('subtitle')}
         </p>
         <div className="d-flex justify-content-center align-items-center gap-2 mb-3">
           <span className={`badge ${socket?.connected ? 'bg-success' : 'bg-danger'}`}>●</span>
           <span className="small text-muted">
-            {socket?.connected ? 'Connected' : 'Connecting...'}
+            {socket?.connected ? t('connectionStatus.connected') : t('connectionStatus.connecting')}
           </span>
         </div>
       </div>
       {/* Create Room */}
       <div className="mb-4">
-        <h2 className="h5 fw-semibold mb-4">Create New Game</h2>
+        <h2 className="h5 fw-semibold mb-4">{t('createGame.heading')}</h2>
 
         <div className="mb-3">
-          <label className="form-label fw-medium small">Your Name</label>
+          <label className="form-label fw-medium small">{t('createGame.nameLabel')}</label>
           <input
             type="text"
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
             className="form-control form-control-lg"
-            placeholder="Enter your name"
+            placeholder={t('createGame.namePlaceholder')}
           />
         </div>
 
         <div className="mb-3">
-          <label className="form-label fw-medium small">Number Length</label>
+          <label className="form-label fw-medium small">{t('createGame.numberLengthLabel')}</label>
           <select
             value={numberLength}
             onChange={(e) => setNumberLength(parseInt(e.target.value))}
             className="form-select form-select-lg"
           >
-            <option value={4}>4 Digits (1000-9999)</option>
-            <option value={5}>5 Digits (10000-99999)</option>
-            <option value={6}>6 Digits (100000-999999)</option>
+            <option value={4}>{t('createGame.numberLengthOptions.4')}</option>
+            <option value={5}>{t('createGame.numberLengthOptions.5')}</option>
+            <option value={6}>{t('createGame.numberLengthOptions.6')}</option>
           </select>
         </div>
 
@@ -192,11 +201,11 @@ export default function Lobby() {
               onChange={(e) => setSpectatorModeEnabled(e.target.checked)}
             />
             <label className="form-check-label fw-medium small" htmlFor="spectatorModeToggle">
-              Enable Spectator Mode
+              {t('createGame.spectatorMode.label')}
             </label>
           </div>
           <div className="form-text small text-muted">
-            Allow others to watch the game in read-only mode
+            {t('createGame.spectatorMode.description')}
           </div>
         </div>
 
@@ -205,24 +214,24 @@ export default function Lobby() {
           disabled={isCreating || !socket?.connected}
           className="btn btn-primary btn-lg w-100 mb-4"
         >
-          {!socket?.connected ? 'Connecting...' :
-            isCreating ? 'Creating Room...' : 'Create New Game'}
+          {!socket?.connected ? t('createGame.buttons.connecting') :
+            isCreating ? t('createGame.buttons.creating') : t('createGame.buttons.create')}
         </button>
       </div>
 
       {/* Join Room */}
       <div className="mb-4">
-        <h2 className="h5 fw-semibold mb-4">Join Existing Game</h2>
+        <h2 className="h5 fw-semibold mb-4">{t('joinGame.heading')}</h2>
 
         {rooms.length > 0 ? (
           <div className="table-responsive">
             <table className="table table-striped table-dark">
               <thead>
                 <tr>
-                  <th>Room ID</th>
-                  <th>Player 1</th>
-                  <th>Player 2</th>
-                  <th>Action</th>
+                  <th>{t('joinGame.table.roomId')}</th>
+                  <th>{t('joinGame.table.player1')}</th>
+                  <th>{t('joinGame.table.player2')}</th>
+                  <th>{t('joinGame.table.action')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -256,16 +265,16 @@ export default function Lobby() {
                   return (
                     <tr key={room.id}>
                       <td>{room.id}</td>
-                      <td>{p1?.name} {p1?.isConnected ? '' : '(disconnected)'}</td>
-                      <td>{p2?.name} {p2?.isConnected ? '' : '(disconnected)'}</td>
+                      <td>{p1?.name} {p1?.isConnected ? '' : t('joinGame.statuses.disconnected')}</td>
+                      <td>{p2?.name} {p2?.isConnected ? '' : t('joinGame.statuses.disconnected')}</td>
                       <td>
                         {shouldShowSpectate ? (
                           <button className="btn btn-info btn-sm" onClick={() => handleSpectateRoomTable(room.id)}>
-                            👁️ Spectate
+                            {t('joinGame.statuses.spectate')}
                           </button>
                         ) : (
                           <button className="btn btn-secondary btn-sm" onClick={() => handleJoinRoomTable(room.id)}>
-                            Join
+                            {t('joinGame.statuses.join')}
                           </button>
                         )}
                       </td>
@@ -276,7 +285,7 @@ export default function Lobby() {
             </table>
           </div>
         ) : (
-          <p className="text-muted">No open rooms available.</p>
+          <p className="text-muted">{t('joinGame.noRooms')}</p>
         )}
       </div>
 
@@ -285,7 +294,7 @@ export default function Lobby() {
         <span className="me-2">
           <span className={`badge ${socket?.connected ? 'bg-success' : 'bg-danger'}`}>●</span>
         </span>
-        {socket?.connected ? `Connected (${socket.id})` : 'Disconnected'}
+        {socket?.connected ? `${t('connectionStatus.connected')} (${socket.id})` : t('connectionStatus.disconnected')}
       </div>
     </div>
   );

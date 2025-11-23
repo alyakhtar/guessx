@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { socketService } from '../lib/socket';
 import { GameRoom, Player } from '../types/game';
 import { validateNumber } from '../lib/gameLogic';
@@ -14,6 +15,7 @@ interface GuessInputProps {
 }
 
 export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength, onNewGame }: GuessInputProps) {
+  const t = useTranslations('guessInput');
   const [secretNumber, setSecretNumber] = useState('');
   const [guess, setGuess] = useState('');
   const [isSettingSecret, setIsSettingSecret] = useState(false);
@@ -27,7 +29,7 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
 
   const handleSetSecretNumber = () => {
     if (!validateNumber(secretNumber, numberLength)) {
-      alert(`Please enter a valid ${numberLength}-digit number`);
+      alert(t('validation.invalidNumber', { length: numberLength }));
       return;
     }
 
@@ -39,7 +41,7 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
 
   const handleMakeGuess = () => {
     if (!validateNumber(guess, numberLength)) {
-      alert(`Please enter a valid ${numberLength}-digit number`);
+      alert(t('validation.invalidNumber', { length: numberLength }));
       return;
     }
 
@@ -52,13 +54,16 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
 
   // Player hasn't set secret number yet
   if (!currentPlayer?.isReady && room.gameStatus !== 'finished') {
+    const minNumber = 10 ** (numberLength - 1);
+    const maxNumber = 10 ** numberLength - 1;
+
     return (
       <div>
-        <h2 className="h5 fw-semibold mb-3 text-center text-md-start">Set Your Secret Number</h2>
+        <h2 className="h5 fw-semibold mb-3 text-center text-md-start">{t('secretNumber.title')}</h2>
 
         <div className="mb-3">
           <label className="form-label fw-medium small">
-            Your {numberLength}-digit secret number
+            {t('secretNumber.label', { length: numberLength })}
           </label>
           <div className="d-flex justify-content-center gap-2 mb-3">
             {Array.from({ length: numberLength }, (_, i) => (
@@ -92,9 +97,8 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
                   if (e.key === 'Backspace' && !secretNumber[i] && i > 0) {
                     // Focus previous box on backspace
                     const target = e.target as HTMLElement;
-                    const prevInput = target.previousElementSibling as HTMLInputElement;
-                    if (prevInput && prevInput.tagName === 'INPUT') {
-                      prevInput.focus();
+                    if (target.previousElementSibling && target.previousElementSibling.tagName === 'INPUT') {
+                      (target.previousElementSibling as HTMLInputElement).focus();
                     }
                   } else if (e.key === 'Enter' && secretNumber.length === numberLength) {
                     handleSetSecretNumber();
@@ -107,7 +111,7 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
             ))}
           </div>
           <div className="form-text text-center">
-            Enter each digit in the boxes - cursor moves automatically
+            {t('secretNumber.help')}
           </div>
         </div>
 
@@ -116,28 +120,28 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
           disabled={secretNumber.length !== numberLength}
           className="btn btn-primary btn-lg w-100"
         >
-          Set Secret Number & Start Game
+          {t('secretNumber.button')}
         </button>
 
         <div className="card mt-3">
           <div className="card-body">
-            <h3 className="card-title h6 fw-semibold">Game Rules</h3>
+            <h3 className="card-title h6 fw-semibold">{t('gameRules.title')}</h3>
             <ul className="list-unstyled mb-0 small">
               <li className="d-flex">
                 <span className="text-info">•</span>
-                <span className="ms-2">Choose a {numberLength}-digit number between {10 ** (numberLength - 1)} and {10 ** numberLength - 1}</span>
+                <span className="ms-2">{t('gameRules.rule1', { length: numberLength, min: minNumber, max: maxNumber })}</span>
               </li>
               <li className="d-flex mt-1">
                 <span className="text-info">•</span>
-                <span className="ms-2">Take turns guessing your opponent's number</span>
+                <span className="ms-2">{t('gameRules.rule2')}</span>
               </li>
               <li className="d-flex mt-1">
                 <span className="text-info">•</span>
-                <span className="ms-2">Get feedback on how many digits are in the correct position</span>
+                <span className="ms-2">{t('gameRules.rule3')}</span>
               </li>
               <li className="d-flex mt-1">
                 <span className="text-info">•</span>
-                <span className="ms-2">First to guess the exact number wins!</span>
+                <span className="ms-2">{t('gameRules.rule4')}</span>
               </li>
             </ul>
           </div>
@@ -153,9 +157,9 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
       <div className="text-center">
         <div className="card bg-success text-white mb-3">
           <div className="card-body">
-            <h2 className="card-title h4 fw-bold mb-2">Game Over!</h2>
+            <h2 className="card-title h4 fw-bold mb-2">{t('gameOver.title')}</h2>
             <p className="card-text fs-5">
-              <span className="fw-bold">{room.winner}</span> won the game!
+              {t('gameOver.winnerText', { name: room.winner })}
             </p>
           </div>
         </div>
@@ -166,7 +170,7 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
           onClick={onNewGame}
           className="btn btn-success btn-lg w-100"
         >
-          🎮 Start New Game
+          {t('gameOver.newGameButton')}
         </button>
       </div>
     );
@@ -177,9 +181,9 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
     <div>
       <h2 className="h5 fw-semibold mb-3 text-center text-md-start">
         {isMyTurn ? (
-          <span className="badge text-bg-success fs-6">🎯 Your Turn - Make a Guess!</span>
+          <span className="badge text-bg-success fs-6">{t('turn.yourTurn')}</span>
         ) : (
-          <span className="badge text-bg-warning fs-6">⏳ Waiting for {room.players.find(p => p.id === room.currentTurn)?.name}</span>
+          <span className="badge text-bg-warning fs-6">{t('turn.waitingFor', { name: room.players.find(p => p.id === room.currentTurn)?.name })}</span>
         )}
       </h2>
 
@@ -187,7 +191,7 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
         <div className="mb-3">
           <div className="mb-3">
             <label className="form-label fw-medium small text-center text-md-start">
-              Enter your {numberLength}-digit guess
+              {t('turn.guessLabel', { length: numberLength })}
             </label>
             <div className="d-flex justify-content-center gap-2 mb-3">
               {Array.from({ length: numberLength }, (_, i) => (
@@ -237,7 +241,7 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
               ))}
             </div>
             <div className="form-text text-center">
-              Enter each digit in the boxes - cursor moves automatically
+              {t('secretNumber.help')}
             </div>
           </div>
 
@@ -246,7 +250,7 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
             disabled={guess.length !== numberLength || room.gameStatus !== 'playing'}
             className="btn btn-success btn-lg w-100"
           >
-            {room.gameStatus === 'playing' ? '✅ Submit Guess' : '⏳ Waiting for both players...'}
+            {room.gameStatus === 'playing' ? t('turn.submitGuess') : t('turn.waitingForBoth')}
           </button>
         </div>
       ) : (
@@ -255,7 +259,7 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
             <span className="visually-hidden">Loading...</span>
           </div>
           <p className="text-muted fs-5">
-            Waiting for {room.players.find(p => p.id === room.currentTurn)?.name} to make a guess...
+            {t('turn.waitingForGuess', { name: room.players.find(p => p.id === room.currentTurn)?.name })}
           </p>
         </div>
       )}
@@ -263,19 +267,19 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
       {/* Quick Stats */}
       <div className="card">
         <div className="card-body">
-          <h3 className="card-title h6 fw-semibold mb-3 text-center text-md-start">Game Progress</h3>
+          <h3 className="card-title h6 fw-semibold mb-3 text-center text-md-start">{t('progress.title')}</h3>
           <div className="row text-center">
             <div className="col-6">
               <div className="display-6 fw-bold text-info">
                 {room.gameHistory.filter(g => g.playerName === currentPlayer?.name).length}
               </div>
-              <div className="text-muted small">Your Guesses</div>
+              <div className="text-muted small">{t('progress.yourGuesses')}</div>
             </div>
             <div className="col-6">
               <div className="display-6 fw-bold text-primary">
                 {room.gameHistory.filter(g => g.playerName !== currentPlayer?.name).length}
               </div>
-              <div className="text-muted small">Opponent's Guesses</div>
+              <div className="text-muted small">{t('progress.opponentGuesses')}</div>
             </div>
           </div>
         </div>

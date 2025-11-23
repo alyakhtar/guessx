@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
+const withNextIntl = require('next-intl/plugin')();
+
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ['socket.io']
-  },
+  serverExternalPackages: ['socket.io'],
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,
@@ -14,4 +14,4 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+module.exports = withNextIntl(nextConfig);

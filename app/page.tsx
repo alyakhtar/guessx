@@ -1,40 +1,27 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { socketService } from '../lib/socket';
-import Lobby from '../components/Lobby';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
-export default function Home() {
-  const [isConnected, setIsConnected] = useState(false);
+export default function RootPage() {
+    const router = useRouter();
 
-  useEffect(() => {
-    const socket = socketService.connect();
+    useEffect(() => {
+        // Get preferred locale from localStorage, default to 'en'
+        const preferredLocale = localStorage.getItem('preferredLocale') || 'en';
 
-    socket.on('connect', () => {
-      console.log('Connected to server');
-      setIsConnected(true);
-    });
+        // Redirect to the preferred locale
+        router.replace(`/${preferredLocale}`);
+    }, [router]);
 
-    socket.on('disconnect', () => {
-      console.log('Disconnected from server');
-      setIsConnected(false);
-    });
-
-    socket.on('connected', (data) => {
-      console.log('Server connection confirmed:', data);
-      setIsConnected(true);
-    });
-
-    return () => {
-      // Don't disconnect here - we want to maintain connection between pages
-    };
-  }, []);
-
-  return (
-    <main className="container-fluid p-2 p-md-4 d-flex flex-column justify-content-center align-items-center min-vh-100">
-      <div className="w-100">
-        <Lobby />
-      </div>
-    </main>
-  );
+    return (
+        <div className="d-flex justify-content-center align-items-center min-vh-100">
+            <div className="text-center">
+                <div className="spinner-border" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </div>
+                <p className="mt-2">Setting up your language...</p>
+            </div>
+        </div>
+    );
 }

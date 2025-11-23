@@ -1,7 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Guess } from '../types/game';
-import { formatGameTimestamp } from '../lib/utils';
 
 interface GameHistoryProps {
   gameHistory: Guess[];
@@ -9,17 +9,18 @@ interface GameHistoryProps {
 }
 
 export default function GameHistory({ gameHistory, currentPlayerName }: GameHistoryProps) {
+  const t = useTranslations('gameHistory');
   // Only show current player's guesses
   const myGuesses = gameHistory.filter(guess => guess.playerName === currentPlayerName);
 
   if (myGuesses.length === 0) {
     return (
       <div className="card p-4 shadow h-100">
-        <h2 className="card-title h5 fw-semibold mb-4">Your Guesses</h2>
+        <h2 className="card-title h5 fw-semibold mb-4">{t('title')}</h2>
         <div className="text-center py-5">
           <div className="fs-1 mb-3">🎯</div>
-          <p className="text-muted">No guesses yet</p>
-          <p className="text-muted small">Your guesses will appear here</p>
+          <p className="text-muted">{t('empty.title')}</p>
+          <p className="text-muted small">{t('empty.subtitle')}</p>
         </div>
       </div>
     );
@@ -27,15 +28,15 @@ export default function GameHistory({ gameHistory, currentPlayerName }: GameHist
 
   return (
     <div className="card p-4 shadow h-100">
-      <h2 className="card-title h5 fw-semibold mb-4">Your Guesses</h2>
+      <h2 className="card-title h5 fw-semibold mb-4">{t('title')}</h2>
 
       <div className="table-responsive">
         <table className="table table-striped table-hover table-bordered">
           <thead className="table-dark">
             <tr>
-              <th className="text-center">#</th>
-              <th className="text-center">Guess</th>
-              <th className="text-center">Correct</th>
+              <th className="text-center">{t('table.number')}</th>
+              <th className="text-center">{t('table.guess')}</th>
+              <th className="text-center">{t('table.correct')}</th>
             </tr>
           </thead>
           <tbody>
@@ -70,22 +71,16 @@ export default function GameHistory({ gameHistory, currentPlayerName }: GameHist
       {/* Summary */}
       <div className="card mt-3">
         <div className="card-body">
-          <div className="row g-2">
-            <div className="col-6">
-              <strong>Total Guesses:</strong>
-            </div>
-            <div className="col-6">
+          <div className="row g-3">
+            <div className="col-12 d-flex justify-content-between align-items-center">
+              <strong className="text-nowrap me-3">{t('summary.total')}</strong>
               <span className="fs-5 fw-bold">{myGuesses.length}</span>
             </div>
             {myGuesses.length > 0 && (
-              <>
-                <div className="col-6">
-                  <strong>Last Guess:</strong>
-                </div>
-                <div className="col-6">
-                  <code>{myGuesses[myGuesses.length - 1].guess}</code>
-                </div>
-              </>
+              <div className="col-12 d-flex justify-content-between align-items-center">
+                <strong className="text-nowrap me-3">{t('summary.last')}</strong>
+                <code className="fs-5">{myGuesses[myGuesses.length - 1].guess}</code>
+              </div>
             )}
           </div>
         </div>

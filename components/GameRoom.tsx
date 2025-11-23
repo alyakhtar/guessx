@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { socketService } from '../lib/socket';
 import { GameRoom as GameRoomType, Player } from '../types/game';
 import PlayerList from './PlayerList';
@@ -13,6 +14,7 @@ export default function GameRoom() {
   const params = useParams();
   const router = useRouter();
   const roomId = params.routeId as string;
+  const t = useTranslations('gameRoom');
 
   const [room, setRoom] = useState<GameRoomType | null>(null);
   const [currentPlayerId, setCurrentPlayerId] = useState<string>('');
@@ -84,9 +86,9 @@ export default function GameRoom() {
       <div className="container-fluid min-vh-100 d-flex justify-content-center align-items-center">
         <div className="text-center">
           <div className="spinner-border text-primary mb-3" role="status"></div>
-          <p className="text-muted fw-semibold">Loading game room...</p>
-          <p className="text-muted small mb-2">Room ID: <code className="fs-5">{roomId}</code></p>
-          <p className="text-muted small">Share this ID with your friend!</p>
+          <p className="text-muted fw-semibold">{t('loading.title')}</p>
+          <p className="text-muted small mb-2">{t('loading.roomId')}: <code className="fs-5">{roomId}</code></p>
+          <p className="text-muted small">{t('loading.shareMessage')}</p>
         </div>
       </div>
     );
@@ -116,23 +118,23 @@ export default function GameRoom() {
               <h1 className="h2 fw-bold text-primary">
                 Guess<span className="text-info">X</span>
               </h1>
-              <p className="text-muted small">Room: {roomId}</p>
+              <p className="text-muted small">{t('header.room')}: {roomId}</p>
             </div>
 
             <div className="d-flex flex-wrap gap-2 justify-content-center w-100 w-md-auto">
               <span className="badge text-bg-secondary fs-6">
-                Digits: {room.numberLength}
+                {t('header.digits')}: {room.numberLength}
               </span>
 
               {room.gameStatus === 'playing' && (
                 <span className={`badge fs-6 ${isMyTurn ? 'text-bg-success' : 'text-bg-warning'}`}>
-                  {isMyTurn ? 'Your Turn!' : `${opponent?.name}'s Turn`}
+                  {isMyTurn ? t('status.yourTurn') : t('status.playerTurn', { name: opponent?.name })}
                 </span>
               )}
 
               {room.gameStatus === 'finished' && room.winner && (
                 <span className="badge text-bg-info fs-6">
-                  Winner: {room.winner}
+                  {t('status.winner')}: {room.winner}
                 </span>
               )}
             </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { socketService } from '../lib/socket';
 import { GameRoom } from '../types/game';
 
@@ -9,6 +10,7 @@ export default function Spectator() {
     const params = useParams();
     const router = useRouter();
     const roomId = params.routeId as string;
+    const t = useTranslations('spectator');
 
     const [room, setRoom] = useState<GameRoom | null>(null);
     const [error, setError] = useState<string>('');
@@ -29,7 +31,7 @@ export default function Spectator() {
         const handleRoomUpdated = (updatedRoom: GameRoom) => {
             // Check if spectator mode is enabled for this room
             if (!updatedRoom.spectatorModeEnabled) {
-                setError('Spectator mode is not enabled for this room.');
+                setError(t('access.disabled'));
                 return;
             }
 
@@ -71,13 +73,13 @@ export default function Spectator() {
             <div className="container p-4 min-vh-100 d-flex justify-content-center align-items-center">
                 <div className="card p-4 shadow text-center">
                     <div className="card-body">
-                        <h2 className="card-title text-danger">Access Denied</h2>
+                        <h2 className="card-title text-danger">{t('access.denied')}</h2>
                         <p className="card-text">{error}</p>
                         <button
                             className="btn btn-primary"
                             onClick={() => router.push('/')}
                         >
-                            🏠 Back to Home
+                            {t('access.backHome')}
                         </button>
                     </div>
                 </div>
@@ -91,8 +93,8 @@ export default function Spectator() {
             <div className="container-fluid min-vh-100 d-flex justify-content-center align-items-center">
                 <div className="text-center">
                     <div className="spinner-border text-primary mb-3" role="status"></div>
-                    <p className="text-muted fw-semibold">Loading spectator view...</p>
-                    <p className="text-muted small mb-2">Room ID: <code className="fs-5">{roomId}</code></p>
+                    <p className="text-muted fw-semibold">{t('loading.title')}</p>
+                    <p className="text-muted small mb-2">{t('loading.roomId')}: <code className="fs-5">{roomId}</code></p>
                 </div>
             </div>
         );
@@ -127,25 +129,25 @@ export default function Spectator() {
                                 Guess<span className="text-info">X</span>
                             </div>
                             <div className="d-flex flex-column gap-2">
-                                <p className="text-muted small mb-0">Room: {roomId}</p>
-                                <span className="badge text-bg-info fs-6">👁️ Spectator Mode</span>
+                                <p className="text-muted small mb-0">{t('header.room')}: {roomId}</p>
+                                <span className="badge text-bg-info fs-6">{t('header.mode')}</span>
                             </div>
                         </div>
 
                         <div className="d-flex flex-wrap gap-2 justify-content-center w-100 w-md-auto">
                             <span className="badge text-bg-secondary fs-6">
-                                Digits: {room.numberLength}
+                                {t('header.digits')}: {room.numberLength}
                             </span>
 
                             {room.gameStatus === 'playing' && currentPlayerName && (
                                 <span className="badge text-bg-warning fs-6">
-                                    ⏳ {currentPlayerName}'s Turn
+                                    {t('header.turn', { name: currentPlayerName })}
                                 </span>
                             )}
 
                             {room.gameStatus === 'finished' && room.winner && (
                                 <span className="badge text-bg-info fs-6">
-                                    Winner: {room.winner}
+                                    {t('header.winner')}: {room.winner}
                                 </span>
                             )}
                         </div>
@@ -159,10 +161,10 @@ export default function Spectator() {
                         <div className="card shadow h-100">
                             <div className="card-header text-center">
                                 <h3 className="card-title h5 mb-0">
-                                    {p1?.name} {p1?.isConnected ? '' : '(disconnected)'}
+                                    {p1?.name} {p1?.isConnected ? '' : t('player.status.disconnected')}
                                 </h3>
                                 {!p1?.isReady && room.gameStatus !== 'waiting' && (
-                                    <span className="badge text-bg-warning mt-1">Setting up...</span>
+                                    <span className="badge text-bg-warning mt-1">{t('player.status.settingUp')}</span>
                                 )}
                             </div>
                             <div className="card-body">
@@ -198,24 +200,24 @@ export default function Spectator() {
                                             );
                                         })}
                                     </div>
-                                    <div className="text-center small text-muted">Secret Number</div>
+                                    <div className="text-center small text-muted">{t('player.secretNumber')}</div>
                                 </div>
 
                                 {/* Player's History */}
                                 <div className="card">
                                     <div className="card-header">
-                                        <h4 className="card-title h6 mb-0">Guesses</h4>
+                                        <h4 className="card-title h6 mb-0">{t('player.guesses')}</h4>
                                     </div>
                                     <div className="card-body p-2" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                                         {room.gameHistory.filter(g => g.playerName === p1?.name).length === 0 ? (
-                                            <p className="text-muted small text-center mb-0">No guesses yet</p>
+                                            <p className="text-muted small text-center mb-0">{t('player.noGuesses')}</p>
                                         ) : (
                                             room.gameHistory
                                                 .filter(g => g.playerName === p1?.name)
                                                 .map((guess, index) => (
                                                     <div key={index} className="d-flex justify-content-between align-items-center small mb-1">
                                                         <span className="font-monospace">{guess.guess}</span>
-                                                        <span className="badge bg-primary">{guess.correctPositions} correct</span>
+                                                        <span className="badge bg-primary">{guess.correctPositions} {t('player.correct')}</span>
                                                     </div>
                                                 ))
                                         )}
@@ -230,10 +232,10 @@ export default function Spectator() {
                         <div className="card shadow h-100">
                             <div className="card-header text-center">
                                 <h3 className="card-title h5 mb-0">
-                                    {p2?.name} {p2?.isConnected ? '' : '(disconnected)'}
+                                    {p2?.name} {p2?.isConnected ? '' : t('player.status.disconnected')}
                                 </h3>
                                 {!p2?.isReady && room.gameStatus !== 'waiting' && (
-                                    <span className="badge text-bg-warning mt-1">Setting up...</span>
+                                    <span className="badge text-bg-warning mt-1">{t('player.status.settingUp')}</span>
                                 )}
                             </div>
                             <div className="card-body">
@@ -269,24 +271,24 @@ export default function Spectator() {
                                             );
                                         })}
                                     </div>
-                                    <div className="text-center small text-muted">Secret Number</div>
+                                    <div className="text-center small text-muted">{t('player.secretNumber')}</div>
                                 </div>
 
                                 {/* Player's History */}
                                 <div className="card">
                                     <div className="card-header">
-                                        <h4 className="card-title h6 mb-0">Guesses</h4>
+                                        <h4 className="card-title h6 mb-0">{t('player.guesses')}</h4>
                                     </div>
                                     <div className="card-body p-2" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                                         {room.gameHistory.filter(g => g.playerName === p2?.name).length === 0 ? (
-                                            <p className="text-muted small text-center mb-0">No guesses yet</p>
+                                            <p className="text-muted small text-center mb-0">{t('player.noGuesses')}</p>
                                         ) : (
                                             room.gameHistory
                                                 .filter(g => g.playerName === p2?.name)
                                                 .map((guess, index) => (
                                                     <div key={index} className="d-flex justify-content-between align-items-center small mb-1">
                                                         <span className="font-monospace">{guess.guess}</span>
-                                                        <span className="badge bg-primary">{guess.correctPositions} correct</span>
+                                                        <span className="badge bg-primary">{guess.correctPositions} {t('player.correct')}</span>
                                                     </div>
                                                 ))
                                         )}
