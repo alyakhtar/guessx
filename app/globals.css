@@ -1,0 +1,52 @@
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+:root {
+  --bs-body-bg: #1e293b;
+  --bs-body-color: #f1f5f9;
+}
+
+[data-bs-theme="light"] {
+  --bs-body-bg: #ffffff;
+  --bs-body-color: #212529;
+}
+
+body {
+  min-height: 100vh;
+  background: linear-gradient(to bottom, transparent, #334155) #1e293b;
+}
+
+[data-bs-theme="light"] body {
+  background: linear-gradient(to bottom, transparent, #f8fafc) #ffffff;
+}
+
+/* Improve mobile input experience */
+input[type="number"] {
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+}
+
+/* Prevent zoom on input focus on mobile */
+input,
+textarea,
+select {
+  font-size: 16px;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Better scrolling on mobile */
+@media (max-width: 768px) {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
