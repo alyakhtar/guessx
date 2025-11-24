@@ -151,7 +151,8 @@
             "you": "(You)",
             "thinking": "Thinking...",
             "yourSecret": "Your secret:",
-            "playerSecret": "{player}'s secret:"
+            "playerSecret": "{player}'s secret:",
+            "digitsGuessed": "Digits guessed:"
         },
         "roomStatus": {
             "title": "Room Status",

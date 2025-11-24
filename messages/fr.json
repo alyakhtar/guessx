@@ -151,7 +151,8 @@
             "you": "(Vous)",
             "thinking": "Réfléchit...",
             "yourSecret": "Votre secret :",
-            "playerSecret": "Secret de {player} :"
+            "playerSecret": "Secret de {player} :",
+            "digitsGuessed": "Chiffres découverts :"
         },
         "roomStatus": {
             "title": "État de la salle",

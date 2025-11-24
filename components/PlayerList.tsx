@@ -37,6 +37,23 @@ export default function PlayerList({ room, currentPlayerId }: PlayerListProps) {
 
   const statusInfo = getGameStatusText();
 
+  const getDigitGuessStatus = () => {
+    if (!currentPlayer?.secretNumber) return [];
+
+    const opponentGuesses = room.gameHistory.filter(guess =>
+      room.players.find(p => p.name === guess.playerName)?.id !== currentPlayerId
+    );
+
+    return currentPlayer.secretNumber.split('').map((digit, index) => {
+      const isGuessed = opponentGuesses.some(guess => guess.guess[index] === digit);
+      return {
+        digit,
+        isGuessed,
+        index
+      };
+    });
+  };
+
   return (
     <div className="card p-4 shadow h-100">
       <h2 className="card-title h5 fw-semibold mb-4">{t('title')}</h2>
@@ -65,8 +82,39 @@ export default function PlayerList({ room, currentPlayerId }: PlayerListProps) {
       {room.players.map((player) => (
         <div key={`secret-${player.id}`}>
           {(player.secretNumber && player.id === currentPlayerId) && (
-            <div className="alert alert-secondary small mb-3">
-              <strong>{t('indicators.yourSecret')}</strong> <code>{player.secretNumber}</code>
+            <div className="card mb-3">
+              <div className="card-body">
+                <h4 className="card-title h6 fw-semibold mb-3">{t('indicators.yourSecret')}</h4>
+                <div className="d-flex gap-2 justify-content-center">
+                  {getDigitGuessStatus().map(({ digit, isGuessed }, index) => (
+                    <div
+                      key={index}
+                      className={`badge fs-5 fw-bold border border-2 ${isGuessed
+                        ? 'text-bg-danger border-danger'
+                        : 'text-bg-success border-success'
+                        }`}
+                      style={{
+                        minWidth: '40px',
+                        minHeight: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'white'
+                      }}
+                    >
+                      {digit}
+                    </div>
+                  ))}
+                </div>
+                {room.gameStatus === 'playing' && (
+                  <div className="small text-muted mt-2 d-flex justify-content-center align-items-center gap-1">
+                    <span>{t('indicators.digitsGuessed')}</span>
+                    <span className="badge text-bg-danger">
+                      {getDigitGuessStatus().filter(d => d.isGuessed).length}/{currentPlayer.secretNumber.length}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           )}
           {room.gameStatus === 'finished' && player.secretNumber && player.id !== currentPlayerId && (
