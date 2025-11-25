@@ -4,7 +4,11 @@ export interface Player {
   secretNumber?: string;
   isReady: boolean;
   isConnected: boolean;
+  isBot?: boolean;
+  botDifficulty?: BotDifficulty;
 }
+
+export type BotDifficulty = 'easy' | 'medium' | 'hard';
 
 export interface Guess {
   playerName: string;
@@ -22,6 +26,7 @@ export interface GameRoom {
   winner?: string;
   numberLength: number;
   spectatorModeEnabled: boolean;
+  isSinglePlayer?: boolean;
 }
 
 export interface GameState {

@@ -5,7 +5,7 @@
     },
     "lobby": {
         "title": "GuessX",
-        "subtitle": "A real-time number guessing game for two players",
+        "subtitle": "A real-time number guessing game - play with friends or challenge a bot!",
         "connectionStatus": {
             "connected": "Connected",
             "connecting": "Connecting...",
@@ -20,6 +20,16 @@
                 "4": "4 Digits (1000-9999)",
                 "5": "5 Digits (10000-99999)",
                 "6": "6 Digits (100000-999999)"
+            },
+            "singlePlayerMode": {
+                "label": "Single Player vs Bot",
+                "description": "Play against an AI opponent"
+            },
+            "botDifficultyLabel": "Bot Difficulty",
+            "botDifficultyOptions": {
+                "easy": "Easy",
+                "medium": "Medium",
+                "hard": "Hard"
             },
             "spectatorMode": {
                 "label": "Enable Spectator Mode",

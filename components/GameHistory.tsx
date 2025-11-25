@@ -10,8 +10,8 @@ interface GameHistoryProps {
 
 export default function GameHistory({ gameHistory, currentPlayerName }: GameHistoryProps) {
   const t = useTranslations('gameHistory');
-  // Only show current player's guesses
-  const myGuesses = gameHistory.filter(guess => guess.playerName === currentPlayerName);
+  // Only show current player's guesses, latest first
+  const myGuesses = gameHistory.filter(guess => guess.playerName === currentPlayerName).reverse();
 
   if (myGuesses.length === 0) {
     return (
@@ -42,7 +42,7 @@ export default function GameHistory({ gameHistory, currentPlayerName }: GameHist
           <tbody>
             {myGuesses.map((guess, index) => (
               <tr key={index}>
-                <td className="text-center font-mono">{index + 1}</td>
+                <td className="text-center font-mono">{myGuesses.length - index}</td>
                 <td className="text-center">
                   <code className="fs-5">{guess.guess}</code>
                 </td>
@@ -79,7 +79,7 @@ export default function GameHistory({ gameHistory, currentPlayerName }: GameHist
             {myGuesses.length > 0 && (
               <div className="col-12 d-flex justify-content-between align-items-center">
                 <strong className="text-nowrap me-3">{t('summary.last')}</strong>
-                <code className="fs-5">{myGuesses[myGuesses.length - 1].guess}</code>
+                <code className="fs-5">{myGuesses[0].guess}</code>
               </div>
             )}
           </div>

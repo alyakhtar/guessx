@@ -5,7 +5,7 @@
     },
     "lobby": {
         "title": "GuessX",
-        "subtitle": "Un jeu de devinettes de nombres en temps réel pour deux joueurs",
+        "subtitle": "Un jeu de devinettes de nombres en temps réel - jouez avec des amis ou défiez un bot !",
         "connectionStatus": {
             "connected": "Connecté",
             "connecting": "Connexion en cours...",
@@ -20,6 +20,16 @@
                 "4": "4 chiffres (1000-9999)",
                 "5": "5 chiffres (10000-99999)",
                 "6": "6 chiffres (100000-999999)"
+            },
+            "singlePlayerMode": {
+                "label": "Mode solo contre bot",
+                "description": "Jouer contre un adversaire IA"
+            },
+            "botDifficultyLabel": "Difficulté du bot",
+            "botDifficultyOptions": {
+                "easy": "Facile",
+                "medium": "Moyen",
+                "hard": "Difficile"
             },
             "spectatorMode": {
                 "label": "Activer le mode spectateur",

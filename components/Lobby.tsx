@@ -16,6 +16,8 @@ export default function Lobby() {
   const [numberLength, setNumberLength] = useState(4);
   const [spectatorModeEnabled, setSpectatorModeEnabled] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [isSinglePlayer, setIsSinglePlayer] = useState(false);
+  const [botDifficulty, setBotDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [socket, setSocket] = useState<any>(null);
   const [darkMode, setDarkMode] = useState(true);
   const [rooms, setRooms] = useState<GameRoom[]>([]);
@@ -65,7 +67,14 @@ export default function Lobby() {
     setIsCreating(true);
 
     // Set up one-time listeners
-    socket.emit('create_room', trimmedName, numberLength, spectatorModeEnabled);
+    socket.emit(
+      'create_room',
+      trimmedName,
+      numberLength,
+      spectatorModeEnabled,
+      isSinglePlayer,
+      botDifficulty
+    );
 
     const handleRoomCreated = (newRoomId: string, room: any) => {
       console.log('Room created, navigating to:', newRoomId);
@@ -196,18 +205,54 @@ export default function Lobby() {
               className="form-check-input"
               type="checkbox"
               role="switch"
-              id="spectatorModeToggle"
-              checked={spectatorModeEnabled}
-              onChange={(e) => setSpectatorModeEnabled(e.target.checked)}
+              id="singlePlayerModeToggle"
+              checked={isSinglePlayer}
+              onChange={(e) => setIsSinglePlayer(e.target.checked)}
             />
-            <label className="form-check-label fw-medium small" htmlFor="spectatorModeToggle">
-              {t('createGame.spectatorMode.label')}
+            <label className="form-check-label fw-medium small" htmlFor="singlePlayerModeToggle">
+              {t('createGame.singlePlayerMode.label')}
             </label>
           </div>
           <div className="form-text small text-muted">
-            {t('createGame.spectatorMode.description')}
+            {t('createGame.singlePlayerMode.description')}
           </div>
         </div>
+
+        {isSinglePlayer && (
+          <div className="mb-3">
+            <label className="form-label fw-medium small">{t('createGame.botDifficultyLabel')}</label>
+            <select
+              value={botDifficulty}
+              onChange={(e) => setBotDifficulty(e.target.value as 'easy' | 'medium' | 'hard')}
+              className="form-select form-select-lg"
+            >
+              <option value="easy">{t('createGame.botDifficultyOptions.easy')}</option>
+              <option value="medium">{t('createGame.botDifficultyOptions.medium')}</option>
+              <option value="hard">{t('createGame.botDifficultyOptions.hard')}</option>
+            </select>
+          </div>
+        )}
+
+        {!isSinglePlayer && (
+          <div className="mb-3">
+            <div className="form-check form-switch">
+              <input
+                className="form-check-input"
+                type="checkbox"
+                role="switch"
+                id="spectatorModeToggle"
+                checked={spectatorModeEnabled}
+                onChange={(e) => setSpectatorModeEnabled(e.target.checked)}
+              />
+              <label className="form-check-label fw-medium small" htmlFor="spectatorModeToggle">
+                {t('createGame.spectatorMode.label')}
+              </label>
+            </div>
+            <div className="form-text small text-muted">
+              {t('createGame.spectatorMode.description')}
+            </div>
+          </div>
+        )}
 
         <button
           onClick={handleCreateRoom}
