@@ -31,44 +31,39 @@ export const generateBotSecretNumber = (length: number): string => {
   return (min + Math.floor(Math.random() * (max - min + 1))).toString();
 };
 
-export const generateBotGuess = (difficulty: 'easy' | 'medium' | 'hard', length: number, gameHistory: any[], botGuessCount: number): string => {
+export const generateBotGuess = (difficulty: 'easy' | 'medium' | 'hard', length: number, gameHistory: any[], botGuessCount: number, minGuess: number = 10 ** (length - 1), maxGuess: number = 10 ** length - 1): string => {
   switch (difficulty) {
     case 'easy':
-      return generateEasyBotGuess(length, gameHistory, botGuessCount);
+      return generateEasyBotGuess(length, gameHistory, botGuessCount, minGuess, maxGuess);
     case 'medium':
-      return generateMediumBotGuess(length, gameHistory, botGuessCount);
+      return generateMediumBotGuess(length, gameHistory, botGuessCount, minGuess, maxGuess);
     case 'hard':
-      return generateHardBotGuess(length, gameHistory, botGuessCount);
+      return generateHardBotGuess(length, gameHistory, botGuessCount, minGuess, maxGuess);
     default:
-      return generateRandomGuess(length, gameHistory);
+      return generateRandomGuess(length, gameHistory, minGuess, maxGuess);
   }
 };
 
-const generateRandomGuess = (length: number, gameHistory: any[]): string => {
+const generateRandomGuess = (length: number, gameHistory: any[], minGuess: number = 10 ** (length - 1), maxGuess: number = 10 ** length - 1): string => {
   const allPossible = [];
-  const max = Math.pow(10, length);
-  for (let i = Math.pow(10, length - 1); i < max; i++) {
+  for (let i = minGuess; i <= maxGuess; i++) {
     const numStr = i.toString().padStart(length, '0');
     if (!gameHistory.some(h => h.guess === numStr)) {
       allPossible.push(numStr);
     }
   }
   if (allPossible.length === 0) {
-    // Fallback to any random number
-    const min = Math.pow(10, length - 1);
-    const max = Math.pow(10, length) - 1;
-    return Math.floor(Math.random() * (max - min + 1) + min).toString();
+    // Fallback to any random number in range
+    return Math.floor(Math.random() * (maxGuess - minGuess + 1) + minGuess).toString();
   }
   return allPossible[Math.floor(Math.random() * allPossible.length)];
 };
 
-const generateEasyBotGuess = (length: number, gameHistory: any[], botGuessCount: number): string => {
+const generateEasyBotGuess = (length: number, gameHistory: any[], botGuessCount: number, minGuess: number, maxGuess: number): string => {
   if (botGuessCount + 1 >= 9) {
     // Use intelligent guessing after 10 guesses
     let possibleCandidates = [];
-    const min = Math.pow(10, length - 1);
-    const max = Math.pow(10, length) - 1;
-    for (let i = min; i <= max; i++) {
+    for (let i = minGuess; i <= maxGuess; i++) {
       possibleCandidates.push(i.toString());
     }
 
@@ -87,15 +82,14 @@ const generateEasyBotGuess = (length: number, gameHistory: any[], botGuessCount:
   }
 
   // Before 11 guesses: random
-  return generateRandomGuess(length, gameHistory);
+  return generateRandomGuess(length, gameHistory, minGuess, maxGuess);
 };
 
-const generateMediumBotGuess = (length: number, gameHistory: any[], botGuessCount: number): string => {
+const generateMediumBotGuess = (length: number, gameHistory: any[], botGuessCount: number, minGuess: number, maxGuess: number): string => {
   if (botGuessCount + 1 >= 6) {
     // Use intelligent guessing after 7 guesses
     const possible = [];
-    const max = Math.pow(10, length);
-    for (let i = Math.pow(10, length - 1); i < max; i++) {
+    for (let i = minGuess; i <= maxGuess; i++) {
       const numStr = i.toString().padStart(length, '0');
       if (gameHistory.every(h => h.guess !== numStr)) {
         if (isConsistentWithHistory(numStr, gameHistory)) {
@@ -109,16 +103,14 @@ const generateMediumBotGuess = (length: number, gameHistory: any[], botGuessCoun
   }
 
   // Before 8 guesses: random
-  return generateRandomGuess(length, gameHistory);
+  return generateRandomGuess(length, gameHistory, minGuess, maxGuess);
 };
 
-const generateHardBotGuess = (length: number, gameHistory: any[], botGuessCount: number): string => {
+const generateHardBotGuess = (length: number, gameHistory: any[], botGuessCount: number, minGuess: number, maxGuess: number): string => {
   if (botGuessCount + 1 >= 5) {
     // Use optimal strategy after 4 guesses
     let possibleCandidates = [];
-    const min = Math.pow(10, length - 1);
-    const max = Math.pow(10, length) - 1;
-    for (let i = min; i <= max; i++) {
+    for (let i = minGuess; i <= maxGuess; i++) {
       possibleCandidates.push(i.toString());
     }
 
@@ -137,7 +129,7 @@ const generateHardBotGuess = (length: number, gameHistory: any[], botGuessCount:
   }
 
   // Before 5 guesses: random guesses to avoid winning too early
-  return generateRandomGuess(length, gameHistory);
+  return generateRandomGuess(length, gameHistory, minGuess, maxGuess);
 };
 
 const isConsistentWithHistory = (numStr: string, gameHistory: any[]): boolean => {

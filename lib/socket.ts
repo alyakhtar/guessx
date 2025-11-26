@@ -17,7 +17,7 @@ class SocketService {
     }
 
     this.isConnecting = true;
-    
+
     // Connect to the same host
     this.socket = io({
       transports: ['websocket', 'polling'],
@@ -27,17 +27,17 @@ class SocketService {
     });
 
     this.socket.on('connect', () => {
-      console.log('Socket connected:', this.socket?.id);
+      console.debug('Socket connected:', this.socket?.id);
       this.isConnecting = false;
     });
 
     this.socket.on('disconnect', (reason) => {
-      console.log('Socket disconnected:', reason);
+      console.debug('Socket disconnected:', reason);
       this.isConnecting = false;
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
+      console.debug('Socket connection error:', error);
       this.isConnecting = false;
     });
 

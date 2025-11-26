@@ -186,5 +186,30 @@
             "total": "Total Guesses:",
             "last": "Last Guess:"
         }
+    },
+    "admin": {
+        "title": "Admin Panel",
+        "nav": {
+            "home": "Home"
+        },
+        "lengthSelector": {
+            "label": "Game Length : ",
+            "description": "Configure difficulty ranges for {length}-digit games"
+        },
+        "buttons": {
+            "refresh": "Refresh",
+            "save": "Save Changes",
+            "saving": "Saving..."
+        },
+        "table": {
+            "difficulty": "Difficulty",
+            "minGuess": "Min Guesses",
+            "maxGuess": "Max Guesses",
+            "numberLength": "Number Length"
+        },
+        "errors": {
+            "loadError": "Failed to load configs",
+            "saveError": "Failed to save configs"
+        }
     }
 }

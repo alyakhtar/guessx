@@ -29,7 +29,7 @@ export default async function RootLayout({ children, params }: LayoutProps) {
 
     return (
         <html lang={validLocale} suppressHydrationWarning>
-            <body className={inter.className}>
+            <body className={inter.className} suppressHydrationWarning>
                 <NextIntlClientProvider locale={validLocale} messages={messages}>
                     {children}
                 </NextIntlClientProvider>

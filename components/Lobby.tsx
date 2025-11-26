@@ -11,13 +11,13 @@ export default function Lobby() {
   const t = useTranslations('lobby');
   const locale = useLocale();
 
-  console.log('🏴 Lobby debug: current locale:', locale);
+  console.debug('🏴 Lobby debug: current locale:', locale);
   const [playerName, setPlayerName] = useState('');
   const [numberLength, setNumberLength] = useState(4);
   const [spectatorModeEnabled, setSpectatorModeEnabled] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [isSinglePlayer, setIsSinglePlayer] = useState(false);
-  const [botDifficulty, setBotDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
+  const [botDifficulty, setBotDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
   const [socket, setSocket] = useState<any>(null);
   const [darkMode, setDarkMode] = useState(true);
   const [rooms, setRooms] = useState<GameRoom[]>([]);
@@ -77,13 +77,13 @@ export default function Lobby() {
     );
 
     const handleRoomCreated = (newRoomId: string, room: any) => {
-      console.log('Room created, navigating to:', newRoomId);
+      console.debug('Room created, navigating to:', newRoomId);
       setIsCreating(false);
       router.push(`/${locale}/game/${newRoomId}`);
     };
 
     const handleError = (error: string) => {
-      console.error('Room creation error:', error);
+      console.debug('Room creation error:', error);
       alert(error);
       setIsCreating(false);
     };
@@ -121,12 +121,12 @@ export default function Lobby() {
     socket.emit('join_room', roomId, trimmedName);
 
     const handleRoomUpdated = (room: any) => {
-      console.log('Joined room, navigating to:', room.id);
+      console.debug('Joined room, navigating to:', room.id);
       router.push(`/${locale}/game/${room.id}`);
     };
 
     const handleError = (error: string) => {
-      console.error('Join room error:', error);
+      console.debug('Join room error:', error);
       alert(error);
     };
 

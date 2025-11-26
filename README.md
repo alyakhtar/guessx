@@ -5,6 +5,8 @@ A real-time multiplayer number guessing game built with Next.js and Socket.io. P
 ## Features
 
 - Real-time multiplayer gameplay using Socket.io
+- **Single-player mode**: Play against AI opponents with varying difficulty levels
+- **Admin panel**: Comprehensive game configuration management for administrators
 - Dynamic game rooms with unique IDs
 - Player management and lobby system
 - Spectator mode: Watch games in read-only mode
@@ -13,6 +15,8 @@ A real-time multiplayer number guessing game built with Next.js and Socket.io. P
 - Server-side logic for fair and secure gaming
 - Keyboard shortcuts for desktop users (Enter to submit)
 - Individual digit input with auto-focus navigation
+- Internationalization support (English/French)
+- Dark/Light mode toggle
 
 ## Installation
 
@@ -78,6 +82,78 @@ When creating a new game room, you can enable spectator mode by toggling "Enable
 - Spectator mode can only be accessed if enabled during room creation
 - Direct URL access is blocked if spectator mode is not enabled for that room
 - Spectators have no ability to interact with the game
+
+## Single-Player Mode
+
+GuessX offers an exciting single-player mode where you can challenge AI opponents with varying levels of difficulty.
+
+### Enabling Single-Player Mode
+
+When creating a new game room, select the "Single Player vs Bot" option in the room creation form.
+
+### Bot Difficulty Levels
+
+Choose from three difficulty levels:
+
+- **Easy**: Bot uses random guessing with some basic logic
+- **Medium**: Bot employs elimination strategies and learns from previous guesses
+- **Hard**: Bot uses advanced algorithms that simulate optimal guessing patterns
+
+### How It Works
+
+- You set your secret number first (same as multiplayer mode)
+- The bot automatically sets its secret number
+- Take turns guessing against an opponent who never gets tired!
+- Bot behavior adapts based on the difficulty level you selected
+- Games continue until someone correctly guesses the opponent's number
+
+### Difficulty Configuration
+
+Administrators can fine-tune bot difficulty settings through the admin panel, adjusting parameters like:
+- Minimum and maximum number of guesses for win conditions
+- Guess range and elimination strategies
+- Algorithm complexity for each difficulty level
+
+## Admin Panel
+
+The admin panel provides comprehensive game configuration management for server administrators.
+
+### Accessing the Admin Panel
+
+Navigate to `/admin` (e.g., `http://localhost:3000/en/admin`) or click the admin link when available.
+
+### Configuration Management
+
+#### Game Length Selection
+- Configure difficulty settings for 4-digit, 5-digit, and 6-digit games
+- Each digit length has separate difficulty configurations
+- Settings are automatically saved and applied server-wide
+
+#### Difficulty Settings (Per Digit Length)
+For each game length and difficulty level (Easy, Medium, Hard), administrators can set:
+- **Minimum Guesses**: The lowest number of guesses for perfect play
+- **Maximum Guesses**: The highest number of guesses allowed before the bot gives up
+
+#### Example Configuration
+```
+4-Digit Games:
+- Easy: Min 11, Max 13 guesses
+- Medium: Min 8, Max 10 guesses
+- Hard: Min 6, Max 7 guesses
+```
+
+### Persistence
+
+- Configurations are stored in a dedicated database collection
+- Settings persist across server restarts
+- Changes take effect immediately for new games
+- Dark/light mode toggle for admin interface comfort
+
+### Security & Access
+
+- Admin panel is accessible via direct URL navigation
+- No additional authentication required (intended for private deployments)
+- All configuration changes are logged for auditing
 
 ## Deployment as Systemd Service (Linux)
 

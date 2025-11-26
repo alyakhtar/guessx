@@ -186,5 +186,30 @@
             "total": "Total des devinettes :",
             "last": "Dernière devinette :"
         }
+    },
+    "admin": {
+        "title": "Panneau d'Administration",
+        "nav": {
+            "home": "Accueil"
+        },
+        "lengthSelector": {
+            "label": "Longueur du Jeu : ",
+            "description": "Configurer les plages de difficulté pour les jeux à {length} chiffres"
+        },
+        "buttons": {
+            "refresh": "Actualiser",
+            "save": "Sauvegarder les Changements",
+            "saving": "Sauvegarde en cours..."
+        },
+        "table": {
+            "difficulty": "Difficulté",
+            "minGuess": "Devinettes Min",
+            "maxGuess": "Devinettes Max",
+            "numberLength": "Longueur du Nombre"
+        },
+        "errors": {
+            "loadError": "Échec du chargement des configurations",
+            "saveError": "Échec de sauvegarde des configurations"
+        }
     }
 }

@@ -1,5 +1,16 @@
 const { Server } = require('socket.io');
 
+// Simple conditional logger for production
+const isDevelopment = process.env.NODE_ENV === 'development';
+const debugLog = (...args) => {
+  if (isDevelopment) {
+    console.debug(...args);
+  }
+};
+const prodLog = (...args) => {
+  console.log(...args);
+};
+
 function validateNumber(number, length = 4) {
   if (number.length !== length) return false;
   if (!/^\d+$/.test(number)) return false;
@@ -28,47 +39,56 @@ function generateBotSecretNumber(length) {
   return (min + Math.floor(Math.random() * (max - min + 1))).toString();
 }
 
-function generateBotGuess(difficulty, length, gameHistory) {
+function generateBotGuess(difficulty, length, gameHistory, minGuess = 10 ** (length - 1), maxGuess = 10 ** length - 1) {
   switch (difficulty) {
     case 'easy':
-      return generateRandomGuess(length, gameHistory);
+      return generateEasyBotGuess(length, gameHistory, minGuess, maxGuess);
     case 'medium':
-      return generateMediumBotGuess(length, gameHistory);
+      return generateMediumBotGuess(length, gameHistory, minGuess, maxGuess);
     case 'hard':
-      return generateHardBotGuess(length, gameHistory);
+      return generateHardBotGuess(length, gameHistory, minGuess, maxGuess);
     default:
-      return generateRandomGuess(length, gameHistory);
+      return generateRandomGuess(length, gameHistory, minGuess, maxGuess);
   }
 }
 
-function generateRandomGuess(length, gameHistory) {
+function generateRandomGuess(length, gameHistory, minGuess = 10 ** (length - 1), maxGuess = 10 ** length - 1) {
   const allPossible = [];
-  const max = Math.pow(10, length);
-  for (let i = Math.pow(10, length - 1); i < max; i++) {
+  for (let i = minGuess; i <= maxGuess; i++) {
     const numStr = i.toString().padStart(length, '0');
     if (!gameHistory.some(h => h.guess === numStr)) {
       allPossible.push(numStr);
     }
   }
   if (allPossible.length === 0) {
-    // Fallback to any random number
-    const min = Math.pow(10, length - 1);
-    const max = Math.pow(10, length) - 1;
-    return Math.floor(Math.random() * (max - min + 1) + min).toString();
+    // Fallback to any random number in range
+    return Math.floor(Math.random() * (maxGuess - minGuess + 1) + minGuess).toString();
   }
   return allPossible[Math.floor(Math.random() * allPossible.length)];
 }
 
-function generateMediumBotGuess(length, gameHistory) {
+function generateEasyBotGuess(length, gameHistory, minGuess = 10 ** (length - 1), maxGuess = 10 ** length - 1) {
+  // Simple random guess
+  let attempts = 0;
+  let guess;
+  do {
+    const num = Math.floor(Math.random() * (maxGuess - minGuess + 1)) + minGuess;
+    guess = num.toString().padStart(length, '0');
+    attempts++;
+  } while (attempts < 10 && gameHistory.some(h => h.guess === guess));
+
+  return guess;
+}
+
+function generateMediumBotGuess(length, gameHistory, minGuess = 10 ** (length - 1), maxGuess = 10 ** length - 1) {
   if (Math.random() < 0.3) {
     // 30% chance for random guess
-    return generateRandomGuess(length, gameHistory);
+    return generateRandomGuess(length, gameHistory, minGuess, maxGuess);
   }
 
   // Simple elimination: avoid previously guessed numbers, prefer numbers consistent with history
   const possible = [];
-  const max = Math.pow(10, length);
-  for (let i = Math.pow(10, length - 1); i < max; i++) {
+  for (let i = minGuess; i <= maxGuess; i++) {
     const numStr = i.toString().padStart(length, '0');
     if (gameHistory.every(h => h.guess !== numStr)) {
       if (isConsistentWithHistory(numStr, gameHistory)) {
@@ -77,17 +97,15 @@ function generateMediumBotGuess(length, gameHistory) {
     }
   }
   if (possible.length === 0) {
-    return generateRandomGuess(length, gameHistory);
+    return generateRandomGuess(length, gameHistory, minGuess, maxGuess);
   }
   return possible[Math.floor(Math.random() * possible.length)];
 }
 
-function generateHardBotGuess(length, gameHistory) {
+function generateHardBotGuess(length, gameHistory, minGuess, maxGuess) {
   // Maintain full list of possible candidates
   let possibleCandidates = [];
-  const min = Math.pow(10, length - 1);
-  const max = Math.pow(10, length) - 1;
-  for (let i = min; i <= max; i++) {
+  for (let i = minGuess; i <= maxGuess; i++) {
     possibleCandidates.push(i.toString());
   }
 
@@ -102,7 +120,7 @@ function generateHardBotGuess(length, gameHistory) {
 
   if (possibleCandidates.length === 0) {
     // If no candidates left (unlikely), fallback
-    return generateRandomGuess(length, gameHistory);
+    return generateRandomGuess(length, gameHistory, minGuess, maxGuess);
   }
 
   // Choose one randomly from remaining
@@ -116,6 +134,48 @@ function isConsistentWithHistory(numStr, gameHistory) {
     const correctPosForThis = calculateCorrectPositions(history.guess, numStr);
     return correctPosForThis >= history.correctPositions; // Not worse than actual
   });
+}
+
+// Cache for configs
+let configsCache = {
+  easy: { minGuesses: 11, maxGuesses: 13, numberLength: 4 },
+  medium: { minGuesses: 8, maxGuesses: 10, numberLength: 4 },
+  hard: { minGuesses: 6, maxGuesses: 7, numberLength: 4 }
+};
+let lastConfigLoad = 0;
+
+async function loadConfigs() {
+  try {
+    // Note: Since this is CommonJS, we can't easily import, so we'll fetch via HTTP
+    // Use relative URL since both servers are on the same port
+    const response = await fetch('http://localhost:8082/api/admin/configs');
+    if (response.ok) {
+      const data = await response.json();
+      // Store all configs with their composite keys (new format: easy_4, medium_4, etc.)
+      configsCache = { ...data };
+    } else {
+      console.debug('Failed to load configs, using defaults');
+    }
+  } catch (error) {
+    console.debug('Error loading configs:', error);
+    console.debug('Using default configs');
+  }
+}
+
+async function getDifficultyConfig(difficulty, numberLength = 4) {
+  const now = Date.now();
+  // Always try to load from DB if it's been more than 5 seconds
+  if (now - lastConfigLoad > 5000 || lastConfigLoad === 0) {
+    await loadConfigs();
+    lastConfigLoad = now;
+  }
+  // Look for config with composite key first, then fall back to old format
+  const configKey = `${difficulty}_${numberLength}`;
+  if (configsCache[configKey]) {
+    return { ...configsCache[configKey] };
+  }
+  // Fallback to old format for backward compatibility
+  return { ...configsCache[difficulty] };
 }
 
 class GameServer {
@@ -132,7 +192,10 @@ class GameServer {
     this.setupSocketHandlers();
     this.broadcastRoomList();
 
-    console.log('GameServer initialized');
+    prodLog('GameServer initialized');
+
+    // Load configs after a short delay
+    setTimeout(loadConfigs, 1000);
   }
 
   setupSocketHandlers() {
@@ -146,9 +209,9 @@ class GameServer {
         this.sendRoomList(socket);
       });
 
-      socket.on('create_room', (playerName, numberLength = 4, spectatorModeEnabled = false, isSinglePlayer = false, botDifficulty = 'medium') => {
+      socket.on('create_room', async (playerName, numberLength = 4, spectatorModeEnabled = false, isSinglePlayer = false, botDifficulty = 'medium') => {
         console.log('Create room request:', playerName, numberLength, spectatorModeEnabled, isSinglePlayer, botDifficulty);
-        this.createRoom(socket, playerName, numberLength, spectatorModeEnabled, isSinglePlayer, botDifficulty);
+        await this.createRoom(socket, playerName, numberLength, spectatorModeEnabled, isSinglePlayer, botDifficulty);
       });
 
       socket.on('join_room', (roomId, playerName) => {
@@ -191,7 +254,7 @@ class GameServer {
     });
   }
 
-  createRoom(socket, playerName, numberLength, spectatorModeEnabled = false, isSinglePlayer = false, botDifficulty = 'medium') {
+  async createRoom(socket, playerName, numberLength, spectatorModeEnabled = false, isSinglePlayer = false, botDifficulty = 'medium') {
     try {
       const roomId = generateRoomId();
       const player = {
@@ -204,6 +267,9 @@ class GameServer {
       const players = [player];
 
       if (isSinglePlayer) {
+        // Force refresh configs for single player games
+        await loadConfigs();
+
         const botId = `bot_${roomId}`;
         const bot = {
           id: botId,
@@ -211,7 +277,9 @@ class GameServer {
           isConnected: true,
           isReady: false,
           isBot: true,
-          botDifficulty: botDifficulty
+          botDifficulty: botDifficulty,
+          numberLength: numberLength, // Store number length for config lookup
+          winThreshold: null // Will be set on first guess
         };
         players.push(bot);
       }
@@ -429,6 +497,11 @@ class GameServer {
         setTimeout(() => {
           this.makeBotGuess(roomId);
         }, 1000); // Delay for better UX
+
+        // Also trigger immediate config refresh when bot is about to play
+        if (Date.now() - lastConfigLoad > 5000) { // Refresh if older than 5 seconds
+          loadConfigs().catch(console.error);
+        }
       }
     }
 
@@ -439,7 +512,7 @@ class GameServer {
     }
   }
 
-  makeBotGuess(roomId) {
+  async makeBotGuess(roomId) {
     const room = this.rooms.get(roomId);
     if (!room || room.gameStatus !== 'playing') return;
 
@@ -453,13 +526,25 @@ class GameServer {
 
     // Check for forced win based on difficulty
     let guess;
-    const forceWinThresholds = { easy: 12, medium: 9, hard: 6 }; // After this many guesses, force win
-    if (botGuessCount >= forceWinThresholds[bot.botDifficulty]) {
-      console.log(`Forcing bot win on guess ${botGuessCount + 1}`);
+    const config = await getDifficultyConfig(bot.botDifficulty, bot.numberLength);
+    console.log(`🔍 DEBUG: Bot ${bot.name}, difficulty ${bot.botDifficulty}, config:`, config);
+
+    // Set threshold once per bot, not per guess
+    if (bot.winThreshold === null) {
+      bot.winThreshold = Math.floor(Math.random() * (config.maxGuesses - config.minGuesses + 1)) + config.minGuesses;
+      console.log(`🎲 Bot threshold set to: ${bot.winThreshold} (range: ${config.minGuesses}-${config.maxGuesses})`);
+    }
+
+    const currentGuessNumber = botGuessCount + 1;
+    console.log(`🤖 Bot guess #${currentGuessNumber}, threshold: ${bot.winThreshold}, condition: ${currentGuessNumber} >= ${bot.winThreshold} = ${currentGuessNumber >= bot.winThreshold}`);
+
+    if (currentGuessNumber >= bot.winThreshold) {
+      console.log(`🎉 FORCING bot win on guess ${currentGuessNumber} (threshold: ${bot.winThreshold})`);
       guess = opponent.secretNumber;
     } else {
       // Generate bot's guess
-      guess = generateBotGuess(bot.botDifficulty, room.numberLength, room.gameHistory, botGuessCount);
+      guess = generateBotGuess(bot.botDifficulty, room.numberLength, room.gameHistory);
+      console.log(`🔍 Bot will guess randomly: generating smart guess`);
     }
 
     console.log(`Bot ${bot.name} guesses: ${guess}`);
