@@ -11,9 +11,6 @@ export async function GET(request: Request) {
         await connectToDatabase();
 
         const configs: any[] = await (DifficultyConfigModel as any).find({}).lean();
-        if (process.env.NODE_ENV !== 'production') {
-            console.log('📊 Found configs in DB:', configs);
-        }
         const result: any = {};
 
         // Create a map of all configs by difficulty_numberLength
@@ -36,10 +33,6 @@ export async function GET(request: Request) {
                 }
             });
         });
-
-        if (process.env.NODE_ENV !== 'production') {
-            console.log('📤 Returning config data:', result);
-        }
         return NextResponse.json(result);
     } catch (error) {
         console.error('Error fetching configs:', error);

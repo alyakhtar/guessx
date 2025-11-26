@@ -527,7 +527,7 @@ class GameServer {
     // Check for forced win based on difficulty
     let guess;
     const config = await getDifficultyConfig(bot.botDifficulty, bot.numberLength);
-    console.log(`🔍 DEBUG: Bot ${bot.name}, difficulty ${bot.botDifficulty}, config:`, config);
+    // console.log(`🔍 DEBUG: Bot ${bot.name}, difficulty ${bot.botDifficulty}, config:`, config);
 
     // Set threshold once per bot, not per guess
     if (bot.winThreshold === null) {
