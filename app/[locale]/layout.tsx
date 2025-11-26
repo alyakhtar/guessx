@@ -19,7 +19,7 @@ interface LayoutProps {
 export default async function RootLayout({ children, params }: LayoutProps) {
     const { locale } = await params;
 
-    console.log('🏴 Layout debug: rendering with locale:', locale);
+    // console.log('🏴 Layout debug: rendering with locale:', locale);
 
     // Validate locale and fallback to default if needed
     const validLocale = ['en', 'fr'].includes(locale) ? locale : 'en';

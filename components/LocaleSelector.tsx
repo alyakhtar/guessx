@@ -9,7 +9,7 @@ export default function LocaleSelector() {
     const t = useTranslations('localeSelector');
 
     // Debug logging
-    console.debug('🏴 LocaleSelector debug:', { locale, pathname });
+    // console.debug('🏴 LocaleSelector debug:', { locale, pathname });
 
     const changeLocale = (newLocale: string) => {
         // Set locale cookie for persistence

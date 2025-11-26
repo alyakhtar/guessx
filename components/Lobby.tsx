@@ -11,7 +11,7 @@ export default function Lobby() {
   const t = useTranslations('lobby');
   const locale = useLocale();
 
-  console.debug('🏴 Lobby debug: current locale:', locale);
+  // console.debug('🏴 Lobby debug: current locale:', locale);
   const [playerName, setPlayerName] = useState('');
   const [numberLength, setNumberLength] = useState(4);
   const [spectatorModeEnabled, setSpectatorModeEnabled] = useState(true);
