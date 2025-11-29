@@ -1,7 +1,10 @@
 import mongoose from 'mongoose';
 
 // const MONGODB_URI = 'mongodb+srv://gamex-admin:6hVNTdnEUYa6U6bo@gamex.0111rfj.mongodb.net/?appName=gamex';
-const MONGODB_URI = 'mongodb://admin:6hVNTdnEUYa6U6bo@192.168.86.49:27017/gamex?authSource=admin';
+
+// Use /dev database in development, /gamex in production
+const dbName = process.env.NODE_ENV === 'development' ? 'dev' : 'gamex';
+const MONGODB_URI = `mongodb://admin:6hVNTdnEUYa6U6bo@192.168.86.49:27017/${dbName}?authSource=admin`;
 
 if (!MONGODB_URI) {
     throw new Error('Please define the MONGODB_URI environment variable inside .env.local');
