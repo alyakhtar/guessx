@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { GameRoom, Player } from '../types/game';
 
@@ -8,9 +9,52 @@ interface PlayerListProps {
   currentPlayerId: string;
 }
 
+interface VsStats {
+  player1: {
+    name: string;
+    wins: number;
+    totalGames: number;
+  };
+  player2: {
+    name: string;
+    wins: number;
+    totalGames: number;
+  };
+  totalGames: number;
+}
+
 export default function PlayerList({ room, currentPlayerId }: PlayerListProps) {
   const t = useTranslations('playerList');
   const currentPlayer = room.players.find(p => p.id === currentPlayerId);
+  const [vsStats, setVsStats] = useState<VsStats | null>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
+
+  // Fetch vs stats when there are two players
+  useEffect(() => {
+    if (room.players.length === 2) {
+      const player1 = room.players[0].name;
+      const player2 = room.players[1].name;
+
+      const fetchVsStats = async () => {
+        setLoadingStats(true);
+        try {
+          const response = await fetch(`/api/admin/player-stats?player1=${encodeURIComponent(player1)}&player2=${encodeURIComponent(player2)}`);
+          if (response.ok) {
+            const data = await response.json();
+            setVsStats(data);
+          }
+        } catch (error) {
+          console.error('Failed to fetch vs stats:', error);
+        } finally {
+          setLoadingStats(false);
+        }
+      };
+
+      fetchVsStats();
+    } else {
+      setVsStats(null);
+    }
+  }, [room.players]);
 
   const getStatusBadge = (player: Player) => {
     if (player.isReady) {
@@ -77,6 +121,40 @@ export default function PlayerList({ room, currentPlayerId }: PlayerListProps) {
           </a>
         ))}
       </div>
+
+      {/* VS Stats */}
+      {vsStats && room.players.length === 2 && (
+        <div className="card mb-3">
+          <div className="card-body">
+            <h4 className="card-title h6 fw-semibold mb-3">Head-to-Head</h4>
+            {loadingStats ? (
+              <div className="text-center">
+                <div className="spinner-border spinner-border-sm" role="status"></div>
+                <small className="text-muted ms-2">Loading stats...</small>
+              </div>
+            ) : (
+              <div className="row text-center">
+                <div className="col-5">
+                  <div className="fw-bold">{vsStats.player1.name}</div>
+                  <div className="h4 text-success mb-0">{vsStats.player1.wins}</div>
+                </div>
+                <div className="col-2 d-flex align-items-center justify-content-center">
+                  <span className="text-muted">vs</span>
+                </div>
+                <div className="col-5">
+                  <div className="fw-bold">{vsStats.player2.name}</div>
+                  <div className="h4 text-success mb-0">{vsStats.player2.wins}</div>
+                </div>
+                <div className="col-12 mt-2">
+                  <small className="text-muted">
+                    {vsStats.totalGames} total games played
+                  </small>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Secret Numbers */}
       {room.players.map((player) => (
