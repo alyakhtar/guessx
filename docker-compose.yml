@@ -5,15 +5,17 @@ services:
     restart: unless-stopped
     ports:
       - "${PORT:-8082}:8082"
-    environment:
-      - NODE_ENV=production
-      - MONGODB_URI=${MONGODB_URI}
-      - PORT=8082
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    env_file:
+      - ./.env
+    networks:
+      - mongodb_default
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8082/"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 30s
+
+networks:
+  mongodb_default:
+    external: true
