@@ -112,7 +112,10 @@ export default function AdminPage() {
         try {
             const response = await fetch('/api/admin/player-stats');
             const data = await response.json();
-            setPlayerStats(data);
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to load player stats');
+            }
+            setPlayerStats(Array.isArray(data) ? data : []);
             setMessage({ type: '', text: '' });
         } catch (error) {
             setMessage({ type: 'error', text: 'Failed to load player stats' });

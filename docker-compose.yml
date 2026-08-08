@@ -9,6 +9,8 @@ services:
       - NODE_ENV=production
       - MONGODB_URI=${MONGODB_URI}
       - PORT=8082
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8082/"]
       interval: 30s
