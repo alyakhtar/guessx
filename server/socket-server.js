@@ -17,8 +17,8 @@ let GameResultModel = null;
 async function initializeDatabase() {
   try {
     // Use /dev database in development, /gamex in production
-    const dbName = process.env.NODE_ENV === 'development' ? 'dev' : 'gamex';
-    const MONGODB_URI = `mongodb://admin:6hVNTdnEUYa6U6bo@raspberrypi.local:27017/${dbName}?authSource=admin`;
+    const MONGODB_URI = process.env.MONGODB_URI;
+    if (!MONGODB_URI) throw new Error('MONGODB_URI environment variable is not set');
     await mongoose.connect(MONGODB_URI);
     console.log('Connected to MongoDB for game results');
 
