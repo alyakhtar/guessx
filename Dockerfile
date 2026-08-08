@@ -35,6 +35,7 @@ COPY --from=builder /app/server ./server
 COPY --from=builder /app/lib ./lib
 COPY --from=builder /app/next.config.js ./next.config.js
 COPY --from=builder /app/i18n.ts ./i18n.ts
+COPY --from=builder /app/i18n ./i18n
 COPY --from=builder /app/next-intl.config.js ./next-intl.config.js
 COPY --from=builder /app/messages ./messages
 
