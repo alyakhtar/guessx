@@ -35,6 +35,11 @@
                 "label": "Enable Spectator Mode",
                 "description": "Allow others to watch the game in read-only mode"
             },
+            "privateRoom": {
+                "label": "Private Room",
+                "description": "Create a private room. A 3-character code is generated to share with your opponent."
+            },
+            "privateRoomCreated": "Private room created! Share this code with your friend to join: {code}",
             "buttons": {
                 "create": "Create New Game",
                 "creating": "Creating room...",
@@ -54,7 +59,18 @@
                 "spectate": "👁️ Spectate",
                 "join": "Join"
             },
-            "noRooms": "No open rooms available."
+            "noRooms": "No open rooms available.",
+            "byCode": {
+                "heading": "Join a Private Room",
+                "nameLabel": "Your Name",
+                "codeLabel": "3-Character Access Code",
+                "codePlaceholder": "ABC",
+                "button": "Join with Code"
+            },
+            "errors": {
+                "codeRequired": "Please enter the 3-character access code",
+                "invalidCode": "Invalid access code. Please check the code and try again."
+            }
         },
         "errors": {
             "nameRequired": "Please enter your name",
