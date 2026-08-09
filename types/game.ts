@@ -14,19 +14,21 @@ export interface Guess {
   playerName: string;
   guess: string;
   correctPositions: number;
-  timestamp: string | Date; // Allow both string and Date
+  timestamp: string | Date;
 }
 
 export interface GameRoom {
   id: string;
   players: Player[];
-  currentTurn: string; // playerId
+  currentTurn: string;
   gameHistory: Guess[];
   gameStatus: 'waiting' | 'setup' | 'playing' | 'finished';
   winner?: string;
   numberLength: number;
   spectatorModeEnabled: boolean;
   isSinglePlayer?: boolean;
+  isPrivate?: boolean;
+  accessCode?: string;
 }
 
 export interface GameState {
