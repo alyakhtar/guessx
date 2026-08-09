@@ -29,6 +29,8 @@ export interface GameRoom {
   isSinglePlayer?: boolean;
   isPrivate?: boolean;
   accessCode?: string;
+  // Public/private discriminator shown in the room list
+  type?: 'public' | 'private';
 }
 
 export interface GameState {

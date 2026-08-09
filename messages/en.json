@@ -52,6 +52,10 @@
                 "roomId": "Room ID",
                 "player1": "Player 1",
                 "player2": "Player 2",
+                "type": {
+                    "public": "Public",
+                    "private": "Private"
+                },
                 "action": "Action"
             },
             "statuses": {
@@ -65,7 +69,7 @@
                 "nameLabel": "Your Name",
                 "codeLabel": "3-Character Access Code",
                 "codePlaceholder": "ABC",
-                "button": "Join with Code"
+                "button": "Join"
             },
             "errors": {
                 "codeRequired": "Please enter the 3-character access code",

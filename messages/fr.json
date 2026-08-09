@@ -52,6 +52,10 @@
                 "roomId": "ID de la salle",
                 "player1": "Joueur 1",
                 "player2": "Joueur 2",
+                "type": {
+                    "public": "Public",
+                    "private": "Privé"
+                },
                 "action": "Action"
             },
             "statuses": {
@@ -65,7 +69,7 @@
                 "nameLabel": "Votre nom",
                 "codeLabel": "Code d'accès à 3 caractères",
                 "codePlaceholder": "ABC",
-                "button": "Rejoindre avec le code"
+                "button": "Rejoindre"
             },
             "errors": {
                 "codeRequired": "Veuillez entrer le code d'accès à 3 caractères",
