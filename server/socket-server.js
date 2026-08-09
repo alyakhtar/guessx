@@ -224,7 +224,9 @@ class GameServer {
       const room = {
         id: roomId, players: players, currentTurn: socket.id, gameHistory: [],
         gameStatus: 'waiting', numberLength: numberLength, spectatorModeEnabled: spectatorModeEnabled,
-        isSinglePlayer: isSinglePlayer, isPrivate: isPrivate, accessCode: isPrivate ? accessCode : undefined
+        isSinglePlayer: isSinglePlayer, isPrivate: isPrivate, accessCode: isPrivate ? accessCode : undefined,
+        // Discriminator surfaced in the (single) room list
+        type: isPrivate ? 'private' : 'public'
       };
       this.rooms.set(roomId, room);
       this.playerRoomMap.set(socket.id, roomId);
@@ -259,7 +261,7 @@ class GameServer {
     try {
       const room = this.rooms.get(roomId);
       if (!room) { socket.emit('error', `Room "${roomId}" not found. Please check the room code.`); return; }
-      // Private rooms cannot be joined from the public list; use the access code instead
+      // Private rooms in the shared list require the access code instead of a plain join
       if (room.isPrivate) { socket.emit('error', 'This is a private room. Join using its access code.'); return; }
       const existingPlayer = room.players.find(p => p.name === playerName);
       if (existingPlayer) {
@@ -408,24 +410,24 @@ class GameServer {
     this.broadcastRoomList();
   }
 
-  sendRoomList(socket) {
-    const openRooms = Array.from(this.rooms.values()).filter(room => {
+  // Single shared room list — includes BOTH public and private rooms.
+  // Private rooms are shown with a Type badge; joining one requires its access code.
+  getOpenRooms() {
+    return Array.from(this.rooms.values()).filter(room => {
       const connectedPlayersCount = room.players.filter(p => p.isConnected).length;
       const hasSpaceForJoin = connectedPlayersCount < 2;
       const canSpectate = connectedPlayersCount === 2 && room.spectatorModeEnabled;
-      return !room.isPrivate && (hasSpaceForJoin || canSpectate) && (room.gameStatus === 'waiting' || room.gameStatus === 'setup' || room.gameStatus === 'playing');
+      return (hasSpaceForJoin || canSpectate) &&
+        (room.gameStatus === 'waiting' || room.gameStatus === 'setup' || room.gameStatus === 'playing');
     });
-    socket.emit('room_list', openRooms);
+  }
+
+  sendRoomList(socket) {
+    socket.emit('room_list', this.getOpenRooms());
   }
 
   broadcastRoomList() {
-    const openRooms = Array.from(this.rooms.values()).filter(room => {
-      const connectedPlayersCount = room.players.filter(p => p.isConnected).length;
-      const hasSpaceForJoin = connectedPlayersCount < 2;
-      const canSpectate = connectedPlayersCount === 2 && room.spectatorModeEnabled;
-      return !room.isPrivate && (hasSpaceForJoin || canSpectate) && (room.gameStatus === 'waiting' || room.gameStatus === 'setup' || room.gameStatus === 'playing');
-    });
-    this.io.emit('room_list', openRooms);
+    this.io.emit('room_list', this.getOpenRooms());
   }
 }
 
