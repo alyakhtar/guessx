@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { socketService } from '../lib/socket';
@@ -22,25 +22,21 @@ export default function Lobby() {
   const [rooms, setRooms] = useState<GameRoom[]>([]);
   // Private room toggle (default off, per issue AC)
   const [isPrivate, setIsPrivate] = useState(false);
-  // Join-by-code UI state
-  const [joinCode, setJoinCode] = useState('');
-  const [joinCodeName, setJoinCodeName] = useState('');
+  // Inline code input keyed by room id for private rows
+  const [codeByRoom, setCodeByRoom] = useState<Record<string, string>>({});
   const router = useRouter();
+  const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const savedName = localStorage.getItem('playerName');
-    if (savedName) {
-      setPlayerName(savedName);
-    }
+    if (savedName) setPlayerName(savedName);
   }, []);
 
   useEffect(() => {
     const socketInstance = socketService.connect();
     setSocket(socketInstance);
-
     socketInstance.emit('get_rooms');
     socketInstance.on('room_list', (rooms: GameRoom[]) => setRooms(rooms));
-
     return () => {};
   }, []);
 
@@ -48,32 +44,17 @@ export default function Lobby() {
     document.documentElement.setAttribute('data-bs-theme', darkMode ? 'dark' : 'light');
   }, [darkMode]);
 
+  const blurActive = () => {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+  };
+
   const handleCreateRoom = () => {
     const trimmedName = playerName.trim();
-    if (!trimmedName) {
-      alert(t('errors.nameRequired'));
-      return;
-    }
-
+    if (!trimmedName) { alert(t('errors.nameRequired')); return; }
     localStorage.setItem('playerName', trimmedName);
-
-    if (!socket) {
-      alert(t('errors.connectionError'));
-      return;
-    }
-
+    if (!socket) { alert(t('errors.connectionError')); return; }
     setIsCreating(true);
-
-    socket.emit(
-      'create_room',
-      trimmedName,
-      numberLength,
-      spectatorModeEnabled,
-      isSinglePlayer,
-      botDifficulty,
-      isPrivate // NEW: pass private flag
-    );
-
+    socket.emit('create_room', trimmedName, numberLength, spectatorModeEnabled, isSinglePlayer, botDifficulty, isPrivate);
     const handleRoomCreated = (newRoomId: string, room: any) => {
       setIsCreating(false);
       if (room && room.isPrivate && room.accessCode) {
@@ -81,101 +62,43 @@ export default function Lobby() {
       }
       router.push(`/${locale}/game/${newRoomId}`);
     };
-
-    const handleError = (error: string) => {
-      alert(error);
-      setIsCreating(false);
-    };
-
+    const handleError = (error: string) => { alert(error); setIsCreating(false); };
     socket.once('room_created', handleRoomCreated);
     socket.once('error', handleError);
-
-    setTimeout(() => {
-      socket.off('room_created', handleRoomCreated);
-      socket.off('error', handleError);
-    }, 5000);
-
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
+    setTimeout(() => { socket.off('room_created', handleRoomCreated); socket.off('error', handleError); }, 5000);
+    blurActive();
   };
 
+  // Public room join (table row)
   const handleJoinRoomTable = (roomId: string) => {
     const trimmedName = playerName.trim();
-    if (!trimmedName) {
-      alert(t('errors.nameRequired'));
-      return;
-    }
-
+    if (!trimmedName) { alert(t('errors.nameRequired')); return; }
     localStorage.setItem('playerName', trimmedName);
-
-    if (!socket) {
-      alert(t('errors.connectionError'));
-      return;
-    }
-
+    if (!socket) { alert(t('errors.connectionError')); return; }
     socket.emit('join_room', roomId, trimmedName);
-
-    const handleRoomUpdated = (room: any) => {
-      router.push(`/${locale}/game/${room.id}`);
-    };
-
-    const handleError = (error: string) => {
-      alert(error);
-    };
-
+    const handleRoomUpdated = (room: any) => router.push(`/${locale}/game/${room.id}`);
+    const handleError = (error: string) => alert(error);
     socket.once('room_updated', handleRoomUpdated);
     socket.once('error', handleError);
-
-    setTimeout(() => {
-      socket.off('room_updated', handleRoomUpdated);
-      socket.off('error', handleError);
-    }, 5000);
-
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
+    setTimeout(() => { socket.off('room_updated', handleRoomUpdated); socket.off('error', handleError); }, 5000);
+    blurActive();
   };
 
-  // NEW: join a private room by its 3-char access code
-  const handleJoinByCode = () => {
-    const trimmedName = joinCodeName.trim();
-    const code = joinCode.trim().toUpperCase();
-    if (!trimmedName) {
-      alert(t('errors.nameRequired'));
-      return;
-    }
-    if (!code) {
-      alert(t('joinGame.errors.codeRequired'));
-      return;
-    }
-    if (!socket) {
-      alert(t('errors.connectionError'));
-      return;
-    }
-
+  // Private room join via inline code input
+  const handleJoinByCode = (roomId: string) => {
+    const trimmedName = playerName.trim();
+    const code = (codeByRoom[roomId] || '').trim().toUpperCase();
+    if (!trimmedName) { alert(t('errors.nameRequired')); return; }
+    if (!code) { alert(t('joinGame.errors.codeRequired')); return; }
+    if (!socket) { alert(t('errors.connectionError')); return; }
     localStorage.setItem('playerName', trimmedName);
-
     socket.emit('join_room_by_code', code, trimmedName);
-
-    const handleRoomUpdated = (room: any) => {
-      router.push(`/${locale}/game/${room.id}`);
-    };
-    const handleError = (error: string) => {
-      alert(error);
-    };
-
+    const handleRoomUpdated = (room: any) => router.push(`/${locale}/game/${room.id}`);
+    const handleError = (error: string) => alert(error);
     socket.once('room_updated', handleRoomUpdated);
     socket.once('error', handleError);
-
-    setTimeout(() => {
-      socket.off('room_updated', handleRoomUpdated);
-      socket.off('error', handleError);
-    }, 5000);
-
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
+    setTimeout(() => { socket.off('room_updated', handleRoomUpdated); socket.off('error', handleError); }, 5000);
+    blurActive();
   };
 
   const handleSpectateRoomTable = (roomId: string) => {
@@ -183,7 +106,7 @@ export default function Lobby() {
   };
 
   return (
-    <div className="card p-4 shadow position-relative">
+    <div ref={cardRef} className="card p-2 p-sm-4 shadow position-relative">
       <div className="d-flex justify-content-end gap-2 position-absolute top-0 end-0 m-2">
         <LocaleSelector />
         <button className="btn btn-sm btn-outline-secondary" onClick={() => setDarkMode(!darkMode)}>
@@ -191,12 +114,10 @@ export default function Lobby() {
         </button>
       </div>
       <div className="text-center mb-4">
-        <h1 className="display-4 fw-bold text-primary mb-2">
+        <h1 className="display-5 display-sm-4 fw-bold text-primary mb-2">
           Guess<span className="text-info">X</span>
         </h1>
-        <p className="text-muted mb-3 small">
-          {t('subtitle')}
-        </p>
+        <p className="text-muted mb-3 small">{t('subtitle')}</p>
         <div className="d-flex justify-content-center align-items-center gap-2 mb-3">
           <span className={`badge ${socket?.connected ? 'bg-success' : 'bg-danger'}`}>●</span>
           <span className="small text-muted">
@@ -204,10 +125,10 @@ export default function Lobby() {
           </span>
         </div>
       </div>
+
       {/* Create Room */}
       <div className="mb-4">
-        <h2 className="h5 fw-semibold mb-4">{t('createGame.heading')}</h2>
-
+        <h2 className="h5 fw-semibold mb-3">{t('createGame.heading')}</h2>
         <div className="mb-3">
           <label className="form-label fw-medium small">{t('createGame.nameLabel')}</label>
           <input
@@ -218,7 +139,6 @@ export default function Lobby() {
             placeholder={t('createGame.namePlaceholder')}
           />
         </div>
-
         <div className="mb-3">
           <label className="form-label fw-medium small">{t('createGame.numberLengthLabel')}</label>
           <select
@@ -231,26 +151,16 @@ export default function Lobby() {
             <option value={6}>{t('createGame.numberLengthOptions.6')}</option>
           </select>
         </div>
-
         <div className="mb-3">
           <div className="form-check form-switch">
-            <input
-              className="form-check-input"
-              type="checkbox"
-              role="switch"
-              id="singlePlayerModeToggle"
-              checked={isSinglePlayer}
-              onChange={(e) => setIsSinglePlayer(e.target.checked)}
-            />
+            <input className="form-check-input" type="checkbox" role="switch" id="singlePlayerModeToggle"
+              checked={isSinglePlayer} onChange={(e) => setIsSinglePlayer(e.target.checked)} />
             <label className="form-check-label fw-medium small" htmlFor="singlePlayerModeToggle">
               {t('createGame.singlePlayerMode.label')}
             </label>
           </div>
-          <div className="form-text small text-muted">
-            {t('createGame.singlePlayerMode.description')}
-          </div>
+          <div className="form-text small text-muted">{t('createGame.singlePlayerMode.description')}</div>
         </div>
-
         {isSinglePlayer && (
           <div className="mb-3">
             <label className="form-label fw-medium small">{t('createGame.botDifficultyLabel')}</label>
@@ -265,50 +175,31 @@ export default function Lobby() {
             </select>
           </div>
         )}
-
         {!isSinglePlayer && (
           <div className="mb-3">
             <div className="form-check form-switch">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                role="switch"
-                id="spectatorModeToggle"
-                checked={spectatorModeEnabled}
-                onChange={(e) => setSpectatorModeEnabled(e.target.checked)}
-              />
+              <input className="form-check-input" type="checkbox" role="switch" id="spectatorModeToggle"
+                checked={spectatorModeEnabled} onChange={(e) => setSpectatorModeEnabled(e.target.checked)} />
               <label className="form-check-label fw-medium small" htmlFor="spectatorModeToggle">
                 {t('createGame.spectatorMode.label')}
               </label>
             </div>
-            <div className="form-text small text-muted">
-              {t('createGame.spectatorMode.description')}
-            </div>
+            <div className="form-text small text-muted">{t('createGame.spectatorMode.description')}</div>
           </div>
         )}
-
         {/* NEW: Private room toggle (default off) */}
         {!isSinglePlayer && (
           <div className="mb-3">
             <div className="form-check form-switch">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                role="switch"
-                id="privateRoomToggle"
-                checked={isPrivate}
-                onChange={(e) => setIsPrivate(e.target.checked)}
-              />
+              <input className="form-check-input" type="checkbox" role="switch" id="privateRoomToggle"
+                checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} />
               <label className="form-check-label fw-medium small" htmlFor="privateRoomToggle">
                 {t('createGame.privateRoom.label')}
               </label>
             </div>
-            <div className="form-text small text-muted">
-              {t('createGame.privateRoom.description')}
-            </div>
+            <div className="form-text small text-muted">{t('createGame.privateRoom.description')}</div>
           </div>
         )}
-
         <button
           onClick={handleCreateRoom}
           disabled={isCreating || !socket?.connected}
@@ -319,24 +210,24 @@ export default function Lobby() {
         </button>
       </div>
 
-      {/* Join Room */}
+      {/* Shared room list: public + private, distinguished by a Type badge */}
       <div className="mb-4">
-        <h2 className="h5 fw-semibold mb-4">{t('joinGame.heading')}</h2>
-
+        <h2 className="h5 fw-semibold mb-3">{t('joinGame.heading')}</h2>
         {rooms.length > 0 ? (
           <div className="table-responsive">
-            <table className="table table-striped table-dark">
+            <table className="table table-sm table-striped table-dark align-middle">
               <thead>
                 <tr>
-                  <th>{t('joinGame.table.roomId')}</th>
-                  <th>{t('joinGame.table.player1')}</th>
-                  <th>{t('joinGame.table.player2')}</th>
+                  <th className="d-none d-md-table-cell">{t('joinGame.table.roomId')}</th>
+                  <th>{t('joinGame.table.type.public')}</th>
+                  <th className="d-none d-sm-table-cell">{t('joinGame.table.player1')}</th>
+                  <th className="d-none d-sm-table-cell">{t('joinGame.table.player2')}</th>
                   <th>{t('joinGame.table.action')}</th>
                 </tr>
               </thead>
               <tbody>
                 {rooms.map(room => {
-                  if (room.isPrivate) return null;
+                  const isPriv = !!room.isPrivate;
                   const p1 = room.players[0];
                   const p2 = room.players[1];
                   const bothPlayersActive = p1?.isConnected && p2?.isConnected;
@@ -347,22 +238,41 @@ export default function Lobby() {
                   const hasTwoPlayers = room.players.length >= 2;
                   const hasActiveGame = p1?.isConnected || p2?.isConnected;
                   const shouldShowSpectate = room.spectatorModeEnabled &&
-                    hasTwoPlayers &&
-                    hasActiveGame &&
-                    !isRegisteredPlayer;
-
+                    hasTwoPlayers && hasActiveGame && !isRegisteredPlayer;
                   return (
                     <tr key={room.id}>
-                      <td>{room.id}</td>
-                      <td>{p1?.name} {p1?.isConnected ? '' : t('joinGame.statuses.disconnected')}</td>
-                      <td>{p2?.name} {p2?.isConnected ? '' : t('joinGame.statuses.disconnected')}</td>
+                      <td className="d-none d-md-table-cell">{room.id}</td>
+                      <td>
+                        {isPriv ? (
+                          <span className="badge bg-warning text-dark">{t('joinGame.table.type.private')}</span>
+                        ) : (
+                          <span className="badge bg-secondary">{t('joinGame.table.type.public')}</span>
+                        )}
+                      </td>
+                      <td className="d-none d-sm-table-cell">{p1?.name} {p1?.isConnected ? '' : t('joinGame.statuses.disconnected')}</td>
+                      <td className="d-none d-sm-table-cell">{p2?.name} {p2?.isConnected ? '' : t('joinGame.statuses.disconnected')}</td>
                       <td>
                         {shouldShowSpectate ? (
-                          <button className="btn btn-info btn-sm" onClick={() => handleSpectateRoomTable(room.id)}>
+                          <button className="btn btn-info btn-sm w-100" onClick={() => handleSpectateRoomTable(room.id)}>
                             {t('joinGame.statuses.spectate')}
                           </button>
+                        ) : isPriv ? (
+                          <div className="d-flex flex-column flex-sm-row gap-1">
+                            <input
+                              type="text"
+                              value={codeByRoom[room.id] || ''}
+                              onChange={(e) => setCodeByRoom(prev => ({ ...prev, [room.id]: e.target.value.toUpperCase() }))}
+                              maxLength={3}
+                              className="form-control form-control-sm text-uppercase"
+                              placeholder={t('joinGame.byCode.codePlaceholder')}
+                              style={{ letterSpacing: '0.3em', maxWidth: '6rem' }}
+                            />
+                            <button className="btn btn-outline-primary btn-sm" onClick={() => handleJoinByCode(room.id)}>
+                              {t('joinGame.byCode.button')}
+                            </button>
+                          </div>
                         ) : (
-                          <button className="btn btn-secondary btn-sm" onClick={() => handleJoinRoomTable(room.id)}>
+                          <button className="btn btn-secondary btn-sm w-100" onClick={() => handleJoinRoomTable(room.id)}>
                             {t('joinGame.statuses.join')}
                           </button>
                         )}
@@ -376,40 +286,6 @@ export default function Lobby() {
         ) : (
           <p className="text-muted">{t('joinGame.noRooms')}</p>
         )}
-
-        {/* NEW: Join a private room by its 3-char access code */}
-        <div className="mt-3 p-3 border rounded">
-          <h3 className="h6 fw-semibold mb-3">{t('joinGame.byCode.heading')}</h3>
-          <div className="mb-2">
-            <label className="form-label fw-medium small">{t('joinGame.byCode.nameLabel')}</label>
-            <input
-              type="text"
-              value={joinCodeName}
-              onChange={(e) => setJoinCodeName(e.target.value)}
-              className="form-control"
-              placeholder={t('createGame.namePlaceholder')}
-            />
-          </div>
-          <div className="mb-2">
-            <label className="form-label fw-medium small">{t('joinGame.byCode.codeLabel')}</label>
-            <input
-              type="text"
-              value={joinCode}
-              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-              maxLength={3}
-              className="form-control text-uppercase"
-              placeholder={t('joinGame.byCode.codePlaceholder')}
-              style={{ letterSpacing: '0.3em' }}
-            />
-          </div>
-          <button
-            onClick={handleJoinByCode}
-            disabled={!socket?.connected}
-            className="btn btn-outline-primary btn-sm w-100"
-          >
-            {t('joinGame.byCode.button')}
-          </button>
-        </div>
       </div>
 
       {/* Connection Status */}
