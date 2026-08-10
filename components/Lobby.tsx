@@ -248,7 +248,7 @@ export default function Lobby() {
               <tbody>
                 {rooms.map(room => {
                   const isPriv = !!room.isPrivate;
-                  const p1 = room.players[0];
+                  const p1 = room.dotplayers ? room.players[0] : room.players[0];
                   const p2 = room.players[1];
                   const currentPlayerName = playerName.trim();
                   const canRejoinAsPlayer1 = currentPlayerName === p1?.name;
@@ -273,7 +273,7 @@ export default function Lobby() {
                       <td>
                         {shouldShowSpectate ? (
                           <button className="btn btn-info btn-sm w-100" onClick={() => handleSpectateRoomTable(room.id)}>
-                            {t('joinGame.statuses.spectate')')}
+                            {t('joinGame.statuses.spectate')}
                           </button>
                         ) : isPriv ? (
                           <button className="btn btn-outline-primary btn-sm w-100" onClick={() => openCodeModal()}>
