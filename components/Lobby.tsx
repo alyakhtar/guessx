@@ -110,7 +110,7 @@ export default function Lobby() {
     const trimmedName = playerName.trim();
     if (!trimmedName) { setJoinError(t('errors.nameRequired')); return; }
     if (code.length < 3) { setJoinError(t('joinGame.errors.codeRequired')); return; }
-    if (!socket) { setJoinError(t('errors.NameRequired')); return; }
+    if (!socket) { setJoinError(t('errors.connectionError')); return; }
     localStorage.setItem('playerName', trimmedName);
     socket.emit('join_room_by_code', code, trimmedName);
     const handleRoomUpdated = (room: any) => { setModalRoom(null); router.push(`/${locale}/game/${room.id}`); };

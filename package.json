@@ -29,6 +29,7 @@
     "eslint-config-next": "^16.0.3",
     "@typescript-eslint/eslint-plugin": "^8",
     "@typescript-eslint/parser": "^8",
+    "globals": "^15",
     "typescript": "^5"
   }
 }
