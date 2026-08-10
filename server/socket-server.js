@@ -182,7 +182,7 @@ class GameServer {
         await this.createRoom(socket, playerName, numberLength, spectatorModeEnabled, isSinglePlayer, botDifficulty, isPrivate);
       });
 
-      // NEW: join a private room by its 3-char access code
+      // Join a private room by its 3-char access code
       socket.on('join_room_by_code', (accessCode, playerName) => {
         this.joinRoomByCode(socket, accessCode, playerName);
       });
@@ -193,7 +193,8 @@ class GameServer {
         const room = this.rooms.get(roomId);
         if (room) {
           socket.join(`${roomId}_spectators`);
-          socket.emit('room_updated', room);
+          // Send the full room (incl. accessCode) only to members of this room.
+          socket.emit('room_updated', this.sanitizeFor(room, socket.id));
         }
       });
 
@@ -203,6 +204,17 @@ class GameServer {
       socket.on('new_game', () => this.handleNewGame(socket));
       socket.emit('connected', { socketId: socket.id });
     });
+  }
+
+  // Strip secrets (accessCode) from a room before broadcasting to unauthenticated
+  // clients. Members of the room (by socket) still receive the full object via
+  // room_updated — but never through the public room_list.
+  sanitizeFor(room, socketId) {
+    if (!room) return room;
+    const isMember = room.players.some(p => p.id === socketId);
+    if (isMember) return room;
+    const { accessCode, ...safe } = room;
+    return { ...safe, hasAccessCode: !!accessCode };
   }
 
   async createRoom(socket, playerName, numberLength, spectatorModeEnabled = false, isSinglePlayer = false, botDifficulty = 'medium', isPrivate = false) {
@@ -224,36 +236,67 @@ class GameServer {
       const room = {
         id: roomId, players: players, currentTurn: socket.id, gameHistory: [],
         gameStatus: 'waiting', numberLength: numberLength, spectatorModeEnabled: spectatorModeEnabled,
-        isSinglePlayer: isSinglePlayer, isPrivate: isPrivate, accessCode: isPrivate ? accessCode : undefined,
-        // Discriminator surfaced in the (single) room list
-        type: isPrivate ? 'private' : 'public'
+        isSinglePlayer: isSinglePlayer, isPrivate: isPrivate, accessCode: isPrivate ? accessCode : undefined
+        // `type` is derived from `isPrivate` in the client; not stored (review: avoid duplicate state).
       };
       this.rooms.set(roomId, room);
       this.playerRoomMap.set(socket.id, roomId);
       socket.join(roomId);
       console.log(`Room ${roomId} created by ${playerName} (${isSinglePlayer ? 'single player' : 'multiplayer'}${isPrivate ? ', private ' + accessCode : ''})`);
+      // Only the creator (a member) gets the access code back.
       socket.emit('room_created', roomId, room);
       this.broadcastRoomList();
     } catch (error) { console.error('Error creating room:', error); socket.emit('error', 'Failed to create room'); }
   }
 
-  // NEW: join a private room using its access code
+  // Unified admission logic for both public and private rooms. Fixes the divergent
+  // duplicates the reviewer flagged: reconnect (same name, disconnected) is checked
+  // BEFORE the "room full" rejection, for both paths.
+  admitPlayer(room, socket, playerName, { byCode = false } = {}) {
+    // Reconnect: a stored player with the same name who disconnected.
+    const existingPlayer = room.players.find(p => p.name === playerName);
+    if (existingPlayer && !existingPlayer.isConnected) {
+      const oldId = existingPlayer.id;
+      existingPlayer.id = socket.id;
+      existingPlayer.isConnected = true;
+      if (room.currentTurn === oldId) room.currentTurn = socket.id;
+      this.playerRoomMap.set(socket.id, room.id);
+      socket.join(room.id);
+      this.io.to(room.id).emit('player_reconnected', room);
+      this.io.to(room.id).emit('room_updated', room);
+      this.broadcastRoomList();
+      return { reconnected: true };
+    }
+
+    // Capacity checks (after reconnect so a returning player is never blocked).
+    if (room.players.length >= 2) {
+      return { error: 'No space for new players. Only original players can rejoin.' };
+    }
+    if (room.players.filter(p => p.isConnected).length >= 2) {
+      return { error: 'Room is full. Maximum 2 players allowed.' };
+    }
+
+    const player = { id: socket.id, name: playerName, isConnected: true, isReady: false };
+    room.players.push(player);
+    this.playerRoomMap.set(socket.id, room.id);
+    socket.join(room.id);
+    if (room.players.filter(p => p.isConnected).length === 2) room.gameStatus = 'setup';
+    console.log(`Player ${playerName} joined room ${room.id}${byCode ? ' via code' : ''}`);
+    this.io.to(room.id).emit('player_joined', room);
+    this.io.to(room.id).emit('room_updated', room);
+    this.broadcastRoomList();
+    return { joined: true };
+  }
+
+  // Join a private room using its access code
   joinRoomByCode(socket, accessCode, playerName) {
     try {
       if (!accessCode || typeof accessCode !== 'string') { socket.emit('error', 'Please provide a valid access code.'); return; }
       const normalized = accessCode.trim().toUpperCase();
       const room = Array.from(this.rooms.values()).find(r => r.isPrivate && r.accessCode === normalized);
       if (!room) { socket.emit('error', 'Invalid access code. Please check the code and try again.'); return; }
-      if (room.players.length >= 2 || room.players.filter(p => p.isConnected).length >= 2) { socket.emit('error', 'Room is full. Maximum 2 players allowed.'); return; }
-      const player = { id: socket.id, name: playerName, isConnected: true, isReady: false };
-      room.players.push(player);
-      this.playerRoomMap.set(socket.id, room.id);
-      socket.join(room.id);
-      if (room.players.filter(p => p.isConnected).length === 2) room.gameStatus = 'setup';
-      console.log(`Player ${playerName} joined private room ${room.id} via code`);
-      this.io.to(room.id).emit('player_joined', room);
-      this.io.to(room.id).emit('room_updated', room);
-      this.broadcastRoomList();
+      const result = this.admitPlayer(room, socket, playerName, { byCode: true });
+      if (result.error) { socket.emit('error', result.error); return; }
     } catch (error) { console.error('Error joining room by code:', error); socket.emit('error', 'Failed to join room'); }
   }
 
@@ -263,31 +306,8 @@ class GameServer {
       if (!room) { socket.emit('error', `Room "${roomId}" not found. Please check the room code.`); return; }
       // Private rooms in the shared list require the access code instead of a plain join
       if (room.isPrivate) { socket.emit('error', 'This is a private room. Join using its access code.'); return; }
-      const existingPlayer = room.players.find(p => p.name === playerName);
-      if (existingPlayer) {
-        if (existingPlayer.isConnected) { socket.emit('error', 'Player with this name is already in the room.'); return; }
-        const oldId = existingPlayer.id;
-        existingPlayer.id = socket.id;
-        existingPlayer.isConnected = true;
-        if (room.currentTurn === oldId) room.currentTurn = socket.id;
-        this.playerRoomMap.set(socket.id, roomId);
-        socket.join(roomId);
-        this.io.to(roomId).emit('player_reconnected', room);
-        this.io.to(roomId).emit('room_updated', room);
-        this.broadcastRoomList();
-        return;
-      }
-      if (room.players.length >= 2) { socket.emit('error', 'No space for new players. Only original players can rejoin.'); return; }
-      if (room.players.filter(p => p.isConnected).length >= 2) { socket.emit('error', 'Room is full. Maximum 2 players allowed.'); return; }
-      const player = { id: socket.id, name: playerName, isConnected: true, isReady: false };
-      room.players.push(player);
-      this.playerRoomMap.set(socket.id, roomId);
-      socket.join(roomId);
-      if (room.players.filter(p => p.isConnected).length === 2) room.gameStatus = 'setup';
-      console.log(`Player ${playerName} joined room ${roomId}`);
-      this.io.to(roomId).emit('player_joined', room);
-      this.io.to(roomId).emit('room_updated', room);
-      this.broadcastRoomList();
+      const result = this.admitPlayer(room, socket, playerName);
+      if (result.error) { socket.emit('error', result.error); return; }
     } catch (error) { console.error('Error joining room:', error); socket.emit('error', 'Failed to join room'); }
   }
 
@@ -412,14 +432,22 @@ class GameServer {
 
   // Single shared room list — includes BOTH public and private rooms.
   // Private rooms are shown with a Type badge; joining one requires its access code.
+  // SECURITY: never broadcast the accessCode to all clients. Send only a flag that
+  // a code is required, so the code stays secret (review finding: private codes were public).
   getOpenRooms() {
-    return Array.from(this.rooms.values()).filter(room => {
-      const connectedPlayersCount = room.players.filter(p => p.isConnected).length;
-      const hasSpaceForJoin = connectedPlayersCount < 2;
-      const canSpectate = connectedPlayersCount === 2 && room.spectatorModeEnabled;
-      return (hasSpaceForJoin || canSpectate) &&
-        (room.gameStatus === 'waiting' || room.gameStatus === 'setup' || room.gameStatus === 'playing');
-    });
+    return Array.from(this.rooms.values())
+      .filter(room => {
+        const connectedPlayersCount = room.players.filter(p => p.isConnected).length;
+        const hasSpaceForJoin = connectedPlayersCount < 2;
+        const canSpectate = connectedPlayersCount === 2 && room.spectatorModeEnabled;
+        return (hasSpaceForJoin || canSpectate) &&
+          (room.gameStatus === 'waiting' || room.gameStatus === 'setup' || room.gameStatus === 'playing');
+      })
+      .map(room => {
+        // Strip the access code from the payload sent to every client.
+        const { accessCode, ...safeRoom } = room;
+        return { ...safeRoom, hasAccessCode: !!accessCode };
+      });
   }
 
   sendRoomList(socket) {
