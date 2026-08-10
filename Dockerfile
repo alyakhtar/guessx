@@ -43,7 +43,6 @@ COPY --from=builder /app/i18n ./i18n
 COPY --from=builder /app/next-intl.config.js ./next-intl.config.js
 COPY --from=builder /app/messages ./messages
 
-# (no-op comment to retrigger CI after a flaky build-and-push run)
 USER nextjs
 
 EXPOSE 8082
