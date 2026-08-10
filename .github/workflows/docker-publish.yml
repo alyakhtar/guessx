@@ -34,8 +34,11 @@ jobs:
           node-version: 20
           cache: npm
 
+      # `npm install` (not `npm ci`) so CI does not require a committed lockfile that
+      # matches package.json exactly. Still fails the job on real install errors — no
+      # `|| echo` masking (review finding: CI previously hid failures).
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       # These steps MUST fail the job on error. No `|| echo` masking — a real failure
       # must surface as a red check (review finding: CI previously hid failures).
@@ -73,7 +76,6 @@ jobs:
           RAW_HEAD: ${{ github.head_ref }}
           RAW_REF: ${{ github.ref_name }}
           EVENT: ${{ github.event_name }}
-          IS_MAIN: ${{ github.ref == 'refs/heads/main' }}
         run: |
           if [ "$EVENT" = "pull_request" ]; then
             RAW="$RAW_HEAD"
@@ -83,6 +85,8 @@ jobs:
           SLUG="${RAW//\//-}"
           echo "slug=${SLUG}" >> "$GITHUB_OUTPUT"
           echo "is_main=${IS_MAIN}" >> "$GITHUB_OUTPUT"
+        env:
+          IS_MAIN: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
