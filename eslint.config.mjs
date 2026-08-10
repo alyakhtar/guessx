@@ -6,7 +6,7 @@ import globals from 'globals';
 // Native flat config (ESLint 9). `eslint-config-next` v16's flat export is
 // incompatible with the installed ESLint 9 flat loader (circular-ref crash on
 // `next.configs.flat`), so we wire a minimal TypeScript + JS setup directly.
-// This is the working config tracked in issue #7.
+// This working config RESOLVES issue #7 (restore a standalone lint gate in CI).
 export default [
   js.configs.recommended,
   {
@@ -28,7 +28,7 @@ export default [
     },
     rules: {
       ...tseslint.configs.recommended.rules,
-      // TS already reports genuinely-unowned identifiers via type-check; keep
+      // TS already reports genuinely-undefined identifiers via type-check; keep
       // `no-undef` off so DOM/Node globals (document, process, etc.) aren't flagged.
       'no-undef': 'off',
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
