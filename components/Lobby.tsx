@@ -110,7 +110,7 @@ export default function Lobby() {
     const trimmedName = playerName.trim();
     if (!trimmedName) { setJoinError(t('errors.nameRequired')); return; }
     if (code.length < 3) { setJoinError(t('joinGame.errors.codeRequired')); return; }
-    if (!socket) { setJoinError(t('errors.connectionError')); return; }
+    if (!socket) { setJoinError(t('errors.NameRequired')); return; }
     localStorage.setItem('playerName', trimmedName);
     socket.emit('join_room_by_code', code, trimmedName);
     const handleRoomUpdated = (room: any) => { setModalRoom(null); router.push(`/${locale}/game/${room.id}`); };
@@ -188,9 +188,9 @@ export default function Lobby() {
               onChange={(e) => setBotDifficulty(e.target.value as 'easy' | 'medium' | 'hard')}
               className="form-select form-select-lg"
             >
-              <option value="easy">{`easy`}</option>
-              <option value="medium">{`medium`}</option>
-              <option value="hard">{`hard`}</option>
+              <option value="easy">{t('createGame.botDifficultyOptions.easy')}</option>
+              <option value="medium">{t('createGame.botDifficultyOptions.medium')}</option>
+              <option value="hard">{t('createGame.botDifficultyOptions.hard')}</option>
             </select>
           </div>
         )}
