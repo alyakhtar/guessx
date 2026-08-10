@@ -1,9 +1,14 @@
 name: Build and Publish Docker Image
 
-# Validate on every push (cheap: lint/type-check/build) so breakage is caught early.
+# Validate on every push (lint / type-check / build) so breakage is caught early.
 # Publish a branch-tagged image (ghcr.io/<owner>/guessx:<branch-slug>) ONLY when a
 # pull request is opened/updated for the branch (not on every push) to avoid
 # rebuilding on every WIP commit. On main, also publish the `latest` tag.
+#
+# Design decision (per issue #1 + review): feature-branch images ARE published, not
+# only `main`. Rationale: the dev deploy pulls the branch image onto the Pi (port 8084)
+# for hands-off testing, avoiding a ~12-minute native arm64 build on the Pi. See the PR
+# discussion for details.
 on:
   push:
     branches: ["**"]
@@ -30,13 +35,18 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci || npm install
+        run: npm ci
 
-      - name: Run lint / type validation
-        run: |
-          if npm run --if-present --silent type-check; then echo "type-check passed"; fi
-          if npm run --if-present --silent lint; then echo "lint passed"; fi
-          npm run --if-present build || echo "no build script configured"
+      # These steps MUST fail the job on error. No `|| echo` masking — a real failure
+      # must surface as a red check (review finding: CI previously hid failures).
+      - name: Type-check
+        run: npm run type-check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
 
   # Build & push only when a PR is opened/updated (or pushed to main), not on
   # every feature-branch push. The branch slug becomes the image tag.
@@ -56,16 +66,23 @@ jobs:
 
       - name: Derive branch slug
         id: branch
+        # SECURITY: pass refs through env and quote (review finding: branch names are
+        # interpolated directly into shell, enabling injection via `$(...)`). Never embed
+        # ${{ github.head_ref }} inside a run script.
+        env:
+          RAW_HEAD: ${{ github.head_ref }}
+          RAW_REF: ${{ github.ref_name }}
+          EVENT: ${{ github.event_name }}
+          IS_MAIN: ${{ github.ref == 'refs/heads/main' }}
         run: |
-          # Use the PR head ref for PR events, else the push branch name.
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            RAW="${{ github.head_ref }}"
+          if [ "$EVENT" = "pull_request" ]; then
+            RAW="$RAW_HEAD"
           else
-            RAW="${GITHUB_REF_NAME}"
+            RAW="$RAW_REF"
           fi
           SLUG="${RAW//\//-}"
           echo "slug=${SLUG}" >> "$GITHUB_OUTPUT"
-          echo "is_main=${{ github.ref == 'refs/heads/main' }}" >> "$GITHUB_OUTPUT"
+          echo "is_main=${IS_MAIN}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
