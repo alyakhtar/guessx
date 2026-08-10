@@ -1,9 +1,11 @@
 name: Build and Publish Docker Image
 
-# Validate on every push (lint / type-check / build) so breakage is caught early.
-# Publish a branch-tagged image (ghcr.io/<owner>/guessx:<branch-slug>) ONLY when a
-# pull request is opened/updated for the branch (not on every push) to avoid
-# rebuilding on every WIP commit. On main, also publish the `latest` tag.
+# CI strategy (per request): avoid double validation on PRs.
+# - pull_request (opened/synchronize/reopened): runs Validate + builds the
+#   branch-tagged image (ghcr.io/<owner>/guessx:<branch-slug>) for dev testing.
+# - push to `main` ONLY: runs Validate + publishes `latest` (and the branch slug).
+#   Feature-branch pushes do NOT trigger a run (the PR event already covers them),
+#   so a PR no longer validates twice. Merging to main triggers the push run once.
 #
 # Design decision (per issue #1 + review): feature-branch images ARE published, not
 # only `main`. Rationale: the dev deploy pulls the branch image onto the Pi (port 8084)
@@ -11,7 +13,7 @@ name: Build and Publish Docker Image
 # discussion for details.
 on:
   push:
-    branches: ["**"]
+    branches: ["main"]
   pull_request:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
