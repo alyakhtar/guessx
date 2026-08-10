@@ -1,12 +1,14 @@
 name: Build and Publish Docker Image
 
-# Build and validate on every push (including feature branches).
-# Publish a branch-tagged image (ghcr.io/<owner>/guessx:<branch-slug>) for every
-# push so feature branches can be pulled and run on the dev Pi without a local
-# build. On main, also publish the `latest` tag.
+# Validate on every push (cheap: lint/type-check/build) so breakage is caught early.
+# Publish a branch-tagged image (ghcr.io/<owner>/guessx:<branch-slug>) ONLY when a
+# pull request is opened/updated for the branch (not on every push) to avoid
+# rebuilding on every WIP commit. On main, also publish the `latest` tag.
 on:
   push:
     branches: ["**"]
+  pull_request:
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 permissions:
@@ -36,9 +38,12 @@ jobs:
           if npm run --if-present --silent lint; then echo "lint passed"; fi
           npm run --if-present build || echo "no build script configured"
 
+  # Build & push only when a PR is opened/updated (or pushed to main), not on
+  # every feature-branch push. The branch slug becomes the image tag.
   build-and-push:
     name: Build and Push to GHCR
     needs: validate
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
@@ -52,7 +57,12 @@ jobs:
       - name: Derive branch slug
         id: branch
         run: |
-          RAW="${GITHUB_REF_NAME}"
+          # Use the PR head ref for PR events, else the push branch name.
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            RAW="${{ github.head_ref }}"
+          else
+            RAW="${GITHUB_REF_NAME}"
+          fi
           SLUG="${RAW//\//-}"
           echo "slug=${SLUG}" >> "$GITHUB_OUTPUT"
           echo "is_main=${{ github.ref == 'refs/heads/main' }}" >> "$GITHUB_OUTPUT"
@@ -73,7 +83,9 @@ jobs:
         with:
           images: ghcr.io/${{ steps.vars.outputs.owner_lc }}/guessx
           tags: |
+            # Always tag with the branch slug (e.g. feature-private-rooms)
             type=raw,value=${{ steps.branch.outputs.slug }}
+            # Only tag 'latest' when this is the main branch
             type=raw,value=latest,enable=${{ steps.branch.outputs.is_main }}
             type=sha,prefix=sha-
 
