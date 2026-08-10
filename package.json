@@ -5,7 +5,7 @@
     "dev": "node server.js",
     "build": "next build",
     "start": "NODE_ENV=production node server.js",
-    "lint": "next lint",
+    "lint": "eslint app components server lib types i18n.ts i18n next.config.js next-intl.config.js tailwind.config.js --max-warnings=0",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
