@@ -201,7 +201,7 @@ class GameServer {
       socket.on('set_secret_number', (secretNumber) => this.setSecretNumber(socket, secretNumber));
       socket.on('make_guess', (guess) => this.handleGuess(socket, guess));
       socket.on('disconnect', (reason) => this.handleDisconnect(socket));
-      socket.on('new_game', () => this.persistNewGame(socket));
+      socket.on('new_game', () => this.handleNewGame(socket));
       socket.emit('connected', { socketId: socket.id });
     });
   }
