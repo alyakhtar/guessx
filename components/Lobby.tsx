@@ -22,10 +22,7 @@ export default function Lobby() {
   const [rooms, setRooms] = useState<GameRoom[]>([]);
   // Private room toggle (default off, per issue AC)
   const [isPrivate, setIsPrivate] = useState(false);
-  // Standalone "join with code" panel (always reachable, unlike a private-only row button)
-  const [joinCode, setJoinCode] = useState('');
-  const [joinCodeError] = useState('');
-  // Private-room join modal state (used after clicking "Join with code")
+  // Private-room join modal state (opened from a private row's Join button)
   const [modalRoom, setModalRoom] = useState<string | null>(null);
   const [codeDigits, setCodeDigits] = useState<string[]>(['', '', '']);
   const [joinError, setJoinError] = useState('');
@@ -89,10 +86,12 @@ export default function Lobby() {
     blurActive();
   };
 
-  // Standalone join-by-code: opens the modal pre-filled (or empty) so the flow is
-  // reachable without depending on a private row being present in the list.
+  // Opens the code-entry modal. When presetCode is given it pre-fills the boxes
+  // (e.g. from the standalone panel); when called with no argument (private-row
+  // Join) it opens empty for manual entry. The modal renders whenever modalRoom
+  // is set to a truthy sentinel — passing `null` would make it never appear.
   const openCodeModal = (presetCode?: string) => {
-    setModalRoom(presetCode ? '__CODE__' : null);
+    setModalRoom(presetCode ? '__CODE__' : '__OPEN__');
     setCodeDigits(presetCode ? presetCode.split('').slice(0, 3) : ['', '', '']);
     setJoinError('');
     setTimeout(() => codeRefs.current[0]?.focus(), 50);
@@ -230,38 +229,8 @@ export default function Lobby() {
         </button>
       </div>
 
-      {/* Standalone join-by-code panel — reachable without a private row in the list */}
-      <div className="mb-4">
-        <h2 className="h5 fw-semibold mb-3">{t('joinGame.byCode.heading')}</h2>
-        <p className="text-muted small">{t('joinGame.byCode.codeLabel')}</p>
-        <form
-          className="d-flex gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (joinCode.length === 3) openCodeModal(joinCode);
-          }}
-        >
-          <input
-            type="text"
-            value={joinCode}
-            onChange={(e) => setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 3))}
-            placeholder="ABC"
-            maxLength={3}
-            className="form-control form-control-lg text-center text-uppercase"
-            style={{ letterSpacing: '0.15em' }}
-          />
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={joinCode.length !== 3}
-          >
-            {t('joinGame.byCode.button')}
-          </button>
-        </form>
-        {joinCodeError && <div className="alert alert-danger py-2 mt-2 mb-0">{joinCodeError}</div>}
-      </div>
-
-      {/* Shared room list: public + private, distinguished by a Room Type badge */}
+      {/* Unified room list: public + private, distinguished by a Room Type badge.
+          Public rows join directly; private rows open the code-entry modal. */}
       <div className="mb-4">
         <h2 className="h5 fw-semibold mb-3">{t('joinGame.heading')}</h2>
         {rooms.length > 0 ? (
@@ -304,7 +273,7 @@ export default function Lobby() {
                       <td>
                         {shouldShowSpectate ? (
                           <button className="btn btn-info btn-sm w-100" onClick={() => handleSpectateRoomTable(room.id)}>
-                            {t('joinGame.statuses.spectate')}
+                            {t('joinGame.statuses.spectate')')}
                           </button>
                         ) : isPriv ? (
                           <button className="btn btn-outline-primary btn-sm w-100" onClick={() => openCodeModal()}>
