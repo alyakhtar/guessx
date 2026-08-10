@@ -201,7 +201,7 @@ class GameServer {
       socket.on('set_secret_number', (secretNumber) => this.setSecretNumber(socket, secretNumber));
       socket.on('make_guess', (guess) => this.handleGuess(socket, guess));
       socket.on('disconnect', (reason) => this.handleDisconnect(socket));
-      socket.on('new_game', () => this.handleNewGame(socket));
+      socket.on('new_game', () => this.persistNewGame(socket));
       socket.emit('connected', { socketId: socket.id });
     });
   }
@@ -253,8 +253,14 @@ class GameServer {
   // duplicates the reviewer flagged: reconnect (same name, disconnected) is checked
   // BEFORE the "room full" rejection, for both paths.
   admitPlayer(room, socket, playerName, { byCode = false } = {}) {
-    // Reconnect: a stored player with the same name who disconnected.
+    // Reconnect / conflict: a stored player with the same name.
     const existingPlayer = room.players.find(p => p.name === playerName);
+    // A name already taken by a CONNECTED player is a hard conflict — reject
+    // before any reconnect or capacity logic (two live "SameName" is invalid).
+    if (existingPlayer && existingPlayer.isConnected) {
+      return { error: 'A player with that name is already in the room.' };
+    }
+    // Reconnect: a stored player with the same name who disconnected.
     if (existingPlayer && !existingPlayer.isConnected) {
       const oldId = existingPlayer.id;
       existingPlayer.id = socket.id;

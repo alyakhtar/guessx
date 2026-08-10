@@ -24,7 +24,7 @@ permissions:
 
 jobs:
   validate:
-    name: Validate (type-check / build)
+    name: Validate (type-check / lint / build)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -36,9 +36,10 @@ jobs:
           node-version: 20
           cache: npm
 
-      # `npm install` (not `npm ci`) so CI does not require a committed lockfile that
-      # matches package.json exactly. Still fails the job on real install errors — no
-      # `|| echo` masking (review finding: CI previously hid failures).
+      # `npm install` (not `npm ci`) — CI does not require a committed lockfile that
+      # matches package.json exactly (the lockfile is currently stale; regenerating
+      # and committing it is tracked as a follow-up). Still fails the job on real
+      # install errors — no `|| echo` masking (review finding: CI previously hid failures).
       - name: Install dependencies
         run: npm install
 
@@ -47,11 +48,10 @@ jobs:
       - name: Type-check
         run: npm run type-check
 
-      # NOTE: a standalone `eslint` step was removed. `next build` already runs
-      # type-checking + linting, and type-check above is the hard gate. The
-      # `eslint-config-next` v16 flat-config export is incompatible with the
-      # installed ESLint 9 flat loader (circular-ref validator crash); wiring a
-      # working Next-flat ESLint config is tracked as a follow-up.
+      # Lint (ESLint 9 flat config — native @typescript-eslint, see eslint.config.mjs).
+      # Runs as a hard gate; a real lint error fails the check.
+      - name: Lint
+        run: npm run lint
 
       - name: Build
         run: npm run build
