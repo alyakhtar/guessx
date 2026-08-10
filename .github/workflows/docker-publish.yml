@@ -1,7 +1,9 @@
 name: Build and Publish Docker Image
 
 # Build and validate on every push (including feature branches).
-# Only publish the image to GHCR when pushing to main.
+# Publish a branch-tagged image (ghcr.io/<owner>/guessx:<branch-slug>) for every
+# push so feature branches can be pulled and run on the dev Pi without a local
+# build. On main, also publish the `latest` tag.
 on:
   push:
     branches: ["**"]
@@ -37,7 +39,6 @@ jobs:
   build-and-push:
     name: Build and Push to GHCR
     needs: validate
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
@@ -47,6 +48,14 @@ jobs:
       - name: Set owner lowercase
         id: vars
         run: echo "owner_lc=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Derive branch slug
+        id: branch
+        run: |
+          RAW="${GITHUB_REF_NAME}"
+          SLUG="${RAW//\//-}"
+          echo "slug=${SLUG}" >> "$GITHUB_OUTPUT"
+          echo "is_main=${{ github.ref == 'refs/heads/main' }}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -64,9 +73,9 @@ jobs:
         with:
           images: ghcr.io/${{ steps.vars.outputs.owner_lc }}/guessx
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ steps.branch.outputs.slug }}
+            type=raw,value=latest,enable=${{ steps.branch.outputs.is_main }}
             type=sha,prefix=sha-
-            type=ref,event=branch
 
       - name: Build and push
         uses: docker/build-push-action@v6
