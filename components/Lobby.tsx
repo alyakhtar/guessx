@@ -24,7 +24,7 @@ export default function Lobby() {
   const [isPrivate, setIsPrivate] = useState(false);
   // Standalone "join with code" panel (always reachable, unlike a private-only row button)
   const [joinCode, setJoinCode] = useState('');
-  const [joinCodeError, setJoinCodeError] = useState('');
+  const [joinCodeError] = useState('');
   // Private-room join modal state (used after clicking "Join with code")
   const [modalRoom, setModalRoom] = useState<string | null>(null);
   const [codeDigits, setCodeDigits] = useState<string[]>(['', '', '']);
@@ -276,7 +276,6 @@ export default function Lobby() {
                   const isPriv = !!room.isPrivate;
                   const p1 = room.players[0];
                   const p2 = room.players[1];
-                  const bothPlayersActive = p1?.isConnected && p2?.isConnected;
                   const currentPlayerName = playerName.trim();
                   const canRejoinAsPlayer1 = currentPlayerName === p1?.name;
                   const canRejoinAsPlayer2 = currentPlayerName === p2?.name;
@@ -344,7 +343,12 @@ export default function Lobby() {
                       value={codeDigits[i]}
                       onChange={(e) => handleDigit(i, e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Backspace' && !codeDigits[i] && i > 0) codeRefs.current[i - 1]?.focus();
+                        if (e.key === 'Enter') {
+                          const code = codeDigits.join('');
+                          if (code.length === 3) handleJoinByCode();
+                        } else if (e.key === 'Backspace' && !codeDigits[i] && i > 0) {
+                          codeRefs.current[i - 1]?.focus();
+                        }
                       }}
                       maxLength={1}
                       className="form-control form-control-lg text-center text-uppercase"
