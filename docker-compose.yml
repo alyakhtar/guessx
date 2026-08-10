@@ -1,12 +1,19 @@
 services:
   guessx:
-    image: ghcr.io/alyakhtar/guessx:latest
-    container_name: guessx
+    # IMAGE can be overridden at deploy time so a feature branch can run a
+    # locally-built image (e.g. IMAGE=guessx:feature-private-rooms).
+    image: ${IMAGE:-ghcr.io/alyakhtar/guessx:latest}
+    # CONTAINER_NAME is variable so a feature deploy doesn't collide with the
+    # live "guessx" container. Default kept for backward compatibility.
+    container_name: ${CONTAINER_NAME:-guessx}
     restart: unless-stopped
     ports:
+      # HOST port is variable (default 8082); container always listens on 8082.
       - "${PORT:-8082}:8082"
     env_file:
-      - ./.env
+      # Optional: don't fail if .env is missing in a dev checkout.
+      - path: ./.env
+        required: false
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8082/"]
       interval: 30s
