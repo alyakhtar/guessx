@@ -22,13 +22,15 @@ export default function Lobby() {
   const [rooms, setRooms] = useState<GameRoom[]>([]);
   // Private room toggle (default off, per issue AC)
   const [isPrivate, setIsPrivate] = useState(false);
-  // Private-room join modal state
+  // Standalone "join with code" panel (always reachable, unlike a private-only row button)
+  const [joinCode, setJoinCode] = useState('');
+  const [joinCodeError, setJoinCodeError] = useState('');
+  // Private-room join modal state (used after clicking "Join with code")
   const [modalRoom, setModalRoom] = useState<string | null>(null);
   const [codeDigits, setCodeDigits] = useState<string[]>(['', '', '']);
   const [joinError, setJoinError] = useState('');
   const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
   const router = useRouter();
-  const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const savedName = localStorage.getItem('playerName');
@@ -87,10 +89,11 @@ export default function Lobby() {
     blurActive();
   };
 
-  // Private room join — handled through a modal (no inline input; errors shown in-modal)
-  const openCodeModal = (roomId: string) => {
-    setModalRoom(roomId);
-    setCodeDigits(['', '', '']);
+  // Standalone join-by-code: opens the modal pre-filled (or empty) so the flow is
+  // reachable without depending on a private row being present in the list.
+  const openCodeModal = (presetCode?: string) => {
+    setModalRoom(presetCode ? '__CODE__' : null);
+    setCodeDigits(presetCode ? presetCode.split('').slice(0, 3) : ['', '', '']);
     setJoinError('');
     setTimeout(() => codeRefs.current[0]?.focus(), 50);
   };
@@ -104,7 +107,6 @@ export default function Lobby() {
   };
 
   const handleJoinByCode = () => {
-    if (!modalRoom) return;
     const code = codeDigits.join('').toUpperCase();
     const trimmedName = playerName.trim();
     if (!trimmedName) { setJoinError(t('errors.nameRequired')); return; }
@@ -124,7 +126,7 @@ export default function Lobby() {
   };
 
   return (
-    <div ref={cardRef} className="card p-2 p-sm-4 shadow position-relative">
+    <div className="card p-2 p-sm-4 shadow position-relative">
       <div className="d-flex justify-content-end gap-2 position-absolute top-0 end-0 m-2">
         <LocaleSelector />
         <button className="btn btn-sm btn-outline-secondary" onClick={() => setDarkMode(!darkMode)}>
@@ -205,7 +207,7 @@ export default function Lobby() {
             <div className="form-text small text-muted">{t('createGame.spectatorMode.description')}</div>
           </div>
         )}
-        {/* NEW: Private room toggle (default off) */}
+        {/* Private room toggle (default off) */}
         {!isSinglePlayer && (
           <div className="mb-3">
             <div className="form-check form-switch">
@@ -226,6 +228,32 @@ export default function Lobby() {
           {!socket?.connected ? t('createGame.buttons.connecting') :
             isCreating ? t('createGame.buttons.creating') : t('createGame.buttons.create')}
         </button>
+      </div>
+
+      {/* Standalone join-by-code panel — reachable without a private row in the list */}
+      <div className="mb-4">
+        <h2 className="h5 fw-semibold mb-3">{t('joinGame.byCode.heading')}</h2>
+        <p className="text-muted small">{t('joinGame.byCode.codeLabel')}</p>
+        <div className="d-flex gap-2">
+          <input
+            type="text"
+            value={joinCode}
+            onChange={(e) => setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 3))}
+            onKeyDown={(e) => { if (e.key === 'Enter' && joinCode.length === 3) openCodeModal(joinCode); }}
+            placeholder="ABC"
+            maxLength={3}
+            className="form-control form-control-lg text-center text-uppercase"
+            style={{ letterSpacing: '0.15em' }}
+          />
+          <button
+            className="btn btn-primary"
+            disabled={joinCode.length !== 3}
+            onClick={() => openCodeModal(joinCode)}
+          >
+            {t('joinGame.byCode.button')}
+          </button>
+        </div>
+        {joinCodeError && <div className="alert alert-danger py-2 mt-2 mb-0">{joinCodeError}</div>}
       </div>
 
       {/* Shared room list: public + private, distinguished by a Room Type badge */}
@@ -275,7 +303,7 @@ export default function Lobby() {
                             {t('joinGame.statuses.spectate')}
                           </button>
                         ) : isPriv ? (
-                          <button className="btn btn-outline-primary btn-sm w-100" onClick={() => openCodeModal(room.id)}>
+                          <button className="btn btn-outline-primary btn-sm w-100" onClick={() => openCodeModal()}>
                             {t('joinGame.statuses.join')}
                           </button>
                         ) : (
