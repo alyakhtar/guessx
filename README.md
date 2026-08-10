@@ -76,7 +76,7 @@ npm start            # serves on :8082 (override with PORT)
 |---|---|
 | `npm run dev` | Dev server (hot reload) |
 | `npm run build` | Production build |
-| `npm run start` | Run the production server |
+| `npm start` | Run the production server |
 | `npm run lint` | ESLint (flat config) |
 | `npm run type-check` | `tsc --noEmit` |
 
@@ -84,7 +84,7 @@ npm start            # serves on :8082 (override with PORT)
 
 ## 🐳 Docker
 
-Images are built and published to **GHCR** by CI
+Images are built and published to **GHCR** by CI during a PR sync or push to main
 (`ghcr.io/alyakhtar/guessx`). Pull and run:
 
 ```bash
