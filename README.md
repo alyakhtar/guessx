@@ -20,15 +20,15 @@ code, and duel a friend (or an AI bot) to see who can crack the secret number fi
 
 ## 🎮 Play it now
 
-Two live environments are deployed on the Raspberry Pi:
+Two live environments are deployed:
 
 | Environment | URL | Image |
 |---|---|---|
-| **Production (live)** | **http://raspberrypi2.local:8082** | `ghcr.io/alyakhtar/guessx:latest` |
-| **Dev / Staging (feature branches)** | **http://raspberrypi2.local:8084** | `ghcr.io/alyakhtar/guessx:<branch-slug>` |
+| **Production (live)** | **https://guessx.alyakhtar.com** | `ghcr.io/alyakhtar/guessx:latest` |
+| **Dev / Staging (feature branches)** | **https://dev.alyakhtar.com** | `ghcr.io/alyakhtar/guessx:<branch-slug>` |
 
-> Both are on the local network. Open the Production URL to play the released
-> build; the Dev URL tracks the latest feature-branch image for testing.
+> Open the Production URL to play the released build; the Dev URL tracks the
+> latest feature-branch image for testing.
 
 ---
 
