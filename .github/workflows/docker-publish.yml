@@ -71,11 +71,13 @@ jobs:
         id: branch
         # SECURITY: pass refs through env and quote (review finding: branch names are
         # interpolated directly into shell, enabling injection via `$(...)`). Never embed
-        # ${{ github.head_ref }} inside a run script.
+        # ${{ github.head_ref }} inside a run script. Single env block — duplicate
+        # `env:` keys are invalid YAML and cause the whole workflow to fail to parse.
         env:
           RAW_HEAD: ${{ github.head_ref }}
           RAW_REF: ${{ github.ref_name }}
           EVENT: ${{ github.event_name }}
+          IS_MAIN: ${{ github.ref == 'refs/heads/main' }}
         run: |
           if [ "$EVENT" = "pull_request" ]; then
             RAW="$RAW_HEAD"
@@ -85,8 +87,6 @@ jobs:
           SLUG="${RAW//\//-}"
           echo "slug=${SLUG}" >> "$GITHUB_OUTPUT"
           echo "is_main=${IS_MAIN}" >> "$GITHUB_OUTPUT"
-        env:
-          IS_MAIN: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
