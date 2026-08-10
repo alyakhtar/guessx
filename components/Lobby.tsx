@@ -89,7 +89,7 @@ export default function Lobby() {
   // Opens the code-entry modal. When presetCode is given it pre-fills the boxes
   // (e.g. from the standalone panel); when called with no argument (private-row
   // Join) it opens empty for manual entry. The modal renders whenever modalRoom
-  // is set to a truthy sentinel — passing `null` would make it never appear.
+  // is set to a truthy sentinel — passing `null` would make it never mind.
   const openCodeModal = (presetCode?: string) => {
     setModalRoom(presetCode ? '__CODE__' : '__OPEN__');
     setCodeDigits(presetCode ? presetCode.split('').slice(0, 3) : ['', '', '']);
@@ -248,7 +248,7 @@ export default function Lobby() {
               <tbody>
                 {rooms.map(room => {
                   const isPriv = !!room.isPrivate;
-                  const p1 = room.dotplayers ? room.players[0] : room.players[0];
+                  const p1 = room.players[0];
                   const p2 = room.players[1];
                   const currentPlayerName = playerName.trim();
                   const canRejoinAsPlayer1 = currentPlayerName === p1?.name;
@@ -279,7 +279,7 @@ export default function Lobby() {
                           <button className="btn btn-outline-primary btn-sm w-100" onClick={() => openCodeModal()}>
                             {t('joinGame.statuses.join')}
                           </button>
-                        ) : (
+                        ) : isPriv ? (
                           <button className="btn btn-secondary btn-sm w-100" onClick={() => handleJoinRoomTable(room.id)}>
                             {t('joinGame.statuses.join')}
                           </button>
@@ -310,8 +310,6 @@ export default function Lobby() {
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    // Read the settled state via the functional closure; the inputs
-                    // are controlled so by submit time codeDigits is current.
                     handleJoinByCode();
                   }}
                 >
@@ -325,7 +323,6 @@ export default function Lobby() {
                         value={codeDigits[i]}
                         onChange={(e) => handleDigit(i, e.target.value)}
                         onKeyDown={(e) => {
-                          // Keep Backspace navigation; Enter is handled by the form submit.
                           if (e.key === 'Backspace' && !codeDigits[i] && i > 0) {
                             codeRefs.current[i - 1]?.focus();
                           }
