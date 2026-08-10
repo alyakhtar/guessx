@@ -89,7 +89,7 @@ export default function Lobby() {
   // Opens the code-entry modal. When presetCode is given it pre-fills the boxes
   // (e.g. from the standalone panel); when called with no argument (private-row
   // Join) it opens empty for manual entry. The modal renders whenever modalRoom
-  // is set to a truthy sentinel — passing `null` would make it never mind.
+  // is set to a truthy sentinel - passing null would make it never appear.
   const openCodeModal = (presetCode?: string) => {
     setModalRoom(presetCode ? '__CODE__' : '__OPEN__');
     setCodeDigits(presetCode ? presetCode.split('').slice(0, 3) : ['', '', '']);
@@ -165,9 +165,9 @@ export default function Lobby() {
             onChange={(e) => setNumberLength(parseInt(e.target.value))}
             className="form-select form-select-lg"
           >
-            <option value={4}>{t('createGame.numberLengthOptions.4')}</option>
-            <option value={5}>{t('createGame.numberLengthOptions.5')}</option>
-            <option value={6}>{t('createGame.numberLengthOptions.6')}</option>
+            <option value={4}>{`4`}</option>
+            <option value={5}>{`5`}</option>
+            <option value={6}>{`6`}</option>
           </select>
         </div>
         <div className="mb-3">
@@ -188,9 +188,9 @@ export default function Lobby() {
               onChange={(e) => setBotDifficulty(e.target.value as 'easy' | 'medium' | 'hard')}
               className="form-select form-select-lg"
             >
-              <option value="easy">{t('createGame.botDifficultyOptions.easy')}</option>
-              <option value="medium">{t('createGame.botDifficultyOptions.medium')}</option>
-              <option value="hard">{t('createGame.botDifficultyOptions.hard')}</option>
+              <option value="easy">{`easy`}</option>
+              <option value="medium">{`medium`}</option>
+              <option value="hard">{`hard`}</option>
             </select>
           </div>
         )}
@@ -279,7 +279,7 @@ export default function Lobby() {
                           <button className="btn btn-outline-primary btn-sm w-100" onClick={() => openCodeModal()}>
                             {t('joinGame.statuses.join')}
                           </button>
-                        ) : isPriv ? (
+                        ) : (
                           <button className="btn btn-secondary btn-sm w-100" onClick={() => handleJoinRoomTable(room.id)}>
                             {t('joinGame.statuses.join')}
                           </button>
