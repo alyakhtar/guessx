@@ -234,25 +234,30 @@ export default function Lobby() {
       <div className="mb-4">
         <h2 className="h5 fw-semibold mb-3">{t('joinGame.byCode.heading')}</h2>
         <p className="text-muted small">{t('joinGame.byCode.codeLabel')}</p>
-        <div className="d-flex gap-2">
+        <form
+          className="d-flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (joinCode.length === 3) openCodeModal(joinCode);
+          }}
+        >
           <input
             type="text"
             value={joinCode}
             onChange={(e) => setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 3))}
-            onKeyDown={(e) => { if (e.key === 'Enter' && joinCode.length === 3) openCodeModal(joinCode); }}
             placeholder="ABC"
             maxLength={3}
             className="form-control form-control-lg text-center text-uppercase"
             style={{ letterSpacing: '0.15em' }}
           />
           <button
+            type="submit"
             className="btn btn-primary"
             disabled={joinCode.length !== 3}
-            onClick={() => openCodeModal(joinCode)}
           >
             {t('joinGame.byCode.button')}
           </button>
-        </div>
+        </form>
         {joinCodeError && <div className="alert alert-danger py-2 mt-2 mb-0">{joinCodeError}</div>}
       </div>
 
@@ -333,34 +338,41 @@ export default function Lobby() {
               </div>
               <div className="modal-body text-center">
                 <p className="text-muted small">{t('joinGame.byCode.codeLabel')}</p>
-                <div className="d-flex justify-content-center gap-2 mb-3">
-                  {[0, 1, 2].map((i) => (
-                    <input
-                      key={i}
-                      ref={(el) => { codeRefs.current[i] = el; }}
-                      type="text"
-                      inputMode="text"
-                      value={codeDigits[i]}
-                      onChange={(e) => handleDigit(i, e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          const code = codeDigits.join('');
-                          if (code.length === 3) handleJoinByCode();
-                        } else if (e.key === 'Backspace' && !codeDigits[i] && i > 0) {
-                          codeRefs.current[i - 1]?.focus();
-                        }
-                      }}
-                      maxLength={1}
-                      className="form-control form-control-lg text-center text-uppercase"
-                      style={{ width: '3.5rem', fontSize: '1.6rem', letterSpacing: '0.15em' }}
-                    />
-                  ))}
-                </div>
-                {joinError && <div className="alert alert-danger py-2 mb-0">{joinError}</div>}
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setModalRoom(null)}>{t('joinGame.cancel')}</button>
-                <button type="button" className="btn btn-primary" onClick={handleJoinByCode}>{t('joinGame.byCode.button')}</button>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    // Read the settled state via the functional closure; the inputs
+                    // are controlled so by submit time codeDigits is current.
+                    handleJoinByCode();
+                  }}
+                >
+                  <div className="d-flex justify-content-center gap-2 mb-3">
+                    {[0, 1, 2].map((i) => (
+                      <input
+                        key={i}
+                        ref={(el) => { codeRefs.current[i] = el; }}
+                        type="text"
+                        inputMode="text"
+                        value={codeDigits[i]}
+                        onChange={(e) => handleDigit(i, e.target.value)}
+                        onKeyDown={(e) => {
+                          // Keep Backspace navigation; Enter is handled by the form submit.
+                          if (e.key === 'Backspace' && !codeDigits[i] && i > 0) {
+                            codeRefs.current[i - 1]?.focus();
+                          }
+                        }}
+                        maxLength={1}
+                        className="form-control form-control-lg text-center text-uppercase"
+                        style={{ width: '3.5rem', fontSize: '1.6rem', letterSpacing: '0.15em' }}
+                      />
+                    ))}
+                  </div>
+                  {joinError && <div className="alert alert-danger py-2 mb-3">{joinError}</div>}
+                  <div className="d-flex justify-content-center gap-2">
+                    <button type="button" className="btn btn-secondary" onClick={() => setModalRoom(null)}>{t('joinGame.cancel')}</button>
+                    <button type="submit" className="btn btn-primary">{t('joinGame.byCode.button')}</button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>
