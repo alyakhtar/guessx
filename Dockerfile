@@ -2,8 +2,11 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm ci
+# Use `npm install` (not `npm ci`) so the build does not require a committed
+# lockfile that exactly matches package.json. Keeps CI/dev in sync without a
+# brittle lockfile-commit step.
+COPY package.json ./
+RUN npm install
 
 # Stage 2: Build the Next.js app
 FROM node:20-alpine AS builder
