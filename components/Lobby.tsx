@@ -22,8 +22,11 @@ export default function Lobby() {
   const [rooms, setRooms] = useState<GameRoom[]>([]);
   // Private room toggle (default off, per issue AC)
   const [isPrivate, setIsPrivate] = useState(false);
-  // Inline code input keyed by room id for private rows
-  const [codeByRoom, setCodeByRoom] = useState<Record<string, string>>({});
+  // Private-room join modal state
+  const [modalRoom, setModalRoom] = useState<string | null>(null);
+  const [codeDigits, setCodeDigits] = useState<string[]>(['', '', '']);
+  const [joinError, setJoinError] = useState('');
+  const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
   const router = useRouter();
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -84,21 +87,36 @@ export default function Lobby() {
     blurActive();
   };
 
-  // Private room join via inline code input
-  const handleJoinByCode = (roomId: string) => {
+  // Private room join — handled through a modal (no inline input; errors shown in-modal)
+  const openCodeModal = (roomId: string) => {
+    setModalRoom(roomId);
+    setCodeDigits(['', '', '']);
+    setJoinError('');
+    setTimeout(() => codeRefs.current[0]?.focus(), 50);
+  };
+
+  const handleDigit = (idx: number, val: string) => {
+    const v = val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 1);
+    const next = [...codeDigits];
+    next[idx] = v;
+    setCodeDigits(next);
+    if (v && idx < 2) codeRefs.current[idx + 1]?.focus();
+  };
+
+  const handleJoinByCode = () => {
+    if (!modalRoom) return;
+    const code = codeDigits.join('').toUpperCase();
     const trimmedName = playerName.trim();
-    const code = (codeByRoom[roomId] || '').trim().toUpperCase();
-    if (!trimmedName) { alert(t('errors.nameRequired')); return; }
-    if (!code) { alert(t('joinGame.errors.codeRequired')); return; }
-    if (!socket) { alert(t('errors.connectionError')); return; }
+    if (!trimmedName) { setJoinError(t('errors.nameRequired')); return; }
+    if (code.length < 3) { setJoinError(t('joinGame.errors.codeRequired')); return; }
+    if (!socket) { setJoinError(t('errors.connectionError')); return; }
     localStorage.setItem('playerName', trimmedName);
     socket.emit('join_room_by_code', code, trimmedName);
-    const handleRoomUpdated = (room: any) => router.push(`/${locale}/game/${room.id}`);
-    const handleError = (error: string) => alert(error);
+    const handleRoomUpdated = (room: any) => { setModalRoom(null); router.push(`/${locale}/game/${room.id}`); };
+    const handleError = (error: string) => setJoinError(error);
     socket.once('room_updated', handleRoomUpdated);
     socket.once('error', handleError);
     setTimeout(() => { socket.off('room_updated', handleRoomUpdated); socket.off('error', handleError); }, 5000);
-    blurActive();
   };
 
   const handleSpectateRoomTable = (roomId: string) => {
@@ -210,7 +228,7 @@ export default function Lobby() {
         </button>
       </div>
 
-      {/* Shared room list: public + private, distinguished by a Type badge */}
+      {/* Shared room list: public + private, distinguished by a Room Type badge */}
       <div className="mb-4">
         <h2 className="h5 fw-semibold mb-3">{t('joinGame.heading')}</h2>
         {rooms.length > 0 ? (
@@ -218,8 +236,8 @@ export default function Lobby() {
             <table className="table table-sm table-striped table-dark align-middle">
               <thead>
                 <tr>
-                  <th className="d-none d-md-table-cell">{t('joinGame.table.roomId')}</th>
-                  <th>{t('joinGame.table.type.public')}</th>
+                  <th>{t('joinGame.table.roomId')}</th>
+                  <th>{t('joinGame.table.type.header')}</th>
                   <th className="d-none d-sm-table-cell">{t('joinGame.table.player1')}</th>
                   <th className="d-none d-sm-table-cell">{t('joinGame.table.player2')}</th>
                   <th>{t('joinGame.table.action')}</th>
@@ -241,7 +259,7 @@ export default function Lobby() {
                     hasTwoPlayers && hasActiveGame && !isRegisteredPlayer;
                   return (
                     <tr key={room.id}>
-                      <td className="d-none d-md-table-cell">{room.id}</td>
+                      <td>{room.id}</td>
                       <td>
                         {isPriv ? (
                           <span className="badge bg-warning text-dark">{t('joinGame.table.type.private')}</span>
@@ -257,20 +275,9 @@ export default function Lobby() {
                             {t('joinGame.statuses.spectate')}
                           </button>
                         ) : isPriv ? (
-                          <div className="d-flex flex-column flex-sm-row gap-1">
-                            <input
-                              type="text"
-                              value={codeByRoom[room.id] || ''}
-                              onChange={(e) => setCodeByRoom(prev => ({ ...prev, [room.id]: e.target.value.toUpperCase() }))}
-                              maxLength={3}
-                              className="form-control form-control-sm text-uppercase"
-                              placeholder={t('joinGame.byCode.codePlaceholder')}
-                              style={{ letterSpacing: '0.3em', maxWidth: '6rem' }}
-                            />
-                            <button className="btn btn-outline-primary btn-sm" onClick={() => handleJoinByCode(room.id)}>
-                              {t('joinGame.byCode.button')}
-                            </button>
-                          </div>
+                          <button className="btn btn-outline-primary btn-sm w-100" onClick={() => openCodeModal(room.id)}>
+                            {t('joinGame.statuses.join')}
+                          </button>
                         ) : (
                           <button className="btn btn-secondary btn-sm w-100" onClick={() => handleJoinRoomTable(room.id)}>
                             {t('joinGame.statuses.join')}
@@ -287,6 +294,46 @@ export default function Lobby() {
           <p className="text-muted">{t('joinGame.noRooms')}</p>
         )}
       </div>
+
+      {/* Private-room access-code modal: 3-box input, errors shown in-modal (no alerts) */}
+      {modalRoom && (
+        <div className="modal show d-block" tabIndex={-1} style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">{t('joinGame.byCode.heading')}</h5>
+                <button type="button" className="btn-close" aria-label={t('joinGame.cancel')} onClick={() => setModalRoom(null)}></button>
+              </div>
+              <div className="modal-body text-center">
+                <p className="text-muted small">{t('joinGame.byCode.codeLabel')}</p>
+                <div className="d-flex justify-content-center gap-2 mb-3">
+                  {[0, 1, 2].map((i) => (
+                    <input
+                      key={i}
+                      ref={(el) => { codeRefs.current[i] = el; }}
+                      type="text"
+                      inputMode="text"
+                      value={codeDigits[i]}
+                      onChange={(e) => handleDigit(i, e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Backspace' && !codeDigits[i] && i > 0) codeRefs.current[i - 1]?.focus();
+                      }}
+                      maxLength={1}
+                      className="form-control form-control-lg text-center text-uppercase"
+                      style={{ width: '3.5rem', fontSize: '1.6rem', letterSpacing: '0.15em' }}
+                    />
+                  ))}
+                </div>
+                {joinError && <div className="alert alert-danger py-2 mb-0">{joinError}</div>}
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setModalRoom(null)}>{t('joinGame.cancel')}</button>
+                <button type="button" className="btn btn-primary" onClick={handleJoinByCode}>{t('joinGame.byCode.button')}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Connection Status */}
       <div className="alert alert-secondary small">
