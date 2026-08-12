@@ -101,7 +101,7 @@ export default function Spectator() {
     }
 
     const p1 = room.players[0];
-    const p1 = room.players[0];
+    const p2 = room.players[1];
     const currentPlayerName = room.players.find(p => p.id === room.currentTurn)?.name;
 
     return (
