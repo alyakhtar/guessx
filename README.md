@@ -84,7 +84,7 @@ npm start            # serves on :8082 (override with PORT)
 
 ## 🐳 Docker
 
-Images are built and published to **GHCR** by CI during a PR sync or push to main
+Images are built and published to **GHCR** by CI
 (`ghcr.io/alyakhtar/guessx`). Pull and run:
 
 ```bash

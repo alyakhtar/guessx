@@ -36,12 +36,10 @@ jobs:
           node-version: 20
           cache: npm
 
-      # `npm install` (not `npm ci`) — CI does not require a committed lockfile that
-      # matches package.json exactly (the lockfile is currently stale; regenerating
-      # and committing it is tracked as a follow-up). Still fails the job on real
-      # install errors — no `|| echo` masking (review finding: CI previously hid failures).
+      # Reproducible install from the committed lockfile (review finding: CI and
+      # Docker must use the same dependency tree). Fails the job on real errors.
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       # These steps MUST fail the job on error. No `|| echo` masking — a real failure
       # must surface as a red check (review finding: CI previously hid failures).

@@ -1,42 +1,30 @@
-import js from '@eslint/js';
-import tseslint from '@typescript-eslint/eslint-plugin';
-import tsparser from '@typescript-eslint/parser';
-import globals from 'globals';
+import cwv from 'eslint-config-next/core-web-vitals';
+import ts from 'eslint-config-next/typescript';
 
-// Native flat config (ESLint 9). `eslint-config-next` v16's flat export is
-// incompatible with the installed ESLint 9 flat loader (circular-ref crash on
-// `next.configs.flat`), so we wire a minimal TypeScript + JS setup directly.
-// This working config RESOLVES issue #7 (restore a standalone lint gate in CI).
-export default [
-  js.configs.recommended,
+// Real Next.js 16 flat config (Core Web Vitals + TypeScript). These subpath
+// exports load correctly as flat-config arrays under ESLint 9 and bring in the
+// Next.js, React, and React Hooks rules. Resolves review finding: the previous
+// hand-rolled config dropped those framework rules and disabled no-undef.
+const nextConfig = [
+  ...ts,
+  ...cwv,
   {
-    files: ['**/*.{ts,tsx,js,jsx,mjs}'],
+    // server/socket-server.js is a CommonJS Node entrypoint that uses require()
+    // and is not covered by tsconfig's type-checking. Allow require there and
+    // keep no-undef off (Node globals), while the Next/React rules stay active
+    // for the rest of the app.
+    files: ['server/**/*.js'],
     languageOptions: {
-      parser: tsparser,
-      parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
-      },
-      // Browser + Node globals for a Next.js (client) + socket server (node) app.
-      globals: {
-        ...globals.browser,
-        ...globals.node,
-      },
-    },
-    plugins: {
-      '@typescript-eslint': tseslint,
+      sourceType: 'commonjs',
     },
     rules: {
-      ...tseslint.configs.recommended.rules,
-      // TS already reports genuinely-undefined identifiers via type-check; keep
-      // `no-undef` off so DOM/Node globals (document, process, etc.) aren't flagged.
-      'no-undef': 'off',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
-      '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-require-imports': 'off',
+      'no-undef': 'off',
     },
   },
   {
     ignores: ['.next/**', 'node_modules/**', 'out/**', 'server.js', 'lib/socket.js'],
   },
 ];
+
+export default nextConfig;

@@ -82,7 +82,11 @@
       "nameRequired": "Veuillez entrer votre nom",
       "connectionError": "Non connecté au serveur. Veuillez actualiser la page.",
       "roomCreationError": "Erreur",
-      "roomJoinError": "Erreur"
+      "roomJoinError": "Erreur",
+      "server": {
+        "duplicateName": "Un joueur portant ce nom est déjà dans la salle.",
+        "invalidCode": "Code d'accès invalide. Vérifiez le code et réessayez."
+      }
     }
   },
   "localeSelector": {

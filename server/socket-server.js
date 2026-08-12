@@ -258,7 +258,7 @@ class GameServer {
     // A name already taken by a CONNECTED player is a hard conflict — reject
     // before any reconnect or capacity logic (two live "SameName" is invalid).
     if (existingPlayer && existingPlayer.isConnected) {
-      return { error: 'A player with that name is already in the room.' };
+      return { error: 'SERVER_ERROR:duplicateName' };
     }
     // Reconnect: a stored player with the same name who disconnected.
     if (existingPlayer && !existingPlayer.isConnected) {
@@ -300,7 +300,7 @@ class GameServer {
       if (!accessCode || typeof accessCode !== 'string') { socket.emit('error', 'Please provide a valid access code.'); return; }
       const normalized = accessCode.trim().toUpperCase();
       const room = Array.from(this.rooms.values()).find(r => r.isPrivate && r.accessCode === normalized);
-      if (!room) { socket.emit('error', 'Invalid access code. Please check the code and try again.'); return; }
+      if (!room) { socket.emit('error', 'SERVER_ERROR:invalidCode'); return; }
       const result = this.admitPlayer(room, socket, playerName, { byCode: true });
       if (result.error) { socket.emit('error', result.error); return; }
     } catch (error) { console.error('Error joining room by code:', error); socket.emit('error', 'Failed to join room'); }

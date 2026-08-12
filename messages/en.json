@@ -82,7 +82,11 @@
       "nameRequired": "Please enter your name",
       "connectionError": "Not connected to server. Please refresh the page.",
       "roomCreationError": "Error",
-      "roomJoinError": "Error"
+      "roomJoinError": "Error",
+      "server": {
+        "duplicateName": "A player with that name is already in the room.",
+        "invalidCode": "Invalid access code. Please check the code and try again."
+      }
     }
   },
   "localeSelector": {

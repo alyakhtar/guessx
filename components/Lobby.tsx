@@ -7,9 +7,23 @@ import { socketService } from '../lib/socket';
 import { GameRoom } from '../types/game';
 import LocaleSelector from './LocaleSelector';
 
+// Minimal shape of a room payload the lobby receives on socket callbacks.
+type RoomSummary = { id: string; isPrivate?: boolean; accessCode?: string };
+
 export default function Lobby() {
   const t = useTranslations('lobby');
   const locale = useLocale();
+
+  // Translate stable server error codes into localized UI text. Server emits
+  // 'SERVER_ERROR:<key>' for client-facing errors so they can be i18n'd.
+  const translateServerError = (error: string): string => {
+    if (error.startsWith('SERVER_ERROR:')) {
+      const key = error.slice('SERVER_ERROR:'.length);
+      if (key === 'duplicateName') return t('errors.server.duplicateName');
+      if (key === 'invalidCode') return t('errors.server.invalidCode');
+    }
+    return error;
+  };
 
   const [playerName, setPlayerName] = useState('');
   const [numberLength, setNumberLength] = useState(4);
@@ -17,7 +31,7 @@ export default function Lobby() {
   const [isCreating, setIsCreating] = useState(false);
   const [isSinglePlayer, setIsSinglePlayer] = useState(false);
   const [botDifficulty, setBotDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
-  const [socket, setSocket] = useState<any>(null);
+  const [socket, setSocket] = useState<ReturnType<typeof socketService.connect> | null>(null);
   const [darkMode, setDarkMode] = useState(true);
   const [rooms, setRooms] = useState<GameRoom[]>([]);
   // Private room toggle (default off, per issue AC)
@@ -31,11 +45,15 @@ export default function Lobby() {
 
   useEffect(() => {
     const savedName = localStorage.getItem('playerName');
+    // Intentional: restore the persisted name once on mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (savedName) setPlayerName(savedName);
   }, []);
 
   useEffect(() => {
     const socketInstance = socketService.connect();
+    // Intentional: the socket is created once on mount and stored in state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSocket(socketInstance);
     socketInstance.emit('get_rooms');
     socketInstance.on('room_list', (rooms: GameRoom[]) => setRooms(rooms));
@@ -57,14 +75,14 @@ export default function Lobby() {
     if (!socket) { alert(t('errors.connectionError')); return; }
     setIsCreating(true);
     socket.emit('create_room', trimmedName, numberLength, spectatorModeEnabled, isSinglePlayer, botDifficulty, isPrivate);
-    const handleRoomCreated = (newRoomId: string, room: any) => {
+    const handleRoomCreated = (newRoomId: string, room: RoomSummary) => {
       setIsCreating(false);
       if (room && room.isPrivate && room.accessCode) {
         alert(t('createGame.privateRoomCreated', { code: room.accessCode }));
       }
       router.push(`/${locale}/game/${newRoomId}`);
     };
-    const handleError = (error: string) => { alert(error); setIsCreating(false); };
+    const handleError = (error: string) => { alert(translateServerError(error)); setIsCreating(false); };
     socket.once('room_created', handleRoomCreated);
     socket.once('error', handleError);
     setTimeout(() => { socket.off('room_created', handleRoomCreated); socket.off('error', handleError); }, 5000);
@@ -78,8 +96,8 @@ export default function Lobby() {
     localStorage.setItem('playerName', trimmedName);
     if (!socket) { alert(t('errors.connectionError')); return; }
     socket.emit('join_room', roomId, trimmedName);
-    const handleRoomUpdated = (room: any) => router.push(`/${locale}/game/${room.id}`);
-    const handleError = (error: string) => alert(error);
+    const handleRoomUpdated = (room: RoomSummary) => router.push(`/${locale}/game/${room.id}`);
+    const handleError = (error: string) => alert(translateServerError(error));
     socket.once('room_updated', handleRoomUpdated);
     socket.once('error', handleError);
     setTimeout(() => { socket.off('room_updated', handleRoomUpdated); socket.off('error', handleError); }, 5000);
@@ -113,8 +131,8 @@ export default function Lobby() {
     if (!socket) { setJoinError(t('errors.connectionError')); return; }
     localStorage.setItem('playerName', trimmedName);
     socket.emit('join_room_by_code', code, trimmedName);
-    const handleRoomUpdated = (room: any) => { setModalRoom(null); router.push(`/${locale}/game/${room.id}`); };
-    const handleError = (error: string) => setJoinError(error);
+    const handleRoomUpdated = (room: RoomSummary) => { setModalRoom(null); router.push(`/${locale}/game/${room.id}`); };
+    const handleError = (error: string) => setJoinError(translateServerError(error));
     socket.once('room_updated', handleRoomUpdated);
     socket.once('error', handleError);
     setTimeout(() => { socket.off('room_updated', handleRoomUpdated); socket.off('error', handleError); }, 5000);
@@ -165,9 +183,9 @@ export default function Lobby() {
             onChange={(e) => setNumberLength(parseInt(e.target.value))}
             className="form-select form-select-lg"
           >
-            <option value={4}>{`4`}</option>
-            <option value={5}>{`5`}</option>
-            <option value={6}>{`6`}</option>
+            <option value={4}>{t('createGame.numberLengthOptions.4')}</option>
+            <option value={5}>{t('createGame.numberLengthOptions.5')}</option>
+            <option value={6}>{t('createGame.numberLengthOptions.6')}</option>
           </select>
         </div>
         <div className="mb-3">
