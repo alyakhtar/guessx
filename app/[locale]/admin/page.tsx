@@ -43,6 +43,19 @@ export default function AdminPage() {
     const [activeTab, setActiveTab] = useState<'configs' | 'stats'>('configs');
     const [statsLoading, setStatsLoading] = useState(false);
 
+    const fetchConfigs = async () => {
+        try {
+            const response = await fetch('/api/admin/configs');
+            const data = await response.json();
+            setConfigs(data);
+            setMessage({ type: '', text: '' });
+        } catch (error) {
+            setMessage({ type: 'error', text: t('errors.loadError') });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         fetchConfigs();
         // Load saved dark mode preference from localStorage
@@ -62,19 +75,6 @@ export default function AdminPage() {
     useEffect(() => {
         document.documentElement.setAttribute('data-bs-theme', darkMode ? 'dark' : 'light');
     }, [darkMode]);
-
-    const fetchConfigs = async () => {
-        try {
-            const response = await fetch('/api/admin/configs');
-            const data = await response.json();
-            setConfigs(data);
-            setMessage({ type: '', text: '' });
-        } catch (error) {
-            setMessage({ type: 'error', text: t('errors.loadError') });
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleSave = async () => {
         setSaving(true);
@@ -123,6 +123,8 @@ export default function AdminPage() {
             setStatsLoading(false);
         }
     };
+
+/* (duplicate fetchConfigs block intentionally removed above) */
 
     const formatDuration = (ms: number | null) => {
         if (!ms) return 'N/A';
