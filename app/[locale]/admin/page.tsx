@@ -124,8 +124,6 @@ export default function AdminPage() {
         }
     };
 
-/* (duplicate fetchConfigs block intentionally removed above) */
-
     const formatDuration = (ms: number | null) => {
         if (!ms) return 'N/A';
         const seconds = Math.floor(ms / 1000);
