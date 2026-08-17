@@ -316,16 +316,17 @@ export default function Lobby() {
 
       {/* Private-room access-code modal: 3-box input, errors shown in-modal (no alerts) */}
       {modalRoom && (
-        <div className="modal show d-block" tabIndex={-1} style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+        <div className="modal show d-block" tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="codeModalTitle" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">{t('joinGame.byCode.heading')}</h5>
+                <h5 className="modal-title" id="codeModalTitle">{t('joinGame.byCode.heading')}</h5>
                 <button type="button" className="btn-close" aria-label={t('joinGame.cancel')} onClick={() => setModalRoom(null)}></button>
               </div>
               <div className="modal-body text-center">
-                <p className="text-muted small">{t('joinGame.byCode.codeLabel')}</p>
+                <p className="text-muted small" id="codeModalDesc">{t('joinGame.byCode.codeLabel')}</p>
                 <form
+                  aria-describedby="codeModalDesc"
                   onSubmit={(e) => {
                     e.preventDefault();
                     handleJoinByCode();
@@ -338,6 +339,7 @@ export default function Lobby() {
                         ref={(el) => { codeRefs.current[i] = el; }}
                         type="text"
                         inputMode="text"
+                        aria-label={`${t('joinGame.byCode.codeLabel')} ${i + 1}`}
                         value={codeDigits[i]}
                         onChange={(e) => handleDigit(i, e.target.value)}
                         onKeyDown={(e) => {
@@ -351,7 +353,7 @@ export default function Lobby() {
                       />
                     ))}
                   </div>
-                  {joinError && <div className="alert alert-danger py-2 mb-3">{joinError}</div>}
+                  {joinError && <div className="alert alert-danger py-2 mb-3" role="alert" aria-live="assertive">{joinError}</div>}
                   <div className="d-flex justify-content-center gap-2">
                     <button type="button" className="btn btn-secondary" onClick={() => setModalRoom(null)}>{t('joinGame.cancel')}</button>
                     <button type="submit" className="btn btn-primary">{t('joinGame.byCode.button')}</button>
