@@ -116,6 +116,7 @@
       "incoming": "Your opponent wants a rematch!",
       "accept": "✅ Accept",
       "decline": "❌ Decline",
+      "declined": "Opponent declined the rematch.",
       "soloHint": "Your opponent isn't connected. Share the new room so they can join:",
       "soloCode": "Room code",
       "soloRoom": "Room ID"

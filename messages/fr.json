@@ -22,8 +22,8 @@
         "6": "6 chiffres (100000-999999)"
       },
       "singlePlayerMode": {
-        "label": "Solo contre le bot",
-        "description": "Jouez contre un adversaire IA"
+        "label": "Solo contre un bot",
+        "description": "Jouez contre une IA"
       },
       "botDifficultyLabel": "Difficulté du bot",
       "botDifficultyOptions": {
@@ -31,7 +31,7 @@
         "medium": "Moyen",
         "hard": "Difficile"
       },
-      "spectatorMode": {
+    "spectatorMode": {
         "label": "Activer le mode spectateur",
         "description": "Permettre à d'autres de regarder la partie en mode lecture seule"
       },
@@ -39,7 +39,7 @@
         "label": "Salle privée",
         "description": "Créez une salle privée. Un code de 3 caractères est généré pour le partager avec votre adversaire."
       },
-      "privateRoomCreated": "Salle privée créée ! Partagez ce code avec votre ami pour rejoindre : {code}",
+      "privateRoomCreated": "Salle privée créée ! Partagez ce code avec votre ami pour le rejoindre : {code}",
       "buttons": {
         "create": "Créer une nouvelle partie",
         "creating": "Création de la salle...",
@@ -53,8 +53,8 @@
         "roomId": "ID de salle",
         "type": {
           "header": "Type de salle",
-          "public": "Public",
-          "private": "Privé"
+          "public": "Publique",
+          "private": "Privée"
         },
         "player1": "Joueur 1",
         "player2": "Joueur 2",
@@ -75,7 +75,7 @@
       },
       "errors": {
         "codeRequired": "Veuillez entrer le code d'accès à 3 caractères",
-        "invalidCode": "Code d'accès invalide. Vérifiez le code et réessayez."
+        "invalidCode": "Code d'accès invalide. Veuillez vérifier le code et réessayer."
       }
     },
     "errors": {
@@ -85,12 +85,12 @@
       "roomJoinError": "Erreur",
       "server": {
         "duplicateName": "Un joueur avec ce nom est déjà dans la salle.",
-        "invalidCode": "Code d'accès invalide. Vérifiez le code et réessayez."
+        "invalidCode": "Code d'accès invalide. Veuillez vérifier le code et réessayer."
       }
     }
   },
   "localeSelector": {
-    "english": "Anglais",
+    "english": "English",
     "french": "Français"
   },
   "gameRoom": {
@@ -116,6 +116,7 @@
       "incoming": "Votre adversaire propose une revanche !",
       "accept": "✅ Accepter",
       "decline": "❌ Refuser",
+      "declined": "L'adversaire a refusé la revanche.",
       "soloHint": "Votre adversaire n'est pas connecté. Partagez la nouvelle salle pour qu'il puisse rejoindre :",
       "soloCode": "Code de salle",
       "soloRoom": "ID de salle"
@@ -123,8 +124,8 @@
   },
   "guessInput": {
     "secretNumber": {
-      "title": "Définissez Votre Nombre Secret",
-      "label": "Votre nombre secret de {length} chiffres",
+      "title": "Définissez votre nombre secret",
+      "label": "Votre nombre secret à {length} chiffres",
       "help": "Entrez chaque chiffre dans les cases - le curseur avance automatiquement",
       "button": "Définir le nombre secret et commencer"
     },
@@ -138,7 +139,7 @@
     "gameOver": {
       "title": "Partie terminée !",
       "winnerText": "{name} a gagné la partie !",
-      "newGameButton": "🎮 Commencer une nouvelle partie"
+      "newGameButton": "🎮 Nouvelle partie"
     },
     "turn": {
       "yourTurn": "🎯 À votre tour - Faites une supposition !",
@@ -181,7 +182,7 @@
       },
       "secretNumber": "Nombre secret",
       "guesses": "Suppositions",
-      "noGuesses": "Aucune supposition pour l'instant",
+      "noGuesses": "Aucune supposition",
       "correct": "correct"
     }
   },
@@ -192,12 +193,12 @@
       "settingUp": "Configuration...",
       "waiting": "En attente",
       "setup": "Configuration",
-      "playing": "En cours",
+      "playing": "En jeu",
       "finished": "Terminé"
     },
     "indicators": {
       "you": "(Vous)",
-      "thinking": "Réflexion...",
+      "thinking": "Réfléchit...",
       "yourSecret": "Votre secret :",
       "playerSecret": "Secret de {player} :",
       "digitsGuessed": "Chiffres devinés :"
@@ -212,7 +213,7 @@
   "gameHistory": {
     "title": "Vos suppositions",
     "empty": {
-      "title": "Aucune supposition pour l'instant",
+      "title": "Aucune supposition",
       "subtitle": "Vos suppositions apparaîtront ici"
     },
     "table": {
