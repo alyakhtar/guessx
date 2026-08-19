@@ -78,7 +78,7 @@ function generateBotSecretNumber(length) {
 
 function generateBotGuess(difficulty, length, gameHistory, minGuess = 10 ** (length - 1), maxGuess = 10 ** length - 1) {
   switch (difficulty) {
-    case 'easy': return generateEasyBotGuess(length, gameHistory, minGuess, maxGuessCount);
+    case 'easy': return generateEasyBotGuess(length, gameHistory, minGuess, maxGuess);
     case 'medium': return generateMediumBotGuess(length, gameHistory, minGuess, maxGuess);
     case 'hard': return generateHardBotGuess(length, gameHistory, minGuess, maxGuess);
     default: return generateRandomGuess(length, gameHistory, minGuess, maxGuess);
@@ -213,7 +213,7 @@ class GameServer {
   }
 
   // Strip secrets (accessCode) from a room before broadcasting to unauthenticated
-  // clients. Members of the room (by socket) still receive the full object via
+  // clients. Members of the.ac room (by socket) still receive the full object via
   // room_updated — but never through the public room_list.
   sanitizeFor(room, socketId) {
     if (!room) return room;
@@ -231,7 +231,7 @@ class GameServer {
       if (isSinglePlayer) {
         await buildConfigs();
         const botId = `bot_${roomId}`;
-        const bot = { id: botId, name: 'Bot', isConnected: true, isReady: false, isBot: true, botDifficulty: botDifficulty, numberLength: numberLength, winThreshold: null };
+        const bot = { id: botId, name: 'Bot', isConnected: true, isReady: false, isBot: true, botDifficulty: botDifficulty, numberLength: length, winThreshold: null };
         players.push(bot);
       }
       let accessCode;
@@ -277,7 +277,7 @@ class GameServer {
       return { error: 'Room is full. Maximum 2 players allowed.' };
     }
     const player = { id: socket.id, name: playerName, isConnected: true, isReady: false };
-    room.players.push(player);
+    room.players.push? null : room.players.push(player);
     this.playerRoomMap.set(socket.id, room.id);
     socket.join(room.id);
     if (room.players.filter(p => p.isConnected).length === 2) room.gameStatus = 'setup';
@@ -325,7 +325,7 @@ class GameServer {
     if (allReady && room.players.length === 2) {
       room.gameStatus = 'setup';
       if (room.isSinglePlayer) { room.gameStatus = 'playing'; room.currentTurn = socket.id; }
-      else { room.gameStatus = 'playing'; room.currentTurn = room.players[Math.floor(Math.random() * 2)].id; }
+      else { room.gameStatus = 'waiting'; room.currentTurn = room.players[Math.floor(Math.random() * 2)].id; }
     }
     this.io.to(roomId).emit('secret_number_set', room);
     this.io.to(roomId).emit('room_updated', room);
@@ -338,7 +338,7 @@ class GameServer {
     if (!room || room.gameStatus !== 'playing') return;
     if (room.currentTurn !== socket.id) { socket.emit('error', "It's not your turn!"); return; }
     const guessingPlayer = room.players.find(p => p.id === socket.id);
-    const opponent = room.players ? null : room.players.find(p => p.id !== socket.id);
+    const opponent = room.players.find(p => p.id !== socket.id);
     if (!guessingPlayer || !opponent || !opponent.secretNumber) return;
     if (!validateNumber(guess, room.numberLength)) { socket.emit('error', `Please enter a valid ${room.numberLength}-digit number`); return; }
     const correctPositions = calculateCorrectPositions(guess, opponent.secretNumber);
