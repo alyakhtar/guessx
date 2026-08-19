@@ -1,5 +1,6 @@
 const { Server } = require('socket.io');
 const mongoose = require('mongoose');
+const { attachRematch } = require('./rematch');
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 const debugLog = (...args) => { if (isDevelopment) console.debug(...args); };
@@ -91,7 +92,7 @@ function generateRandomGuess(length, gameHistory, minGuess = 10 ** (length - 1),
     const numStr = i.toString().padStart(length, '0');
     if (!gameHistory.some(h => h.guess === numStr)) allPossible.push(numStr);
   }
-  if (allPossible.length === 0) return Math.floor(Math.random() * (maxGuess - minGuess + 1) + minGuess).toString();
+  if (allPossible.length === 0) return Math.floor(Math.random() * (maxGuess - minGuess + 1) + minGuess).toString().padStart(length, '0');
   return allPossible[Math.floor(Math.random() * allPossible.length)];
 }
 
@@ -182,7 +183,6 @@ class GameServer {
         await this.createRoom(socket, playerName, numberLength, spectatorModeEnabled, isSinglePlayer, botDifficulty, isPrivate);
       });
 
-      // Join a private room by its 3-char access code
       socket.on('join_room_by_code', (accessCode, playerName) => {
         this.joinRoomByCode(socket, accessCode, playerName);
       });
@@ -193,7 +193,6 @@ class GameServer {
         const room = this.rooms.get(roomId);
         if (room) {
           socket.join(`${roomId}_spectators`);
-          // Send the full room (incl. accessCode) only to members of this room.
           socket.emit('room_updated', this.sanitizeFor(room, socket.id));
         }
       });
@@ -202,19 +201,12 @@ class GameServer {
       socket.on('make_guess', (guess) => this.handleGuess(socket, guess));
       socket.on('disconnect', (reason) => this.handleDisconnect(socket));
       socket.on('new_game', () => this.handleNewGame(socket));
-
-      // --- Rematch flow (issue #4) ---
-      socket.on('rematch_request', (sourceRoomId) => this.handleRematchRequest(socket, sourceRoomId));
-      socket.on('rematch_accept', (sourceRoomId) => this.handleRematchAccept(socket, sourceRoomId));
-      socket.on('rematch_decline', (sourceRoomId) => this.handleRematchDecline(socket, sourceRoomId));
-
       socket.emit('connected', { socketId: socket.id });
     });
+    // Rematch handlers live in server/rematch.js (issue #4).
+    attachRematch(this);
   }
 
-  // Strip secrets (accessCode) from a room before broadcasting to unauthenticated
-  // clients. Members of the.ac room (by socket) still receive the full object via
-  // room_updated — but never through the public room_list.
   sanitizeFor(room, socketId) {
     if (!room) return room;
     const isMember = room.players.some(p => p.id === socketId);
@@ -231,7 +223,7 @@ class GameServer {
       if (isSinglePlayer) {
         await buildConfigs();
         const botId = `bot_${roomId}`;
-        const bot = { id: botId, name: 'Bot', isConnected: true, isReady: false, isBot: true, botDifficulty: botDifficulty, numberLength: length, winThreshold: null };
+        const bot = { id: botId, name: 'Bot', isConnected: true, isReady: false, isBot: true, botDifficulty: botDifficulty, numberLength: numberLength, winThreshold: null };
         players.push(bot);
       }
       let accessCode;
@@ -277,7 +269,7 @@ class GameServer {
       return { error: 'Room is full. Maximum 2 players allowed.' };
     }
     const player = { id: socket.id, name: playerName, isConnected: true, isReady: false };
-    room.players.push? null : room.players.push(player);
+    room.players.push(player);
     this.playerRoomMap.set(socket.id, room.id);
     socket.join(room.id);
     if (room.players.filter(p => p.isConnected).length === 2) room.gameStatus = 'setup';
@@ -325,10 +317,9 @@ class GameServer {
     if (allReady && room.players.length === 2) {
       room.gameStatus = 'setup';
       if (room.isSinglePlayer) { room.gameStatus = 'playing'; room.currentTurn = socket.id; }
-      else { room.gameStatus = 'waiting'; room.currentTurn = room.players[Math.floor(Math.random() * 2)].id; }
+      else { room.gameStatus = 'playing'; room.currentTurn = room.players[Math.floor(Math.random() * 2)].id; }
     }
-    this.io.to(roomId).emit('secret_number_set', room);
-    this.io.to(roomId).emit('room_updated', room);
+    this.io.to(roomId).emit('secret_number_set', roomName = room.id);
   }
 
   handleGuess(socket, guess) {
@@ -428,79 +419,6 @@ class GameServer {
     this.broadcastRoomList();
   }
 
-  // --- Rematch flow (issue #4) ---
-  handleRematchRequest(socket, sourceRoomId) {
-    const src = this.rooms.get(sourceRoomId);
-    if (!src || src.gameStatus !== 'finished') return;
-    if (src.rematchOffer && src.rematchOffer.pending) {
-      socket.emit('error', 'A rematch is already pending for this room.');
-      return;
-    }
-    if (src.isSinglePlayer) { this.createRematch(sourceRoomId); return; }
-    const opponent = src.players.find(p => p.id !== socket.id);
-    const oppSocket = opponent ? this.io.sockets.sockets.get(opponent.id) : null;
-    if (!oppSocket) { this.createRematch(sourceRoomId); return; }
-    src.rematchOffer = { initiatedBy: socket.id, pending: true };
-    socket.emit('rematch_offer_sent');
-    oppSocket.emit('rematch_offer', { roomId: sourceRoomId, from: socket.id });
-  }
-
-  handleRematchAccept(socket, sourceRoomId) {
-    const src = this.rooms.get(sourceRoomId);
-    if (!src || !src.rematchOffer || !src.rematchOffer.pending) return;
-    src.rematchOffer.pending = false;
-    this.createRematch(sourceRoomId);
-  }
-
-  handleRematchDecline(socket, sourceRoomId) {
-    const src = this.rooms.get(sourceRoomId);
-    if (!src || !src.rematchOffer) return;
-    const initiatorId = src.rematchOffer.initiatedBy;
-    src.rematchOffer = null;
-    const initSocket = this.io.sockets.sockets.get(initiatorId);
-    if (initSocket) initSocket.emit('rematch_declined');
-  }
-
-  createRematch(sourceRoomId) {
-    const src = this.rooms.get(sourceRoomId);
-    if (!src || src.gameStatus !== 'finished') return;
-    const connected = src.players.filter(p => this.io.sockets.sockets.get(p.id));
-    const newRoomId = generateRoomId();
-    const players = connected.map(p => ({
-      id: p.id, name: p.name, isConnected: true, isReady: false,
-      ...(p.isBot ? { isBot: true, botDifficulty: p.botDifficulty, numberLength: src.numberLength, winThreshold: null } : {})
-    }));
-    let accessCode;
-    if (src.isPrivate) {
-      do { accessCode = generateAccessCode(); } while (Array.from(this.rooms.values()).some(r => r.accessCode === accessCode));
-    }
-    const newRoom = {
-      id: newRoomId, players, currentTurn: players[0] ? players[0].id : null, gameHistory: [],
-      gameStatus: 'waiting', numberLength: src.numberLength, spectatorModeEnabled: src.spectatorModeEnabled,
-      isSinglePlayer: src.isSinglePlayer, isPrivate: src.isPrivate, accessCode: src.isPrivate ? accessCode : undefined,
-      rematchOffer: null
-    };
-    this.rooms.set(newRoomId, newRoom);
-    connected.forEach(p => {
-      const s = this.io.sockets.sockets.get(p.id);
-      if (s) { this.playerRoomMap.set(p.id, newRoomId); s.join(newRoomId); }
-    });
-    src.players.forEach(p => this.playerRoomMap.delete(p.id));
-    this.rooms.delete(sourceRoomId);
-    this.broadcastRoomList();
-    const payload = { roomId: newRoomId, accessCode: src.isPrivate ? accessCode : undefined };
-    if (connected.length >= 2) {
-      connected.forEach(p => {
-        const s = this.io.sockets.sockets.get(p.id);
-        if (s) s.emit('rematch_room_ready', payload);
-      });
-    } else if (connected.length === 1) {
-      const s = this.io.sockets.sockets.get(connected[0].id);
-      if (s) s.emit('rematch_room_ready', { ...payload, solo: true });
-    }
-  }
-
-  // Single shared room list — includes BOTH public and private rooms.
   getOpenRooms() {
     return Array.from(this.rooms.values())
       .filter(room => {
