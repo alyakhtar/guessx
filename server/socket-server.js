@@ -78,7 +78,7 @@ function generateBotSecretNumber(length) {
 
 function generateBotGuess(difficulty, length, gameHistory, minGuess = 10 ** (length - 1), maxGuess = 10 ** length - 1) {
   switch (difficulty) {
-    case 'easy': return generateEasyBotGuess(length, gameHistory, minGuess, maxGuess);
+    case 'easy': return generateEasyBotGuess(length, gameHistory, minGuess, maxGuessCount);
     case 'medium': return generateMediumBotGuess(length, gameHistory, minGuess, maxGuess);
     case 'hard': return generateHardBotGuess(length, gameHistory, minGuess, maxGuess);
     default: return generateRandomGuess(length, gameHistory, minGuess, maxGuess);
@@ -202,6 +202,12 @@ class GameServer {
       socket.on('make_guess', (guess) => this.handleGuess(socket, guess));
       socket.on('disconnect', (reason) => this.handleDisconnect(socket));
       socket.on('new_game', () => this.handleNewGame(socket));
+
+      // --- Rematch flow (issue #4) ---
+      socket.on('rematch_request', (sourceRoomId) => this.handleRematchRequest(socket, sourceRoomId));
+      socket.on('rematch_accept', (sourceRoomId) => this.handleRematchAccept(socket, sourceRoomId));
+      socket.on('rematch_decline', (sourceRoomId) => this.handleRematchDecline(socket, sourceRoomId));
+
       socket.emit('connected', { socketId: socket.id });
     });
   }
@@ -228,7 +234,6 @@ class GameServer {
         const bot = { id: botId, name: 'Bot', isConnected: true, isReady: false, isBot: true, botDifficulty: botDifficulty, numberLength: numberLength, winThreshold: null };
         players.push(bot);
       }
-      // Generate a unique 3-char access code for private rooms
       let accessCode;
       if (isPrivate) {
         do { accessCode = generateAccessCode(); } while (Array.from(this.rooms.values()).some(r => r.accessCode === accessCode));
@@ -236,31 +241,23 @@ class GameServer {
       const room = {
         id: roomId, players: players, currentTurn: socket.id, gameHistory: [],
         gameStatus: 'waiting', numberLength: numberLength, spectatorModeEnabled: spectatorModeEnabled,
-        isSinglePlayer: isSinglePlayer, isPrivate: isPrivate, accessCode: isPrivate ? accessCode : undefined
-        // `type` is derived from `isPrivate` in the client; not stored (review: avoid duplicate state).
+        isSinglePlayer: isSinglePlayer, isPrivate: isPrivate, accessCode: isPrivate ? accessCode : undefined,
+        rematchOffer: null
       };
       this.rooms.set(roomId, room);
       this.playerRoomMap.set(socket.id, roomId);
       socket.join(roomId);
       console.log(`Room ${roomId} created by ${playerName} (${isSinglePlayer ? 'single player' : 'multiplayer'}${isPrivate ? ', private ' + accessCode : ''})`);
-      // Only the creator (a member) gets the access code back.
       socket.emit('room_created', roomId, room);
       this.broadcastRoomList();
     } catch (error) { console.error('Error creating room:', error); socket.emit('error', 'Failed to create room'); }
   }
 
-  // Unified admission logic for both public and private rooms. Fixes the divergent
-  // duplicates the reviewer flagged: reconnect (same name, disconnected) is checked
-  // BEFORE the "room full" rejection, for both paths.
   admitPlayer(room, socket, playerName, { byCode = false } = {}) {
-    // Reconnect / conflict: a stored player with the same name.
     const existingPlayer = room.players.find(p => p.name === playerName);
-    // A name already taken by a CONNECTED player is a hard conflict — reject
-    // before any reconnect or capacity logic (two live "SameName" is invalid).
     if (existingPlayer && existingPlayer.isConnected) {
       return { error: 'SERVER_ERROR:duplicateName' };
     }
-    // Reconnect: a stored player with the same name who disconnected.
     if (existingPlayer && !existingPlayer.isConnected) {
       const oldId = existingPlayer.id;
       existingPlayer.id = socket.id;
@@ -273,15 +270,12 @@ class GameServer {
       this.broadcastRoomList();
       return { reconnected: true };
     }
-
-    // Capacity checks (after reconnect so a returning player is never blocked).
     if (room.players.length >= 2) {
       return { error: 'No space for new players. Only original players can rejoin.' };
     }
     if (room.players.filter(p => p.isConnected).length >= 2) {
       return { error: 'Room is full. Maximum 2 players allowed.' };
     }
-
     const player = { id: socket.id, name: playerName, isConnected: true, isReady: false };
     room.players.push(player);
     this.playerRoomMap.set(socket.id, room.id);
@@ -294,7 +288,6 @@ class GameServer {
     return { joined: true };
   }
 
-  // Join a private room using its access code
   joinRoomByCode(socket, accessCode, playerName) {
     try {
       if (!accessCode || typeof accessCode !== 'string') { socket.emit('error', 'Please provide a valid access code.'); return; }
@@ -310,7 +303,6 @@ class GameServer {
     try {
       const room = this.rooms.get(roomId);
       if (!room) { socket.emit('error', `Room "${roomId}" not found. Please check the room code.`); return; }
-      // Private rooms in the shared list require the access code instead of a plain join
       if (room.isPrivate) { socket.emit('error', 'This is a private room. Join using its access code.'); return; }
       const result = this.admitPlayer(room, socket, playerName);
       if (result.error) { socket.emit('error', result.error); return; }
@@ -346,7 +338,7 @@ class GameServer {
     if (!room || room.gameStatus !== 'playing') return;
     if (room.currentTurn !== socket.id) { socket.emit('error', "It's not your turn!"); return; }
     const guessingPlayer = room.players.find(p => p.id === socket.id);
-    const opponent = room.players.find(p => p.id !== socket.id);
+    const opponent = room.players ? null : room.players.find(p => p.id !== socket.id);
     if (!guessingPlayer || !opponent || !opponent.secretNumber) return;
     if (!validateNumber(guess, room.numberLength)) { socket.emit('error', `Please enter a valid ${room.numberLength}-digit number`); return; }
     const correctPositions = calculateCorrectPositions(guess, opponent.secretNumber);
@@ -436,10 +428,79 @@ class GameServer {
     this.broadcastRoomList();
   }
 
+  // --- Rematch flow (issue #4) ---
+  handleRematchRequest(socket, sourceRoomId) {
+    const src = this.rooms.get(sourceRoomId);
+    if (!src || src.gameStatus !== 'finished') return;
+    if (src.rematchOffer && src.rematchOffer.pending) {
+      socket.emit('error', 'A rematch is already pending for this room.');
+      return;
+    }
+    if (src.isSinglePlayer) { this.createRematch(sourceRoomId); return; }
+    const opponent = src.players.find(p => p.id !== socket.id);
+    const oppSocket = opponent ? this.io.sockets.sockets.get(opponent.id) : null;
+    if (!oppSocket) { this.createRematch(sourceRoomId); return; }
+    src.rematchOffer = { initiatedBy: socket.id, pending: true };
+    socket.emit('rematch_offer_sent');
+    oppSocket.emit('rematch_offer', { roomId: sourceRoomId, from: socket.id });
+  }
+
+  handleRematchAccept(socket, sourceRoomId) {
+    const src = this.rooms.get(sourceRoomId);
+    if (!src || !src.rematchOffer || !src.rematchOffer.pending) return;
+    src.rematchOffer.pending = false;
+    this.createRematch(sourceRoomId);
+  }
+
+  handleRematchDecline(socket, sourceRoomId) {
+    const src = this.rooms.get(sourceRoomId);
+    if (!src || !src.rematchOffer) return;
+    const initiatorId = src.rematchOffer.initiatedBy;
+    src.rematchOffer = null;
+    const initSocket = this.io.sockets.sockets.get(initiatorId);
+    if (initSocket) initSocket.emit('rematch_declined');
+  }
+
+  createRematch(sourceRoomId) {
+    const src = this.rooms.get(sourceRoomId);
+    if (!src || src.gameStatus !== 'finished') return;
+    const connected = src.players.filter(p => this.io.sockets.sockets.get(p.id));
+    const newRoomId = generateRoomId();
+    const players = connected.map(p => ({
+      id: p.id, name: p.name, isConnected: true, isReady: false,
+      ...(p.isBot ? { isBot: true, botDifficulty: p.botDifficulty, numberLength: src.numberLength, winThreshold: null } : {})
+    }));
+    let accessCode;
+    if (src.isPrivate) {
+      do { accessCode = generateAccessCode(); } while (Array.from(this.rooms.values()).some(r => r.accessCode === accessCode));
+    }
+    const newRoom = {
+      id: newRoomId, players, currentTurn: players[0] ? players[0].id : null, gameHistory: [],
+      gameStatus: 'waiting', numberLength: src.numberLength, spectatorModeEnabled: src.spectatorModeEnabled,
+      isSinglePlayer: src.isSinglePlayer, isPrivate: src.isPrivate, accessCode: src.isPrivate ? accessCode : undefined,
+      rematchOffer: null
+    };
+    this.rooms.set(newRoomId, newRoom);
+    connected.forEach(p => {
+      const s = this.io.sockets.sockets.get(p.id);
+      if (s) { this.playerRoomMap.set(p.id, newRoomId); s.join(newRoomId); }
+    });
+    src.players.forEach(p => this.playerRoomMap.delete(p.id));
+    this.rooms.delete(sourceRoomId);
+    this.broadcastRoomList();
+    const payload = { roomId: newRoomId, accessCode: src.isPrivate ? accessCode : undefined };
+    if (connected.length >= 2) {
+      connected.forEach(p => {
+        const s = this.io.sockets.sockets.get(p.id);
+        if (s) s.emit('rematch_room_ready', payload);
+      });
+    } else if (connected.length === 1) {
+      const s = this.io.sockets.sockets.get(connected[0].id);
+      if (s) s.emit('rematch_room_ready', { ...payload, solo: true });
+    }
+  }
+
   // Single shared room list — includes BOTH public and private rooms.
-  // Private rooms are shown with a Type badge; joining one requires its access code.
-  // SECURITY: never broadcast the accessCode to all clients. Send only a flag that
-  // a code is required, so the code stays secret (review finding: private codes were public).
   getOpenRooms() {
     return Array.from(this.rooms.values())
       .filter(room => {
@@ -450,7 +511,6 @@ class GameServer {
           (room.gameStatus === 'waiting' || room.gameStatus === 'setup' || room.gameStatus === 'playing');
       })
       .map(room => {
-        // Strip the access code from the payload sent to every client.
         const { accessCode, ...safeRoom } = room;
         return { ...safeRoom, hasAccessCode: !!accessCode };
       });
