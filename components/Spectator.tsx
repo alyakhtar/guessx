@@ -177,7 +177,7 @@ export default function Spectator() {
                                                 .filter(g => g.playerName !== p1?.name)
                                                 .map(g => g.guess);
 
-                                            let guessedDigits = new Set();
+                                            const guessedDigits = new Set();
                                             playerGuessesFromOpponent.forEach(guess => {
                                                 for (let j = 0; j < room.numberLength; j++) {
                                                     if (p1?.secretNumber && guess[j] === p1.secretNumber[j]) {
@@ -248,7 +248,7 @@ export default function Spectator() {
                                                 .filter(g => g.playerName !== p2?.name)
                                                 .map(g => g.guess);
 
-                                            let guessedDigits = new Set();
+                                            const guessedDigits = new Set();
                                             playerGuessesFromOpponent.forEach(guess => {
                                                 for (let j = 0; j < room.numberLength; j++) {
                                                     if (p2?.secretNumber && guess[j] === p2.secretNumber[j]) {

@@ -1,215 +1,241 @@
 {
-    "app": {
-        "title": "GuessX - Jeu de devinettes de nombres",
-        "description": "Un jeu de devinettes de nombres en temps réel pour deux joueurs"
+  "app": {
+    "title": "GuessX - Jeu de devinettes de nombres",
+    "description": "Un jeu de devinettes de nombres en temps réel pour deux joueurs"
+  },
+  "lobby": {
+    "title": "GuessX",
+    "subtitle": "Un jeu de devinettes de nombres en temps réel - jouez avec des amis ou défiez un bot !",
+    "connectionStatus": {
+      "connected": "Connecté",
+      "connecting": "Connexion en cours...",
+      "disconnected": "Déconnecté"
     },
-    "lobby": {
-        "title": "GuessX",
-        "subtitle": "Un jeu de devinettes de nombres en temps réel - jouez avec des amis ou défiez un bot !",
-        "connectionStatus": {
-            "connected": "Connecté",
-            "connecting": "Connexion en cours...",
-            "disconnected": "Déconnecté"
-        },
-        "createGame": {
-            "heading": "Créer une nouvelle partie",
-            "nameLabel": "Votre nom",
-            "namePlaceholder": "Entrez votre nom",
-            "numberLengthLabel": "Longueur du nombre",
-            "numberLengthOptions": {
-                "4": "4 chiffres (1000-9999)",
-                "5": "5 chiffres (10000-99999)",
-                "6": "6 chiffres (100000-999999)"
-            },
-            "singlePlayerMode": {
-                "label": "Mode solo contre bot",
-                "description": "Jouer contre un adversaire IA"
-            },
-            "botDifficultyLabel": "Difficulté du bot",
-            "botDifficultyOptions": {
-                "easy": "Facile",
-                "medium": "Moyen",
-                "hard": "Difficile"
-            },
-            "spectatorMode": {
-                "label": "Activer le mode spectateur",
-                "description": "Permettre aux autres de regarder la partie en mode lecture seule"
-            },
-            "buttons": {
-                "create": "Créer une nouvelle partie",
-                "creating": "Création de la salle...",
-                "connecting": "Connexion..."
-            }
-        },
-        "joinGame": {
-            "heading": "Rejoindre une partie existante",
-            "table": {
-                "roomId": "ID de la salle",
-                "player1": "Joueur 1",
-                "player2": "Joueur 2",
-                "action": "Action"
-            },
-            "statuses": {
-                "disconnected": "(déconnecté)",
-                "spectate": "👁️ Regarder",
-                "join": "Rejoindre"
-            },
-            "noRooms": "Aucune salle ouverte disponible."
-        },
-        "errors": {
-            "nameRequired": "Veuillez entrer votre nom",
-            "connectionError": "Non connecté au serveur. Veuillez actualiser la page.",
-            "roomCreationError": "Erreur",
-            "roomJoinError": "Erreur"
-        }
+    "createGame": {
+      "heading": "Créer une nouvelle partie",
+      "nameLabel": "Votre nom",
+      "namePlaceholder": "Entrez votre nom",
+      "numberLengthLabel": "Longueur du nombre",
+      "numberLengthOptions": {
+        "4": "4 chiffres (1000-9999)",
+        "5": "5 chiffres (10000-99999)",
+        "6": "6 chiffres (100000-999999)"
+      },
+      "singlePlayerMode": {
+        "label": "Mode solo contre bot",
+        "description": "Jouer contre un adversaire IA"
+      },
+      "botDifficultyLabel": "Difficulté du bot",
+      "botDifficultyOptions": {
+        "easy": "Facile",
+        "medium": "Moyen",
+        "hard": "Difficile"
+      },
+      "spectatorMode": {
+        "label": "Activer le mode spectateur",
+        "description": "Permettre aux autres de regarder la partie en mode lecture seule"
+      },
+      "privateRoom": {
+        "label": "Salle privée",
+        "description": "Créez une salle privée. Un code de 3 caractères est généré à partager avec votre adversaire."
+      },
+      "privateRoomCreated": "Salle privée créée ! Partagez ce code avec votre ami pour rejoindre : {code}",
+      "buttons": {
+        "create": "Créer une nouvelle partie",
+        "creating": "Création de la salle...",
+        "connecting": "Connexion..."
+      }
     },
-    "localeSelector": {
-        "english": "English",
-        "french": "Français"
+    "joinGame": {
+      "heading": "Rejoindre une partie existante",
+      "cancel": "Annuler",
+      "table": {
+        "roomId": "ID de la salle",
+        "type": {
+          "header": "Type de salle",
+          "public": "Public",
+          "private": "Privé"
+        },
+        "player1": "Joueur 1",
+        "player2": "Joueur 2",
+        "action": "Action"
+      },
+      "statuses": {
+        "disconnected": "(déconnecté)",
+        "spectate": "👁️ Regarder",
+        "join": "Rejoindre"
+      },
+      "noRooms": "Aucune salle ouverte disponible.",
+      "byCode": {
+        "heading": "Rejoindre une salle privée",
+        "nameLabel": "Votre nom",
+        "codeLabel": "Entrez le code d'accès à 3 caractères",
+        "codePlaceholder": "ABC",
+        "button": "Rejoindre"
+      },
+      "errors": {
+        "codeRequired": "Veuillez entrer le code d'accès à 3 caractères",
+        "invalidCode": "Code d'accès invalide. Vérifiez le code et réessayez."
+      }
     },
-    "gameRoom": {
-        "loading": {
-            "title": "Chargement de la salle de jeu...",
-            "roomId": "ID de salle",
-            "shareMessage": "Partagez cet ID avec votre ami !"
-        },
-        "header": {
-            "room": "Salle",
-            "digits": "Chiffres"
-        },
-        "status": {
-            "yourTurn": "À votre tour !",
-            "playerTurn": "Tour de {name}",
-            "winner": "Gagnant"
-        }
-    },
-    "guessInput": {
-        "secretNumber": {
-            "title": "Définissez Votre Nombre Secret",
-            "label": "Votre nombre secret de {length} chiffres",
-            "help": "Entrez chaque chiffre dans les cases - le curseur se déplace automatiquement",
-            "button": "Définir le Nombre Secret & Commencer la Partie"
-        },
-        "gameRules": {
-            "title": "Règles du Jeu",
-            "rule1": "Choisissez un nombre de {length} chiffres entre {min} et {max}",
-            "rule2": "Faites tour à tour pour deviner le nombre de votre adversaire",
-            "rule3": "Recevez un retour sur le nombre de chiffres dans la position correcte",
-            "rule4": "Le premier à deviner le nombre exact gagne !"
-        },
-        "gameOver": {
-            "title": "Jeu Terminé !",
-            "winnerText": "{name} a gagné la partie !",
-            "newGameButton": "🎮 Nouvelle Partie"
-        },
-        "turn": {
-            "yourTurn": "🎯 À Votre Tour - Faites une Devinette !",
-            "waitingFor": "⏳ En attente de {name}",
-            "guessLabel": "Entrez votre devinette de {length} chiffres",
-            "submitGuess": "✅ Soumettre la Devinette",
-            "waitingForBoth": "⏳ En attente des deux joueurs...",
-            "waitingForGuess": "En attente que {name} fasse une devinette..."
-        },
-        "progress": {
-            "title": "Progression du Jeu",
-            "yourGuesses": "Vos Devinettes",
-            "opponentGuesses": "Devinettes de l'Adversaire"
-        },
-        "validation": {
-            "invalidNumber": "Veuillez entrer un nombre valide de {length} chiffres"
-        }
-    },
-    "spectator": {
-        "loading": {
-            "title": "Chargement de la vue spectateur...",
-            "roomId": "ID de salle"
-        },
-        "access": {
-            "denied": "Accès refusé",
-            "disabled": "Le mode spectateur n'est pas activé pour cette salle.",
-            "backHome": "🏠 Retour à l'accueil"
-        },
-        "header": {
-            "mode": "👁️ Mode spectateur",
-            "room": "Salle",
-            "digits": "Chiffres",
-            "turn": "⏳ Tour de {name}",
-            "winner": "Gagnant"
-        },
-        "player": {
-            "status": {
-                "disconnected": "(déconnecté)",
-                "settingUp": "Configuration..."
-            },
-            "secretNumber": "Nombre secret",
-            "guesses": "Devinettes",
-            "noGuesses": "Aucune devinette pour le moment",
-            "correct": "correct"
-        }
-    },
-    "playerList": {
-        "title": "Joueurs",
-        "status": {
-            "ready": "Prêt",
-            "settingUp": "Configuration...",
-            "waiting": "En attente",
-            "setup": "Configuration",
-            "playing": "Jeu en cours",
-            "finished": "Terminé"
-        },
-        "indicators": {
-            "you": "(Vous)",
-            "thinking": "Réfléchit...",
-            "yourSecret": "Votre secret :",
-            "playerSecret": "Secret de {player} :",
-            "digitsGuessed": "Chiffres découverts :"
-        },
-        "roomStatus": {
-            "title": "État de la salle",
-            "status": "État :",
-            "players": "Joueurs :",
-            "waitingForPlayer": "En attente d'un autre joueur..."
-        }
-    },
-    "gameHistory": {
-        "title": "Vos Devinettes",
-        "empty": {
-            "title": "Aucune devinette pour le moment",
-            "subtitle": "Vos devinettes apparaîtront ici"
-        },
-        "table": {
-            "number": "N°",
-            "guess": "Devinette",
-            "correct": "Correct"
-        },
-        "summary": {
-            "total": "Total des devinettes :",
-            "last": "Dernière devinette :"
-        }
-    },
-    "admin": {
-        "title": "Panneau d'Administration",
-        "nav": {
-            "home": "Accueil"
-        },
-        "lengthSelector": {
-            "label": "Longueur du Jeu : ",
-            "description": "Configurer les plages de difficulté pour les jeux à {length} chiffres"
-        },
-        "buttons": {
-            "refresh": "Actualiser",
-            "save": "Sauvegarder les Changements",
-            "saving": "Sauvegarde en cours..."
-        },
-        "table": {
-            "difficulty": "Difficulté",
-            "minGuess": "Devinettes Min",
-            "maxGuess": "Devinettes Max",
-            "numberLength": "Longueur du Nombre"
-        },
-        "errors": {
-            "loadError": "Échec du chargement des configurations",
-            "saveError": "Échec de sauvegarde des configurations"
-        }
+    "errors": {
+      "nameRequired": "Veuillez entrer votre nom",
+      "connectionError": "Non connecté au serveur. Veuillez actualiser la page.",
+      "roomCreationError": "Erreur",
+      "roomJoinError": "Erreur",
+      "server": {
+        "duplicateName": "Un joueur portant ce nom est déjà dans la salle.",
+        "invalidCode": "Code d'accès invalide. Vérifiez le code et réessayez."
+      }
     }
+  },
+  "localeSelector": {
+    "english": "English",
+    "french": "Français"
+  },
+  "gameRoom": {
+    "loading": {
+      "title": "Chargement de la salle de jeu...",
+      "roomId": "ID de salle",
+      "shareMessage": "Partagez cet ID avec votre ami !"
+    },
+    "header": {
+      "room": "Salle",
+      "digits": "Chiffres"
+    },
+    "status": {
+      "yourTurn": "À votre tour !",
+      "playerTurn": "Tour de {name}",
+      "winner": "Gagnant"
+    }
+  },
+  "guessInput": {
+    "secretNumber": {
+      "title": "Définissez Votre Nombre Secret",
+      "label": "Votre nombre secret de {length} chiffres",
+      "help": "Entrez chaque chiffre dans les cases - le curseur se déplace automatiquement",
+      "button": "Définir le Nombre Secret & Commencer la Partie"
+    },
+    "gameRules": {
+      "title": "Règles du Jeu",
+      "rule1": "Choisissez un nombre de {length} chiffres entre {min} et {max}",
+      "rule2": "Faites tour à tour pour deviner le nombre de votre adversaire",
+      "rule3": "Recevez un retour sur le nombre de chiffres dans la position correcte",
+      "rule4": "Le premier à deviner le nombre exact gagne !"
+    },
+    "gameOver": {
+      "title": "Jeu Terminé !",
+      "winnerText": "{name} a gagné la partie !",
+      "newGameButton": "🎮 Nouvelle Partie"
+    },
+    "turn": {
+      "yourTurn": "🎯 À Votre Tour - Faites une Devinette !",
+      "waitingFor": "⏳ En attente de {name}",
+      "guessLabel": "Entrez votre devinette de {length} chiffres",
+      "submitGuess": "✅ Soumettre la Devinette",
+      "waitingForBoth": "⏳ En attente des deux joueurs...",
+      "waitingForGuess": "En attente que {name} fasse une devinette..."
+    },
+    "progress": {
+      "title": "Progression du Jeu",
+      "yourGuesses": "Vos Devinettes",
+      "opponentGuesses": "Devinettes de l'Adversaire"
+    },
+    "validation": {
+      "invalidNumber": "Veuillez entrer un nombre valide de {length} chiffres"
+    }
+  },
+  "spectator": {
+    "loading": {
+      "title": "Chargement de la vue spectateur...",
+      "roomId": "ID de salle"
+    },
+    "access": {
+      "denied": "Accès refusé",
+      "disabled": "Le mode spectateur n'est pas activé pour cette salle.",
+      "backHome": "🏠 Retour à l'accueil"
+    },
+    "header": {
+      "mode": "👁️ Mode spectateur",
+      "room": "Salle",
+      "digits": "Chiffres",
+      "turn": "⏳ Tour de {name}",
+      "winner": "Gagnant"
+    },
+    "player": {
+      "status": {
+        "disconnected": "(déconnecté)",
+        "settingUp": "Configuration..."
+      },
+      "secretNumber": "Nombre secret",
+      "guesses": "Devinettes",
+      "noGuesses": "Aucune devinette pour le moment",
+      "correct": "correct"
+    }
+  },
+  "playerList": {
+    "title": "Joueurs",
+    "status": {
+      "ready": "Prêt",
+      "settingUp": "Configuration...",
+      "waiting": "En attente",
+      "setup": "Configuration",
+      "playing": "Jeu en cours",
+      "finished": "Terminé"
+    },
+    "indicators": {
+      "you": "(Vous)",
+      "thinking": "Réfléchit...",
+      "yourSecret": "Votre secret :",
+      "playerSecret": "Secret de {player} :",
+      "digitsGuessed": "Chiffres découverts :"
+    },
+    "roomStatus": {
+      "title": "État de la salle",
+      "status": "État :",
+      "players": "Joueurs :",
+      "waitingForPlayer": "En attente d'un autre joueur..."
+    }
+  },
+  "gameHistory": {
+    "title": "Vos Devinettes",
+    "empty": {
+      "title": "Aucune devinette pour le moment",
+      "subtitle": "Vos devinettes apparaîtront ici"
+    },
+    "table": {
+      "number": "N°",
+      "guess": "Devinette",
+      "correct": "Correct"
+    },
+    "summary": {
+      "total": "Total des devinettes :",
+      "last": "Dernière devinette :"
+    }
+  },
+  "admin": {
+    "title": "Panneau d'Administration",
+    "nav": {
+      "home": "Accueil"
+    },
+    "lengthSelector": {
+      "label": "Longueur du Jeu : ",
+      "description": "Configurer les plages de difficulté pour les jeux à {length} chiffres"
+    },
+    "buttons": {
+      "refresh": "Actualiser",
+      "save": "Sauvegarder les Changements",
+      "saving": "Sauvegarde en cours..."
+    },
+    "table": {
+      "difficulty": "Difficulté",
+      "minGuess": "Devinettes Min",
+      "maxGuess": "Devinettes Max",
+      "numberLength": "Longueur du Nombre"
+    },
+    "errors": {
+      "loadError": "Échec du chargement des configurations",
+      "saveError": "Échec de sauvegarde des configurations"
+    }
+  }
 }

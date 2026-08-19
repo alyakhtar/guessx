@@ -1,7 +1,6 @@
 'use client';
 
 import { io, Socket } from 'socket.io-client';
-import { useEffect, useState } from 'react';
 
 class SocketService {
   private socket: Socket | null = null;

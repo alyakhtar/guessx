@@ -2,6 +2,9 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 
+# Copy BOTH package files and install from the committed lockfile with `npm ci`,
+# so builds are fully reproducible (same commit -> same dependency tree). The
+# lockfile is committed and kept in sync with package.json (see review finding #3).
 COPY package.json package-lock.json ./
 RUN npm ci
 
@@ -30,6 +33,7 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/package-lock.json ./package-lock.json
 COPY --from=builder /app/server.js ./server.js
 COPY --from=builder /app/server ./server
 COPY --from=builder /app/lib ./lib

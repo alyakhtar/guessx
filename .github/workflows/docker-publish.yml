@@ -1,8 +1,21 @@
 name: Build and Publish Docker Image
 
+# CI strategy (per request): avoid double validation on PRs.
+# - pull_request (opened/synchronize/reopened): runs Validate + builds the
+#   branch-tagged image (ghcr.io/<owner>/guessx:<branch-slug>) for dev testing.
+# - push to `main` ONLY: runs Validate + publishes `latest` (and the branch slug).
+#   Feature-branch pushes do NOT trigger a run (the PR event already covers them),
+#   so a PR no longer validates twice. Merging to main triggers the push run once.
+#
+# Design decision (per issue #1 + review): feature-branch images ARE published, not
+# only `main`. Rationale: the dev deploy pulls the branch image onto the Pi (port 8084)
+# for hands-off testing, avoiding a ~12-minute native arm64 build on the Pi. See the PR
+# discussion for details.
 on:
   push:
     branches: ["main"]
+  pull_request:
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 permissions:
@@ -10,7 +23,43 @@ permissions:
   packages: write
 
 jobs:
+  validate:
+    name: Validate (type-check / lint / build)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # Reproducible install from the committed lockfile (review finding: CI and
+      # Docker must use the same dependency tree). Fails the job on real errors.
+      - name: Install dependencies
+        run: npm ci
+
+      # These steps MUST fail the job on error. No `|| echo` masking — a real failure
+      # must surface as a red check (review finding: CI previously hid failures).
+      - name: Type-check
+        run: npm run type-check
+
+      # Lint (ESLint 9 flat config — native @typescript-eslint, see eslint.config.mjs).
+      # Runs as a hard gate; a real lint error fails the check.
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+  # Build & push only when a PR is opened/updated (or pushed to main), not on
+  # every feature-branch push. The branch slug becomes the image tag.
   build-and-push:
+    name: Build and Push to GHCR
+    needs: validate
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
@@ -20,6 +69,27 @@ jobs:
       - name: Set owner lowercase
         id: vars
         run: echo "owner_lc=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Derive branch slug
+        id: branch
+        # SECURITY: pass refs through env and quote (review finding: branch names are
+        # interpolated directly into shell, enabling injection via `$(...)`). Never embed
+        # ${{ github.head_ref }} inside a run script. Single env block — duplicate
+        # `env:` keys are invalid YAML and cause the whole workflow to fail to parse.
+        env:
+          RAW_HEAD: ${{ github.head_ref }}
+          RAW_REF: ${{ github.ref_name }}
+          EVENT: ${{ github.event_name }}
+          IS_MAIN: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then
+            RAW="$RAW_HEAD"
+          else
+            RAW="$RAW_REF"
+          fi
+          SLUG="${RAW//\//-}"
+          echo "slug=${SLUG}" >> "$GITHUB_OUTPUT"
+          echo "is_main=${IS_MAIN}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -37,9 +107,11 @@ jobs:
         with:
           images: ghcr.io/${{ steps.vars.outputs.owner_lc }}/guessx
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
+            # Always tag with the branch slug (e.g. feature-private-rooms)
+            type=raw,value=${{ steps.branch.outputs.slug }}
+            # Only tag 'latest' when this is the main branch
+            type=raw,value=latest,enable=${{ steps.branch.outputs.is_main }}
             type=sha,prefix=sha-
-            type=ref,event=branch
 
       - name: Build and push
         uses: docker/build-push-action@v6
