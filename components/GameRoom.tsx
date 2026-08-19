@@ -254,7 +254,7 @@ export default function GameRoom() {
                       {rematchInfo.accessCode ? (
                         <p className="mb-0">{t('rematch.soloCode')}: <code className="fs-5">{rematchInfo.accessCode}</code></p>
                       ) : (
-                        <p className="mb-0\}>{t('rematch.soloRoom')}: <code className="fs-5">{rematchInfo.roomId}</code></p>
+                        <p className="mb-0">{t('rematch.soloRoom')}: <code className="fs-5">{rematchInfo.roomId}</code></p>
                       )}
                     </div>
                   )}
