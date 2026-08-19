@@ -101,12 +101,24 @@
     },
     "header": {
       "room": "Room",
-      "digits": "Digits"
+      "digits": "Digits",
+      "code": "Code"
     },
     "status": {
       "yourTurn": "Your Turn!",
       "playerTurn": "{name}'s Turn",
       "winner": "Winner"
+    },
+    "rematch": {
+      "title": "Rematch",
+      "button": "🔄 Rematch",
+      "waiting": "Waiting for opponent to accept…",
+      "incoming": "Your opponent wants a rematch!",
+      "accept": "✅ Accept",
+      "decline": "❌ Decline",
+      "soloHint": "Your opponent isn't connected. Share the new room so they can join:",
+      "soloCode": "Room code",
+      "soloRoom": "Room ID"
     }
   },
   "guessInput": {
