@@ -15,7 +15,7 @@ import Celebration from './Celebration';
 //   sent     -> I requested; waiting for opponent to accept/decline
 //   incoming -> opponent requested; I see Accept/Decline
 //   ready    -> new room created; navigate (or show code if solo)
-type RematchStatus = 'idle' | 'sent' | 'incoming' | 'ready';
+type RematchStatus = 'idle' | 'sent' | 'incoming' | 'declined' | 'ready';
 interface RematchInfo { roomId: string; accessCode?: string; solo?: boolean }
 
 export default function GameRoom() {
@@ -66,7 +66,7 @@ export default function GameRoom() {
     // Rematch flow (issue #4)
     const handleRematchOffer = () => setRematchStatus('incoming');
     const handleRematchOfferSent = () => setRematchStatus('sent');
-    const handleRematchDeclined = () => setRematchStatus('idle');
+    const handleRematchDeclined = () => setRematchStatus('declined');
     const handleRematchReady = (info: RematchInfo) => {
       if (info.solo) {
         // Only I am connected — show the new room id / code so the other
@@ -149,6 +149,7 @@ export default function GameRoom() {
   };
   const handleRematchDecline = () => {
     socketService.getSocket()?.emit('rematch_decline', roomId);
+    setRematchStatus('idle'); // I declined the offer — return to idle
   };
 
   return (
@@ -197,43 +198,6 @@ export default function GameRoom() {
           <div className="alert alert-danger mb-4">{error}</div>
         )}
 
-        {room.gameStatus === 'finished' && (
-          <div className="card p-4 mb-4 shadow" aria-live="polite">
-            <h3 className="mb-3">{t('rematch.title')}</h3>
-            {rematchStatus === 'idle' && (
-              <button className="btn btn-primary" onClick={handleRematchRequest}>
-                {t('rematch.button')}
-              </button>
-            )}
-            {rematchStatus === 'sent' && (
-              <p>{t('rematch.waiting')}</p>
-            )}
-            {rematchStatus === 'incoming' && (
-              <div>
-                <p>{t('rematch.incoming')}</p>
-                <div className="d-flex gap-2">
-                  <button className="btn btn-success" onClick={handleRematchAccept}>
-                    {t('rematch.accept')}
-                  </button>
-                  <button className="btn btn-secondary" onClick={handleRematchDecline}>
-                    {t('rematch.decline')}
-                  </button>
-                </div>
-              </div>
-            )}
-            {rematchStatus === 'ready' && rematchInfo?.solo && (
-              <div>
-                <p>{t('rematch.soloHint')}</p>
-                {rematchInfo.accessCode ? (
-                  <p>{t('rematch.soloCode')}: <code className="fs-5">{rematchInfo.accessCode}</code></p>
-                ) : (
-                  <p>{t('rematch.soloRoom')}: <code className="fs-5">{rematchInfo.roomId}</code></p>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
         <div className="row row-cols-1 row-cols-lg-3 g-3">
           {/* Left Column - Players */}
           <div className="col">
@@ -253,6 +217,49 @@ export default function GameRoom() {
                 numberLength={room.numberLength}
                 onNewGame={handleNewGame}
               />
+              {room.gameStatus === 'finished' && (
+                <div className="mt-3" aria-live="polite">
+                  {rematchStatus === 'idle' && (
+                    <button className="btn btn-primary btn-lg w-100" onClick={handleRematchRequest}>
+                      {t('rematch.button')}
+                    </button>
+                  )}
+                  {rematchStatus === 'sent' && (
+                    <div className="alert alert-info mb-0">{t('rematch.waiting')}</div>
+                  )}
+                  {rematchStatus === 'declined' && (
+                    <div>
+                      <div className="alert alert-warning mb-2">{t('rematch.declined')}</div>
+                      <button className="btn btn-primary btn-lg w-100" onClick={() => setRematchStatus('idle')}>
+                        {t('rematch.button')}
+                      </button>
+                    </div>
+                  )}
+                  {rematchStatus === 'incoming' && (
+                    <div>
+                      <p className="mb-2">{t('rematch.incoming')}</p>
+                      <div className="d-flex gap-2">
+                        <button className="btn btn-success btn-lg flex-fill" onClick={handleRematchAccept}>
+                          {t('rematch.accept')}
+                        </button>
+                        <button className="btn btn-secondary btn-lg flex-fill" onClick={handleRematchDecline}>
+                          {t('rematch.decline')}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  {rematchStatus === 'ready' && rematchInfo?.solo && (
+                    <div className="alert alert-info mb-0">
+                      <p className="mb-1">{t('rematch.soloHint')}</p>
+                      {rematchInfo.accessCode ? (
+                        <p className="mb-0">{t('rematch.soloCode')}: <code className="fs-5">{rematchInfo.accessCode}</code></p>
+                      ) : (
+                        <p className="mb-0\}>{t('rematch.soloRoom')}: <code className="fs-5">{rematchInfo.roomId}</code></p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

@@ -46,15 +46,19 @@ function createRematch(gs, sourceRoomId) {
   };
   gs.rooms.set(newRoomId, newRoom);
 
+  // Tear down the old room's mappings FIRST (only those still pointing at the
+  // source room), THEN re-point connected players to the new room. The previous
+  // order deleted the freshly-set new-room mappings too, which broke
+  // set_secret_number in the rematch room (game never started).
+  src.players.forEach(p => { if (gs.playerRoomMap.get(p.id) === sourceRoomId) gs.playerRoomMap.delete(p.id); });
+  gs.rooms.delete(sourceRoomId);
+
   // Physically move each connected player's socket into the new room.
   connected.forEach(p => {
     const s = gs.io.sockets.sockets.get(p.id);
     if (s) { gs.playerRoomMap.set(p.id, newRoomId); s.join(newRoomId); }
   });
 
-  // Tear down the old room.
-  src.players.forEach(p => gs.playerRoomMap.delete(p.id));
-  gs.rooms.delete(sourceRoomId);
   gs.broadcastRoomList();
 
   const payload = { roomId: newRoomId, accessCode: src.isPrivate ? accessCode : undefined };
