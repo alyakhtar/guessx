@@ -92,7 +92,7 @@ function generateRandomGuess(length, gameHistory, minGuess = 10 ** (length - 1),
     const numStr = i.toString().padStart(length, '0');
     if (!gameHistory.some(h => h.guess === numStr)) allPossible.push(numStr);
   }
-  if (allPossible.length === 0) return Math.floor(Math.random() * (maxGuess - minGuess + 1) + minGuess).toString().padStart(length, '0');
+  if (allPossible.length === 0) return Math.floor(Math.random() * (maxGuess - minGuess + 1) + minGuess).toString();
   return allPossible[Math.floor(Math.random() * allPossible.length)];
 }
 
@@ -319,7 +319,7 @@ class GameServer {
       if (room.isSinglePlayer) { room.gameStatus = 'playing'; room.currentTurn = socket.id; }
       else { room.gameStatus = 'playing'; room.currentTurn = room.players[Math.floor(Math.random() * 2)].id; }
     }
-    this.io.to(roomId).emit('secret_number_set', roomName = room.id);
+    this.io.to(roomId).emit('secret_number_set', room);
   }
 
   handleGuess(socket, guess) {
