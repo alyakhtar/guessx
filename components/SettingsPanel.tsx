@@ -1,6 +1,6 @@
 'use client';
 
-import { useSyncExternalStore, useEffect, useReducer } from 'react';
+import { useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import { SETTINGS_SCHEMA, setSetting, subscribe, getSettings, DEFAULTS } from '../lib/userSettings';
 import type { UserSettings } from '../lib/userSettings';
@@ -13,12 +13,7 @@ export default function SettingsPanel({ isOpen, onClose }: {
 }) {
   const t = useTranslations();
   const settings = useSyncExternalStore(subscribe, getSettings, () => DEFAULTS);
-  const [, forceTheme] = useReducer((x) => x + 1, 0);
-  const theme = getTheme();
-  useEffect(() => {
-    const unsub = subscribe(forceTheme);
-    return () => { unsub(); };
-  }, []);
+  const theme = useSyncExternalStore(subscribe, getTheme, () => 'dark' as const);
 
   if (!isOpen) return null;
 
