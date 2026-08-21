@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getTheme, subscribe } from '../lib/theme';
+import { getTheme, subscribe, type Theme } from '../lib/theme';
 
 /**
  * Mounted once (in the locale layout). Subscribes to the shared theme store and
@@ -9,7 +9,7 @@ import { getTheme, subscribe } from '../lib/theme';
  * updates every mounted screen immediately without a reload.
  */
 export default function ThemeManager() {
-  const [theme, setTheme] = useState<string>('dark');
+  const [theme, setTheme] = useState<Theme>('dark');
 
   useEffect(() => {
     const apply = () => {
@@ -18,7 +18,8 @@ export default function ThemeManager() {
       document.documentElement.setAttribute('data-bs-theme', current);
     };
     apply();
-    return subscribe(apply);
+    const unsub = subscribe(apply);
+    return () => { unsub(); };
   }, []);
 
   return null;

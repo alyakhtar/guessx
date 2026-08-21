@@ -44,10 +44,6 @@ function readSettings(): UserSettings {
       const value = values[setting.key];
       if (setting.type === 'toggle') {
         settings[setting.key] = typeof value === 'boolean' ? value : DEFAULTS[setting.key];
-      } else {
-        settings[setting.key] = typeof value === 'number' && setting.options.includes(value as TurnTimerSeconds)
-          ? value as TurnTimerSeconds
-          : DEFAULTS[setting.key];
       }
       return settings;
     }, { ...DEFAULTS });

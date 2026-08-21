@@ -1,77 +1,49 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
-import { SETTINGS_SCHEMA, setSetting } from '../lib/userSettings';
+import { SETTINGS_SCHEMA, setSetting, subscribe, getSettings, DEFAULTS } from '../lib/userSettings';
 import type { UserSettings } from '../lib/userSettings';
-import { useUserSettings } from '../lib/useUserSettings';
 import { getTheme, toggleTheme } from '../lib/theme';
 import LocaleSelector from './LocaleSelector';
 
-interface SettingsPanelProps {
-  open: boolean;
+export default function SettingsPanel({ isOpen, onClose }: {
+  isOpen: boolean;
   onClose: () => void;
-}
-
-export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
+}) {
   const t = useTranslations();
-  const settings = useUserSettings();
-
-  useEffect(() => {
-    if (!open) return;
-
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-
-    document.addEventListener('keydown', closeOnEscape);
-    return () => document.removeEventListener('keydown', closeOnEscape);
-  }, [open, onClose]);
-
-  if (!open) return null;
-
+  const [settings, setSettingsState] = useSyncExternalStore(
+    subscribe,
+    getSettings,
+    () => DEFAULTS,
+  );
   const theme = getTheme();
 
+  useEffect(() => {
+    const apply = () => setSettingsState(getSettings());
+    const unsub = subscribe(apply);
+    return () => { unsub(); };
+  }, [setSettingsState]);
+
+  if (!isOpen) return null;
+
   return (
-    <div
-      className="modal show d-block"
-      tabIndex={-1}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="settingsModalTitle"
-      style={{ background: 'rgba(0,0,0,0.65)', zIndex: 1050 }}
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
+    <div className="modal show d-block" tabIndex={-1} role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
       <div className="modal-dialog modal-dialog-centered">
         <div className="modal-content">
           <div className="modal-header">
-            <h2 className="modal-title fs-5" id="settingsModalTitle">
-              {t('settings.title')}
-            </h2>
-            <button
-              type="button"
-              className="btn-close"
-              aria-label={t('settings.close')}
-              onClick={onClose}
-            />
+            <h5 className="modal-title">{t('settings.title')}</h5>
+            <button type="button" className="btn-close" aria-label={t('settings.close')} onClick={onClose}></button>
           </div>
           <div className="modal-body">
-            {/* Language + theme - available on every screen via the cog */}
-            <div className="d-flex align-items-center justify-content-between mb-3">
-              <span className="text-muted small">{t('settings.language')}</span>
+            <div className="mb-3">
+              <label className="form-label fw-semibold">{t('settings.language')}</label>
               <LocaleSelector />
             </div>
-            <div className="d-flex align-items-center justify-content-between mb-3">
-              <span className="text-muted small">{t('settings.theme')}</span>
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-secondary"
-                onClick={() => toggleTheme()}
-                aria-label={t('settings.toggleTheme')}
-              >
-                {theme === 'dark' ? 'Light' : 'Dark'}
+            <div className="mb-3">
+              <label className="form-label fw-semibold">{t('settings.theme')}</label>
+              <button type="button" className="btn btn-outline-secondary w-100" onClick={() => toggleTheme()} aria-label={t('settings.toggleTheme')}>
+                {theme === 'dark' ? '🌞 Light' : '🌙 Dark'}
               </button>
             </div>
             <hr />
@@ -83,36 +55,17 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
                   role="switch"
                   id={`setting-${setting.key}`}
                   checked={settings[setting.key]}
-                  onChange={(event) => setSetting(setting.key, event.target.checked)}
+                  onChange={(event) => setSetting(setting.key, event.target.checked as UserSettings[typeof setting.key])}
                 />
                 <label className="form-check-label" htmlFor={`setting-${setting.key}`}>
-                  {t(setting.labelKey)}
-                </label>
-                <div className="form-text text-muted">{t(setting.descriptionKey)}</div>
-              </div>
-            ) : (
-              <div className="mb-3" key={setting.key}>
-                <label className="form-label" htmlFor={`setting-${setting.key}`}>
                   {t(`${setting.labelKey}.label`)}
+                  <div className="form-text text-muted">{t(setting.descriptionKey)}</div>
                 </label>
-                <select
-                  className="form-select"
-                  id={`setting-${setting.key}`}
-                  value={settings[setting.key]}
-                  onChange={(event) => setSetting(
-                    setting.key,
-                    Number(event.target.value) as UserSettings[typeof setting.key],
-                  )}
-                >
-                  {setting.options.map((option) => (
-                    <option key={option} value={option}>
-                      {t(`${setting.labelKey}.options.${option}`)}
-                    </option>
-                  ))}
-                </select>
-                <div className="form-text text-muted">{t(setting.descriptionKey)}</div>
               </div>
-            ))}
+            ) : null)}
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="btn btn-secondary" onClick={onClose}>{t('settings.close')}</button>
           </div>
         </div>
       </div>
