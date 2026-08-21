@@ -131,13 +131,14 @@ describe('GameServer shareable-room contract', () => {
   it('returns the stable invalid-code key for an unknown code', async () => {
     const creator = await connect();
     const joiner = await connect();
-    const { roomId } = await createRoom(creator, 'Creator', true);
+    const { roomId, room } = await createRoom(creator, 'Creator', true);
+    const wrongCode = room.accessCode === 'AAA' ? 'BBB' : 'AAA';
 
     const error = await emitAndWait(
       joiner,
       'error',
       'join_room_by_code',
-      'ZZZ',
+      wrongCode,
       'Guest',
       roomId,
     );
@@ -162,14 +163,14 @@ describe('GameServer shareable-room contract', () => {
 
   it('does not write the private access code to the creation log', async () => {
     const creator = await connect();
-    const { roomId, room } = await createRoom(creator, 'Creator', true);
+    const { roomId } = await createRoom(creator, 'Creator', true);
 
-    const creationLog = console.log.mock.calls
-      .map((args) => args.join(' '))
-      .find((message) => message.includes(`Room ${roomId} created`));
+    const creationLogs = console.log.mock.calls
+      .filter(([message]) => typeof message === 'string' && message.startsWith(`Room ${roomId} created`));
 
-    expect(creationLog).toContain('private');
-    expect(creationLog).not.toContain(room.accessCode);
+    expect(creationLogs).toEqual([
+      [`Room ${roomId} created by Creator (multiplayer, private)`],
+    ]);
   });
 
   it('returns the stable room-full key when both seats are occupied', async () => {

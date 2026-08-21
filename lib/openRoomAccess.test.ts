@@ -254,8 +254,12 @@ describe('openRoomAccess', () => {
     expect(['connect', 'room_updated', 'player_joined', 'player_reconnected', 'error']
       .map((event) => visitor.listeners(event).length)).toEqual(listenerCounts);
     expect(errors.values).toEqual(['SERVER_ERROR:invalidCode']);
+    await new Promise((resolve) => setTimeout(resolve, NOT_FOUND_TIMEOUT + 100));
+    expect(states.values.filter((state) => state.status === 'not-found')).toEqual([]);
+    expect(['connect', 'room_updated', 'player_joined', 'player_reconnected', 'error']
+      .map((event) => visitor.listeners(event).length)).toEqual(listenerCounts);
     controller.destroy();
-  });
+  }, 10_000);
 
   it('reports not-found five seconds after the request is sent', async () => {
     const visitor = client(false);
