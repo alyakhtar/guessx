@@ -29,4 +29,19 @@ describe('share helpers', () => {
     expect(textarea.value).toBe('two');
     expect(remove).toHaveBeenCalled();
   });
+
+  it('uses the legacy fallback when async clipboard is absent', async () => {
+    const textarea = { value: '', style: {}, setAttribute: vi.fn(), select: vi.fn(), remove: vi.fn() };
+    vi.stubGlobal('navigator', {});
+    vi.stubGlobal('document', { createElement: vi.fn(() => textarea), body: { appendChild: vi.fn() }, execCommand: vi.fn(() => true) });
+    expect(await copyToClipboard('fallback')).toBe(true);
+    expect(textarea.value).toBe('fallback');
+  });
+
+  it('returns failure when both clipboard paths fail', async () => {
+    const textarea = { value: '', style: {}, setAttribute: vi.fn(), select: vi.fn(), remove: vi.fn() };
+    vi.stubGlobal('navigator', { clipboard: { writeText: vi.fn().mockRejectedValue(new Error()) } });
+    vi.stubGlobal('document', { createElement: vi.fn(() => textarea), body: { appendChild: vi.fn() }, execCommand: vi.fn(() => false) });
+    expect(await copyToClipboard('no-copy')).toBe(false);
+  });
 });

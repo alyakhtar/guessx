@@ -102,6 +102,21 @@
       "text": "Rejoignez ma partie GuessX",
       "copied": "Lien copié"
     },
+    "join": {
+      "heading": "Rejoindre cette salle",
+      "nameLabel": "Votre nom",
+      "namePlaceholder": "Entrez votre nom",
+      "codeLabel": "Entrez le code d'accès à 3 caractères",
+      "codePlaceholder": "ABC",
+      "button": "Rejoindre la salle"
+    },
+    "notFound": {
+      "title": "Salle introuvable",
+      "backToLobby": "Retour à l'accueil"
+    },
+    "accessCode": {
+      "label": "Code d'accès"
+    },
     "loading": {
       "title": "Chargement de la salle de jeu...",
       "roomId": "ID de salle",

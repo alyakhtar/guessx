@@ -102,6 +102,21 @@
       "text": "Join my GuessX game",
       "copied": "Link copied"
     },
+    "join": {
+      "heading": "Join this room",
+      "nameLabel": "Your name",
+      "namePlaceholder": "Enter your name",
+      "codeLabel": "Enter the 3-character access code",
+      "codePlaceholder": "ABC",
+      "button": "Join room"
+    },
+    "notFound": {
+      "title": "Room not found",
+      "backToLobby": "Back to lobby"
+    },
+    "accessCode": {
+      "label": "Access code"
+    },
     "loading": {
       "title": "Loading game room...",
       "roomId": "Room ID",
