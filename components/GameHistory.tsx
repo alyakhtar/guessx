@@ -48,8 +48,7 @@ export default function GameHistory({ gameHistory, currentPlayerName, title }: G
                 <td className="text-center">
                   <code className="fs-5">{guess.guess}</code>
                 </td>
-                <td className="text-center">
-                  <td className="text-center align-middle" style={{ width: '96px' }}>
+                <td className="text-center align-middle" style={{ width: "96px" }}>
                   <div className="d-flex flex-column align-items-center justify-content-center gap-1">
                     <span className={`fs-4 fw-bold ${guess.correctPositions === 0 ? 'text-danger' : 'text-success'}`}>
                       {guess.correctPositions}
