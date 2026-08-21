@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getTheme, subscribe, type Theme } from '../lib/theme';
+import { getThemeSnapshot, subscribe, type Theme } from '../lib/theme';
 
 /**
  * Mounted once (in the locale layout). Subscribes to the shared theme store and
@@ -12,7 +12,7 @@ export default function ThemeManager() {
   const [theme, setTheme] = useState<Theme>('dark');
 
   const apply = () => {
-    const current = getTheme();
+    const current = getThemeSnapshot();
     setTheme(current);
     document.documentElement.setAttribute('data-bs-theme', current);
   };

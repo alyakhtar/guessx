@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import { SETTINGS_SCHEMA, setSetting, subscribe, getSettings, DEFAULTS } from '../lib/userSettings';
 import type { UserSettings } from '../lib/userSettings';
-import { getTheme, toggleTheme } from '../lib/theme';
+import { getThemeSnapshot, toggleTheme } from '../lib/theme';
 import LocaleSelector from './LocaleSelector';
 
 export default function SettingsPanel({ isOpen, onClose }: {
@@ -13,7 +13,7 @@ export default function SettingsPanel({ isOpen, onClose }: {
 }) {
   const t = useTranslations();
   const settings = useSyncExternalStore(subscribe, getSettings, () => DEFAULTS);
-  const theme = useSyncExternalStore(subscribe, getTheme, () => 'dark' as const);
+  const theme = useSyncExternalStore(subscribe, getThemeSnapshot, () => 'dark' as const);
 
   if (!isOpen) return null;
 

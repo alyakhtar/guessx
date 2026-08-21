@@ -24,6 +24,12 @@ export function getTheme(): Theme {
   return (cachedTheme = read());
 }
 
+// Render-safe snapshot for useSyncExternalStore: never mutates module state.
+export function getThemeSnapshot(): Theme {
+  if (typeof window === 'undefined') return 'dark';
+  return cachedTheme ?? read();
+}
+
 export function setTheme(theme: Theme) {
   cachedTheme = theme;
   try {
