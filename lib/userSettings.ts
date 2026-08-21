@@ -1,16 +1,19 @@
 import type { GameRoom } from '../types/game';
 
 export interface UserSettings {
+  darkMode: boolean;
   sideBySideBoard: boolean;
   revealSecretsOnWin: boolean;
 }
 
 export const DEFAULTS: UserSettings = {
+  darkMode: true,
   sideBySideBoard: false,
   revealSecretsOnWin: false,
 };
 
 export const SETTINGS_SCHEMA = [
+  { key: 'darkMode', labelKey: 'settings.darkMode.label', descriptionKey: 'settings.darkMode.description' },
   {
     key: 'sideBySideBoard',
     labelKey: 'settings.sideBySideBoard.label',

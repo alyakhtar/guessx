@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import LocaleSelector from '../../../components/LocaleSelector';
+import { useUserSettings } from '../../../lib/useUserSettings';
+import { setSetting } from '../../../lib/userSettings';
 
 interface Config {
     difficulty: 'easy' | 'medium' | 'hard';
@@ -37,8 +39,7 @@ export default function AdminPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
-    const [darkMode, setDarkMode] = useState(true);
-    const [mounted, setMounted] = useState(false);
+    const { darkMode } = useUserSettings();
     const [selectedNumberLength, setSelectedNumberLength] = useState(4);
     const [activeTab, setActiveTab] = useState<'configs' | 'stats'>('configs');
     const [statsLoading, setStatsLoading] = useState(false);
@@ -58,23 +59,7 @@ export default function AdminPage() {
 
     useEffect(() => {
         fetchConfigs();
-        // Load saved dark mode preference from localStorage
-        const savedDarkMode = localStorage.getItem('darkMode');
-        if (savedDarkMode !== null) {
-            setDarkMode(savedDarkMode === 'true');
-        }
-        setMounted(true);
     }, []);
-
-    const handleDarkModeToggle = () => {
-        const newDarkMode = !darkMode;
-        setDarkMode(newDarkMode);
-        localStorage.setItem('darkMode', newDarkMode.toString());
-    };
-
-    useEffect(() => {
-        document.documentElement.setAttribute('data-bs-theme', darkMode ? 'dark' : 'light');
-    }, [darkMode]);
 
     const handleSave = async () => {
         setSaving(true);
@@ -163,7 +148,7 @@ export default function AdminPage() {
                         <LocaleSelector />
                         <button
                             className="btn btn-sm btn-outline-secondary ms-2"
-                            onClick={handleDarkModeToggle}
+                            onClick={() => setSetting('darkMode', !darkMode)}
                         >
                             {darkMode ? '🌞' : '🌙'}
                         </button>

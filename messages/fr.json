@@ -108,6 +108,11 @@
     "title": "Paramètres",
     "close": "Fermer",
     "openAriaLabel": "Ouvrir les paramètres",
+    "language": "Langue",
+    "darkMode": {
+      "label": "Mode sombre",
+      "description": "Utiliser le thème sombre sur tous les écrans."
+    },
     "sideBySideBoard": {
       "label": "Plateau de jeu côte à côte",
       "description": "Afficher votre historique de tentatives à côté de celui de votre adversaire sur les grands écrans."

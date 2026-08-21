@@ -6,7 +6,6 @@ import { useTranslations, useLocale } from 'next-intl';
 import { socketService } from '../lib/socket';
 import { parseTurnTimerSeconds } from '../lib/turnTimer';
 import type { GameRoom, TurnTimerSeconds } from '../types/game';
-import LocaleSelector from './LocaleSelector';
 import SettingsCog from './SettingsCog';
 import ShareRoomButton from './ShareRoomButton';
 
@@ -37,7 +36,6 @@ export default function Lobby() {
   const [isSinglePlayer, setIsSinglePlayer] = useState(false);
   const [botDifficulty, setBotDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
   const [socket, setSocket] = useState<ReturnType<typeof socketService.connect> | null>(null);
-  const [darkMode, setDarkMode] = useState(true);
   const [rooms, setRooms] = useState<GameRoom[]>([]);
   // Private room toggle (default off, per issue AC)
   const [isPrivate, setIsPrivate] = useState(false);
@@ -66,10 +64,6 @@ export default function Lobby() {
     socketInstance.on('room_list', (rooms: GameRoom[]) => setRooms(rooms));
     return () => {};
   }, []);
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-bs-theme', darkMode ? 'dark' : 'light');
-  }, [darkMode]);
 
   const blurActive = () => {
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
@@ -156,10 +150,6 @@ export default function Lobby() {
   return (
     <div className="card p-2 p-sm-4 shadow position-relative">
       <div className="d-flex justify-content-end gap-2 position-absolute top-0 end-0 m-2">
-        <LocaleSelector />
-        <button className="btn btn-sm btn-outline-secondary" onClick={() => setDarkMode(!darkMode)}>
-          {darkMode ? '🌞' : '🌙'}
-        </button>
         <SettingsCog />
       </div>
       <div className="text-center mb-4">
