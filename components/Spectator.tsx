@@ -3,14 +3,18 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { socketService } from '../lib/socket';
-import { GameRoom } from '../types/game';
+import { socketService, TurnStartedPayload } from '../lib/socket';
+import { useUserSettings } from '../lib/useUserSettings';
+import { shouldRevealSecret } from '../lib/userSettings';
+import { GameRoom, TurnTimerSeconds } from '../types/game';
+import TurnTimer from './TurnTimer';
 
 export default function Spectator() {
     const params = useParams();
     const router = useRouter();
     const roomId = params.routeId as string;
     const t = useTranslations('spectator');
+    const settings = useUserSettings();
 
     const [room, setRoom] = useState<GameRoom | null>(null);
     const [error, setError] = useState<string>('');
@@ -43,6 +47,17 @@ export default function Spectator() {
             setError(errorMessage);
         };
 
+        const handleTurnStarted = (payload: TurnStartedPayload) => {
+            setRoom(currentRoom => currentRoom ? {
+                ...currentRoom,
+                currentTurn: payload.currentTurn,
+                turnStartedAt: payload.turnStartedAt,
+                turnDeadline: payload.turnDeadline,
+                turnTimerSeconds: payload.turnDurationMs / 1000 as TurnTimerSeconds,
+                serverNow: payload.serverNow,
+            } : currentRoom);
+        };
+
         socket.on('room_updated', handleRoomUpdated);
         socket.on('secret_number_set', handleRoomUpdated);
         socket.on('guess_made', handleRoomUpdated);
@@ -50,6 +65,7 @@ export default function Spectator() {
         socket.on('player_joined', handleRoomUpdated);
         socket.on('player_left', handleRoomUpdated);
         socket.on('player_reconnected', handleRoomUpdated);
+        socket.on('turn_started', handleTurnStarted);
         socket.on('error', handleError);
 
         // Request current room state
@@ -63,6 +79,8 @@ export default function Spectator() {
             socket.off('game_won', handleRoomUpdated);
             socket.off('player_joined', handleRoomUpdated);
             socket.off('player_left', handleRoomUpdated);
+            socket.off('player_reconnected', handleRoomUpdated);
+            socket.off('turn_started', handleTurnStarted);
             socket.off('error', handleError);
         };
     }, [roomId, router]);
@@ -103,6 +121,7 @@ export default function Spectator() {
     const p1 = room.players[0];
     const p2 = room.players[1];
     const currentPlayerName = room.players.find(p => p.id === room.currentTurn)?.name;
+    const revealSecret = shouldRevealSecret(settings, room.gameStatus);
 
     return (
         <div className="container p-2 p-md-4 min-vh-100 d-flex flex-column align-items-center">
@@ -154,6 +173,15 @@ export default function Spectator() {
                     </div>
                 </div>
 
+                {room.gameStatus === 'playing' && (
+                    <TurnTimer
+                        currentTurn={room.currentTurn}
+                        durationMs={(room.turnTimerSeconds ?? 0) * 1000}
+                        serverNow={room.serverNow}
+                        turnDeadline={room.turnDeadline}
+                    />
+                )}
+
                 {/* Player Boxes */}
                 <div className="row g-3 mb-4">
                     {/* Player 1 Box */}
@@ -195,7 +223,7 @@ export default function Spectator() {
                                                     className="border border-secondary rounded d-flex align-items-center justify-content-center"
                                                     style={{ width: '40px', height: '40px', fontSize: '1.2rem', fontWeight: 'bold' }}
                                                 >
-                                                    {isGuessed ? digit : ''}
+                                                    {isGuessed || revealSecret ? digit : ''}
                                                 </div>
                                             );
                                         })}
@@ -266,7 +294,7 @@ export default function Spectator() {
                                                     className="border border-secondary rounded d-flex align-items-center justify-content-center"
                                                     style={{ width: '40px', height: '40px', fontSize: '1.2rem', fontWeight: 'bold' }}
                                                 >
-                                                    {isGuessed ? digit : ''}
+                                                    {isGuessed || revealSecret ? digit : ''}
                                                 </div>
                                             );
                                         })}

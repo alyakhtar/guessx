@@ -5,6 +5,7 @@
     "dev": "node server.js",
     "build": "next build",
     "start": "NODE_ENV=production node server.js",
+    "test": "vitest run",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
     "test": "vitest run"

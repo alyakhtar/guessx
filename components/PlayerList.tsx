@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { useUserSettings } from '../lib/useUserSettings';
+import { shouldRevealSecret } from '../lib/userSettings';
 import { GameRoom, Player } from '../types/game';
 
 interface PlayerListProps {
@@ -25,6 +27,7 @@ interface VsStats {
 
 export default function PlayerList({ room, currentPlayerId }: PlayerListProps) {
   const t = useTranslations('playerList');
+  const settings = useUserSettings();
   const currentPlayer = room.players.find(p => p.id === currentPlayerId);
   const [vsStats, setVsStats] = useState<VsStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
@@ -195,7 +198,7 @@ export default function PlayerList({ room, currentPlayerId }: PlayerListProps) {
               </div>
             </div>
           )}
-          {room.gameStatus === 'finished' && player.secretNumber && player.id !== currentPlayerId && (
+          {shouldRevealSecret(settings, room.gameStatus) && player.secretNumber && player.id !== currentPlayerId && (
             <div className="alert alert-secondary small mb-3">
               <strong>{t('indicators.playerSecret', { player: player.name })}</strong> <code>{player.secretNumber}</code>
             </div>
