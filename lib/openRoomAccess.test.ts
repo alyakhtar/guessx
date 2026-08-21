@@ -212,6 +212,28 @@ describe('openRoomAccess', () => {
     controller.destroy();
   });
 
+  it('preserves an authorized private code across a later sanitized target-room update', async () => {
+    const creator = await connectedClient();
+    const { roomId, room } = await createRoom(creator, 'Creator', true);
+    const visitor = await connectedClient();
+    const { controller, states } = open(visitor, roomId, room.accessCode);
+    await states.waitFor((state) => state.status === 'visitor-private');
+    controller.join('Guest');
+    const authorized = await states.waitFor((state) => state.status === 'member');
+    if (authorized.status !== 'member') throw new Error('Expected member state');
+    const { accessCode, ...sanitizedRoom } = authorized.room;
+    states.clear();
+
+    gameServer.io.sockets.sockets.get(visitor.id!)!.emit('room_updated', sanitizedRoom);
+
+    const refreshed = await states.waitFor((state) => state.status === 'member');
+    expect(refreshed).toMatchObject({
+      status: 'member',
+      room: { id: roomId, accessCode },
+    });
+    controller.destroy();
+  });
+
   it('retries a rejected private code without duplicating controller effects', async () => {
     const creator = await connectedClient();
     const { roomId, room } = await createRoom(creator, 'Creator', true);

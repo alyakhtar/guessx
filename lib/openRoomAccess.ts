@@ -44,11 +44,15 @@ export function openRoomAccess(
   const handleRoom = (nextRoom: GameRoom) => {
     if (destroyed || nextRoom.id !== roomId) return;
     clearNotFoundTimer();
-    room = nextRoom;
-    if (nextRoom.players.some((player) => player.id === socket.id)) {
-      onState({ status: 'member', room: nextRoom });
+    const isMember = nextRoom.players.some((player) => player.id === socket.id);
+    const priorAccessCode = room?.accessCode;
+    room = isMember && nextRoom.isPrivate && !nextRoom.accessCode && priorAccessCode
+      ? { ...nextRoom, accessCode: priorAccessCode }
+      : nextRoom;
+    if (isMember) {
+      onState({ status: 'member', room });
     } else {
-      onState({ status: nextRoom.isPrivate ? 'visitor-private' : 'visitor-public', room: nextRoom });
+      onState({ status: nextRoom.isPrivate ? 'visitor-private' : 'visitor-public', room });
     }
   };
 
