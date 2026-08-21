@@ -183,8 +183,8 @@ class GameServer {
       });
 
       // Join a private room by its 3-char access code
-      socket.on('join_room_by_code', (accessCode, playerName) => {
-        this.joinRoomByCode(socket, accessCode, playerName);
+      socket.on('join_room_by_code', (accessCode, playerName, roomId) => {
+        this.joinRoomByCode(socket, accessCode, playerName, roomId);
       });
 
       socket.on('join_room', (roomId, playerName) => this.joinRoom(socket, roomId, playerName));
@@ -242,7 +242,7 @@ class GameServer {
       this.rooms.set(roomId, room);
       this.playerRoomMap.set(socket.id, roomId);
       socket.join(roomId);
-      console.log(`Room ${roomId} created by ${playerName} (${isSinglePlayer ? 'single player' : 'multiplayer'}${isPrivate ? ', private ' + accessCode : ''})`);
+      console.log(`Room ${roomId} created by ${playerName} (${isSinglePlayer ? 'single player' : 'multiplayer'}${isPrivate ? ', private' : ''})`);
       // Only the creator (a member) gets the access code back.
       socket.emit('room_created', roomId, room);
       this.broadcastRoomList();
@@ -276,10 +276,10 @@ class GameServer {
 
     // Capacity checks (after reconnect so a returning player is never blocked).
     if (room.players.length >= 2) {
-      return { error: 'No space for new players. Only original players can rejoin.' };
+      return { error: 'SERVER_ERROR:roomFull' };
     }
     if (room.players.filter(p => p.isConnected).length >= 2) {
-      return { error: 'Room is full. Maximum 2 players allowed.' };
+      return { error: 'SERVER_ERROR:roomFull' };
     }
 
     const player = { id: socket.id, name: playerName, isConnected: true, isReady: false };
@@ -295,12 +295,14 @@ class GameServer {
   }
 
   // Join a private room using its access code
-  joinRoomByCode(socket, accessCode, playerName) {
+  joinRoomByCode(socket, accessCode, playerName, roomId) {
     try {
       if (!accessCode || typeof accessCode !== 'string') { socket.emit('error', 'Please provide a valid access code.'); return; }
       const normalized = accessCode.trim().toUpperCase();
-      const room = Array.from(this.rooms.values()).find(r => r.isPrivate && r.accessCode === normalized);
-      if (!room) { socket.emit('error', 'SERVER_ERROR:invalidCode'); return; }
+      const room = roomId === undefined
+        ? Array.from(this.rooms.values()).find(r => r.isPrivate && r.accessCode === normalized)
+        : this.rooms.get(roomId);
+      if (!room || !room.isPrivate || room.accessCode !== normalized) { socket.emit('error', 'SERVER_ERROR:invalidCode'); return; }
       const result = this.admitPlayer(room, socket, playerName, { byCode: true });
       if (result.error) { socket.emit('error', result.error); return; }
     } catch (error) { console.error('Error joining room by code:', error); socket.emit('error', 'Failed to join room'); }
