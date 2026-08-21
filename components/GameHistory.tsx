@@ -57,7 +57,7 @@ export default function GameHistory({ gameHistory, currentPlayerName, title }: G
                       {Array.from({ length: guess.guess.length }).map((_, i) => (
                         <span
                           key={i}
-                          className={`badge ${i < guess.correctPositions ? 'bg-success' : 'bg-secondary'}`}
+                          className={`badge p-0 ${i < guess.correctPositions ? 'bg-success' : 'bg-secondary'}`}
                           style={{ width: '8px', height: '8px', borderRadius: '50%' }}
                         ></span>
                       ))}
