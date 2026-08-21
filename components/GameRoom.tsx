@@ -2,17 +2,26 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { socketService } from '../lib/socket';
-import { GameRoom as GameRoomType, Player } from '../types/game';
+import { GameRoom as GameRoomType } from '../types/game';
 import PlayerList from './PlayerList';
 import GuessInput from './GuessInput';
 import GameHistory from './GameHistory';
 import Celebration from './Celebration';
 
+// Rematch UI state machine (issue #4).
+//   idle     -> show "Rematch" button
+//   sent     -> I requested; waiting for opponent to accept/decline
+//   incoming -> opponent requested; I see Accept/Decline
+//   ready    -> new room created; navigate (or show code if solo)
+type RematchStatus = 'idle' | 'sent' | 'incoming' | 'declined' | 'ready';
+interface RematchInfo { roomId: string; accessCode?: string; solo?: boolean }
+
 export default function GameRoom() {
   const params = useParams();
   const router = useRouter();
+  const locale = useLocale();
   const roomId = params.routeId as string;
   const t = useTranslations('gameRoom');
 
@@ -21,6 +30,8 @@ export default function GameRoom() {
   const [error, setError] = useState<string>('');
   const [darkMode, setDarkMode] = useState(true);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [rematchStatus, setRematchStatus] = useState<RematchStatus>('idle');
+  const [rematchInfo, setRematchInfo] = useState<RematchInfo | null>(null);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-bs-theme', darkMode ? 'dark' : 'light');
@@ -52,6 +63,22 @@ export default function GameRoom() {
       setError(errorMessage);
     };
 
+    // Rematch flow (issue #4)
+    const handleRematchOffer = () => setRematchStatus('incoming');
+    const handleRematchOfferSent = () => setRematchStatus('sent');
+    const handleRematchDeclined = () => setRematchStatus('declined');
+    const handleRematchReady = (info: RematchInfo) => {
+      if (info.solo) {
+        // Only I am connected — show the new room id / code so the other
+        // player can rejoin from the list or by code.
+        setRematchInfo(info);
+        setRematchStatus('ready');
+      } else {
+        // Both connected — auto-invited: navigate to the fresh room.
+        router.push(`/${locale}/game/${info.roomId}`);
+      }
+    };
+
     socket.on('room_updated', handleRoomUpdated);
     socket.on('secret_number_set', handleRoomUpdated);
     socket.on('guess_made', handleRoomUpdated);
@@ -60,6 +87,10 @@ export default function GameRoom() {
     socket.on('player_left', handleRoomUpdated);
     socket.on('player_reconnected', handleRoomUpdated);
     socket.on('error', handleError);
+    socket.on('rematch_offer', handleRematchOffer);
+    socket.on('rematch_offer_sent', handleRematchOfferSent);
+    socket.on('rematch_declined', handleRematchDeclined);
+    socket.on('rematch_room_ready', handleRematchReady);
 
     // Request current room state
     socket.emit('get_room_state', roomId);
@@ -72,9 +103,14 @@ export default function GameRoom() {
       socket.off('game_won', handleRoomUpdated);
       socket.off('player_joined', handleRoomUpdated);
       socket.off('player_left', handleRoomUpdated);
+      socket.off('player_reconnected', handleRoomUpdated);
       socket.off('error', handleError);
+      socket.off('rematch_offer', handleRematchOffer);
+      socket.off('rematch_offer_sent', handleRematchOfferSent);
+      socket.off('rematch_declined', handleRematchDeclined);
+      socket.off('rematch_room_ready', handleRematchReady);
     };
-  }, [roomId, router]);
+  }, [roomId, locale, router]);
 
   const currentPlayer = room?.players.find(p => p.id === currentPlayerId);
   const isMyTurn = room?.currentTurn === currentPlayerId;
@@ -105,6 +141,17 @@ export default function GameRoom() {
     router.push('/');
   };
 
+  const handleRematchRequest = () => {
+    socketService.getSocket()?.emit('rematch_request', roomId);
+  };
+  const handleRematchAccept = () => {
+    socketService.getSocket()?.emit('rematch_accept', roomId);
+  };
+  const handleRematchDecline = () => {
+    socketService.getSocket()?.emit('rematch_decline', roomId);
+    setRematchStatus('idle'); // I declined the offer — return to idle
+  };
+
   return (
     <div className="container p-2 p-md-4 min-vh-100 d-flex flex-column align-items-center">
       <div className="w-100">
@@ -125,6 +172,12 @@ export default function GameRoom() {
               <span className="badge text-bg-secondary fs-6">
                 {t('header.digits')}: {room.numberLength}
               </span>
+
+              {room.isPrivate && room.accessCode && (
+                <span className="badge text-bg-info fs-6">
+                  {t('header.code')}: {room.accessCode}
+                </span>
+              )}
 
               {room.gameStatus === 'playing' && (
                 <span className={`badge fs-6 ${isMyTurn ? 'text-bg-success' : 'text-bg-warning'}`}>
@@ -164,6 +217,49 @@ export default function GameRoom() {
                 numberLength={room.numberLength}
                 onNewGame={handleNewGame}
               />
+              {room.gameStatus === 'finished' && (
+                <div className="mt-3" aria-live="polite">
+                  {rematchStatus === 'idle' && (
+                    <button className="btn btn-primary btn-lg w-100" onClick={handleRematchRequest}>
+                      {t('rematch.button')}
+                    </button>
+                  )}
+                  {rematchStatus === 'sent' && (
+                    <div className="alert alert-info mb-0">{t('rematch.waiting')}</div>
+                  )}
+                  {rematchStatus === 'declined' && (
+                    <div>
+                      <div className="alert alert-warning mb-2">{t('rematch.declined')}</div>
+                      <button className="btn btn-primary btn-lg w-100" onClick={() => setRematchStatus('idle')}>
+                        {t('rematch.button')}
+                      </button>
+                    </div>
+                  )}
+                  {rematchStatus === 'incoming' && (
+                    <div>
+                      <p className="mb-2">{t('rematch.incoming')}</p>
+                      <div className="d-flex gap-2">
+                        <button className="btn btn-success btn-lg flex-fill" onClick={handleRematchAccept}>
+                          {t('rematch.accept')}
+                        </button>
+                        <button className="btn btn-secondary btn-lg flex-fill" onClick={handleRematchDecline}>
+                          {t('rematch.decline')}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  {rematchStatus === 'ready' && rematchInfo?.solo && (
+                    <div className="alert alert-info mb-0">
+                      <p className="mb-1">{t('rematch.soloHint')}</p>
+                      {rematchInfo.accessCode ? (
+                        <p className="mb-0">{t('rematch.soloCode')}: <code className="fs-5">{rematchInfo.accessCode}</code></p>
+                      ) : (
+                        <p className="mb-0">{t('rematch.soloRoom')}: <code className="fs-5">{rematchInfo.roomId}</code></p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
