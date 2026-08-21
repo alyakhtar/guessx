@@ -71,6 +71,7 @@ export default function Lobby() {
   const handleCreateRoom = () => {
     const trimmedName = playerName.trim();
     if (!trimmedName) { alert(t('errors.nameRequired')); return; }
+    if (trimmedName.toLowerCase() === 'bot') { alert(t('errors.reservedName')); return; }
     localStorage.setItem('playerName', trimmedName);
     if (!socket) { alert(t('errors.connectionError')); return; }
     setIsCreating(true);
@@ -93,6 +94,7 @@ export default function Lobby() {
   const handleJoinRoomTable = (roomId: string) => {
     const trimmedName = playerName.trim();
     if (!trimmedName) { alert(t('errors.nameRequired')); return; }
+    if (trimmedName.toLowerCase() === 'bot') { alert(t('errors.reservedName')); return; }
     localStorage.setItem('playerName', trimmedName);
     if (!socket) { alert(t('errors.connectionError')); return; }
     socket.emit('join_room', roomId, trimmedName);
@@ -127,6 +129,7 @@ export default function Lobby() {
     const code = codeDigits.join('').toUpperCase();
     const trimmedName = playerName.trim();
     if (!trimmedName) { setJoinError(t('errors.nameRequired')); return; }
+    if (trimmedName.toLowerCase() === 'bot') { setJoinError(t('errors.reservedName')); return; }
     if (code.length < 3) { setJoinError(t('joinGame.errors.codeRequired')); return; }
     if (!socket) { setJoinError(t('errors.connectionError')); return; }
     localStorage.setItem('playerName', trimmedName);

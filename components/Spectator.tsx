@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { socketService } from '../lib/socket';
+import { useUserSettings } from '../lib/useUserSettings';
+import { shouldRevealSecret } from '../lib/userSettings';
 import { GameRoom } from '../types/game';
 
 export default function Spectator() {
@@ -11,6 +13,7 @@ export default function Spectator() {
     const router = useRouter();
     const roomId = params.routeId as string;
     const t = useTranslations('spectator');
+    const settings = useUserSettings();
 
     const [room, setRoom] = useState<GameRoom | null>(null);
     const [error, setError] = useState<string>('');
@@ -103,6 +106,7 @@ export default function Spectator() {
     const p1 = room.players[0];
     const p2 = room.players[1];
     const currentPlayerName = room.players.find(p => p.id === room.currentTurn)?.name;
+    const revealSecret = shouldRevealSecret(settings, room.gameStatus);
 
     return (
         <div className="container p-2 p-md-4 min-vh-100 d-flex flex-column align-items-center">
@@ -195,7 +199,7 @@ export default function Spectator() {
                                                     className="border border-secondary rounded d-flex align-items-center justify-content-center"
                                                     style={{ width: '40px', height: '40px', fontSize: '1.2rem', fontWeight: 'bold' }}
                                                 >
-                                                    {isGuessed ? digit : ''}
+                                                    {isGuessed || revealSecret ? digit : ''}
                                                 </div>
                                             );
                                         })}
@@ -266,7 +270,7 @@ export default function Spectator() {
                                                     className="border border-secondary rounded d-flex align-items-center justify-content-center"
                                                     style={{ width: '40px', height: '40px', fontSize: '1.2rem', fontWeight: 'bold' }}
                                                 >
-                                                    {isGuessed ? digit : ''}
+                                                    {isGuessed || revealSecret ? digit : ''}
                                                 </div>
                                             );
                                         })}

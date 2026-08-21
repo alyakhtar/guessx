@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { socketService } from '../lib/socket';
+import { useUserSettings } from '../lib/useUserSettings';
 import { GameRoom as GameRoomType } from '../types/game';
 import PlayerList from './PlayerList';
 import GuessInput from './GuessInput';
@@ -24,6 +25,7 @@ export default function GameRoom() {
   const locale = useLocale();
   const roomId = params.routeId as string;
   const t = useTranslations('gameRoom');
+  const settings = useUserSettings();
 
   const [room, setRoom] = useState<GameRoomType | null>(null);
   const [currentPlayerId, setCurrentPlayerId] = useState<string>('');
@@ -198,7 +200,7 @@ export default function GameRoom() {
           <div className="alert alert-danger mb-4">{error}</div>
         )}
 
-        <div className="row row-cols-1 row-cols-lg-3 g-3">
+        <div className={settings.sideBySideBoard && opponent ? 'row row-cols-1 row-cols-md-2 g-3' : 'row row-cols-1 row-cols-lg-3 g-3'}>
           {/* Left Column - Players */}
           <div className="col">
             <PlayerList
@@ -270,6 +272,16 @@ export default function GameRoom() {
               currentPlayerName={currentPlayer?.name}
             />
           </div>
+
+          {settings.sideBySideBoard && opponent && (
+            <div className="col">
+              <GameHistory
+                gameHistory={room.gameHistory}
+                currentPlayerName={opponent.name}
+                title={t('opponentHistoryTitle', { name: opponent.name })}
+              />
+            </div>
+          )}
         </div>
       </div>
 

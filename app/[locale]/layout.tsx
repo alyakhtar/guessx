@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import '../globals.css';
 import Script from 'next/script';
+import SettingsCog from '../../components/SettingsCog';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -32,6 +33,7 @@ export default async function RootLayout({ children, params }: LayoutProps) {
             <body className={inter.className} suppressHydrationWarning>
                 <NextIntlClientProvider locale={validLocale} messages={messages}>
                     {children}
+                    <SettingsCog />
                 </NextIntlClientProvider>
                 <Script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" />
             </body>
