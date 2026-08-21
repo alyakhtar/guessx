@@ -268,6 +268,10 @@ class GameServer {
       if (room.currentTurn === oldId) room.currentTurn = socket.id;
       this.playerRoomMap.set(socket.id, room.id);
       socket.join(room.id);
+      // A member must not stay on the spectator channel — it only ever receives
+      // the accessCode-stripped room view, which would otherwise race with (and
+      // intermittently overwrite) the full member broadcast on room.id.
+      socket.leave(`${room.id}_spectators`);
       this.io.to(room.id).emit('player_reconnected', room);
       this.io.to(room.id).emit('room_updated', room);
       this.broadcastRoomList();
@@ -286,6 +290,7 @@ class GameServer {
     room.players.push(player);
     this.playerRoomMap.set(socket.id, room.id);
     socket.join(room.id);
+    socket.leave(`${room.id}_spectators`);
     if (room.players.filter(p => p.isConnected).length === 2) room.gameStatus = 'setup';
     console.log(`Player ${playerName} joined room ${room.id}${byCode ? ' via code' : ''}`);
     this.io.to(room.id).emit('player_joined', room);
