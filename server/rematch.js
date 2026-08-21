@@ -79,6 +79,8 @@ function createRematch(gs, sourceRoomId) {
 function handleRematchRequest(gs, socket, sourceRoomId) {
   const src = gs.rooms.get(sourceRoomId);
   if (!src || src.gameStatus !== 'finished') return;
+  // Authorize: only a current member of the finished room may start a rematch.
+  if (!src.players.some(p => p.id === socket.id)) return;
   // Reject a second concurrent request — keeps the offer single-owner.
   if (src.rematchOffer && src.rematchOffer.pending) {
     socket.emit('error', 'A rematch is already pending for this room.');
@@ -101,6 +103,9 @@ function handleRematchRequest(gs, socket, sourceRoomId) {
 function handleRematchAccept(gs, socket, sourceRoomId) {
   const src = gs.rooms.get(sourceRoomId);
   if (!src || !src.rematchOffer || !src.rematchOffer.pending) return;
+  // Authorize: only a member (and not the initiator) may accept the offer.
+  if (!src.players.some(p => p.id === socket.id)) return;
+  if (src.rematchOffer.initiatedBy === socket.id) return;
   src.rematchOffer.pending = false;
   createRematch(gs, sourceRoomId);
 }
@@ -108,6 +113,8 @@ function handleRematchAccept(gs, socket, sourceRoomId) {
 function handleRematchDecline(gs, socket, sourceRoomId) {
   const src = gs.rooms.get(sourceRoomId);
   if (!src || !src.rematchOffer) return;
+  // Authorize: only a member may decline the offer.
+  if (!src.players.some(p => p.id === socket.id)) return;
   const initiatorId = src.rematchOffer.initiatedBy;
   src.rematchOffer = null;
   const initSocket = gs.io.sockets.sockets.get(initiatorId);
