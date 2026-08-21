@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { socketService } from '../lib/socket';
+import { socketService, TurnStartedPayload } from '../lib/socket';
 import { useUserSettings } from '../lib/useUserSettings';
 import { shouldRevealSecret } from '../lib/userSettings';
-import { GameRoom } from '../types/game';
+import { GameRoom, TurnTimerSeconds } from '../types/game';
+import TurnTimer from './TurnTimer';
 
 export default function Spectator() {
     const params = useParams();
@@ -46,6 +47,17 @@ export default function Spectator() {
             setError(errorMessage);
         };
 
+        const handleTurnStarted = (payload: TurnStartedPayload) => {
+            setRoom(currentRoom => currentRoom ? {
+                ...currentRoom,
+                currentTurn: payload.currentTurn,
+                turnStartedAt: payload.turnStartedAt,
+                turnDeadline: payload.turnDeadline,
+                turnTimerSeconds: payload.turnDurationMs / 1000 as TurnTimerSeconds,
+                serverNow: payload.serverNow,
+            } : currentRoom);
+        };
+
         socket.on('room_updated', handleRoomUpdated);
         socket.on('secret_number_set', handleRoomUpdated);
         socket.on('guess_made', handleRoomUpdated);
@@ -53,6 +65,7 @@ export default function Spectator() {
         socket.on('player_joined', handleRoomUpdated);
         socket.on('player_left', handleRoomUpdated);
         socket.on('player_reconnected', handleRoomUpdated);
+        socket.on('turn_started', handleTurnStarted);
         socket.on('error', handleError);
 
         // Request current room state
@@ -66,6 +79,8 @@ export default function Spectator() {
             socket.off('game_won', handleRoomUpdated);
             socket.off('player_joined', handleRoomUpdated);
             socket.off('player_left', handleRoomUpdated);
+            socket.off('player_reconnected', handleRoomUpdated);
+            socket.off('turn_started', handleTurnStarted);
             socket.off('error', handleError);
         };
     }, [roomId, router]);
@@ -157,6 +172,15 @@ export default function Spectator() {
                         </div>
                     </div>
                 </div>
+
+                {room.gameStatus === 'playing' && (
+                    <TurnTimer
+                        currentTurn={room.currentTurn}
+                        durationMs={(room.turnTimerSeconds ?? 0) * 1000}
+                        serverNow={room.serverNow}
+                        turnDeadline={room.turnDeadline}
+                    />
+                )}
 
                 {/* Player Boxes */}
                 <div className="row g-3 mb-4">

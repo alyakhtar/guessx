@@ -9,6 +9,7 @@ export interface Player {
 }
 
 export type BotDifficulty = 'easy' | 'medium' | 'hard';
+export type TurnTimerSeconds = 0 | 15 | 30 | 60;
 
 export interface Guess {
   playerName: string;
@@ -31,6 +32,12 @@ export interface GameRoom {
   // from this; `type` was a duplicate state and has been removed (review ponytail).
   isPrivate?: boolean;
   accessCode?: string;
+  turnStartedAt?: number;
+  turnDeadline?: number;
+  turnTimerSeconds?: TurnTimerSeconds;
+  gameEndReason?: 'idle_forfeit';
+  forfeitedBy?: string;
+  serverNow?: number;
 }
 
 export interface GameState {

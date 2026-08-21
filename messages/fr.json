@@ -105,6 +105,16 @@
     "revealSecretsOnWin": {
       "label": "Révéler les nombres secrets après une victoire",
       "description": "Afficher les deux nombres secrets à la fin de la partie."
+    },
+    "turnTimer": {
+      "label": "Minuteur de tour",
+      "description": "Un joueur perd la partie s’il ne propose pas de nombre avant la fin du délai.",
+      "options": {
+        "0": "Désactivé",
+        "15": "15 secondes",
+        "30": "30 secondes",
+        "60": "60 secondes"
+      }
     }
   },
   "gameRoom": {
@@ -154,6 +164,7 @@
     "gameOver": {
       "title": "Partie terminée !",
       "winnerText": "{name} a gagné la partie !",
+      "forfeitIdle": "{name} a perdu par inactivité",
       "newGameButton": "🎮 Nouvelle partie"
     },
     "turn": {

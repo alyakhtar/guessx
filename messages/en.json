@@ -105,6 +105,16 @@
     "revealSecretsOnWin": {
       "label": "Reveal secret numbers after a win",
       "description": "Show both secret numbers when the game ends."
+    },
+    "turnTimer": {
+      "label": "Turn timer",
+      "description": "Forfeit a player who does not guess before time runs out.",
+      "options": {
+        "0": "Off",
+        "15": "15 seconds",
+        "30": "30 seconds",
+        "60": "60 seconds"
+      }
     }
   },
   "gameRoom": {
@@ -154,6 +164,7 @@
     "gameOver": {
       "title": "Game Over!",
       "winnerText": "{name} won the game!",
+      "forfeitIdle": "{name} forfeited (idle)",
       "newGameButton": "🎮 Start New Game"
     },
     "turn": {

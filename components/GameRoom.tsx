@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
-import { socketService } from '../lib/socket';
+import { socketService, TurnStartedPayload } from '../lib/socket';
 import { useUserSettings } from '../lib/useUserSettings';
-import { GameRoom as GameRoomType } from '../types/game';
+import { GameRoom as GameRoomType, TurnTimerSeconds } from '../types/game';
 import PlayerList from './PlayerList';
 import GuessInput from './GuessInput';
 import GameHistory from './GameHistory';
 import Celebration from './Celebration';
+import TurnTimer from './TurnTimer';
 
 // Rematch UI state machine (issue #4).
 //   idle     -> show "Rematch" button
@@ -81,6 +82,17 @@ export default function GameRoom() {
       }
     };
 
+    const handleTurnStarted = (payload: TurnStartedPayload) => {
+      setRoom(currentRoom => currentRoom ? {
+        ...currentRoom,
+        currentTurn: payload.currentTurn,
+        turnStartedAt: payload.turnStartedAt,
+        turnDeadline: payload.turnDeadline,
+        turnTimerSeconds: payload.turnDurationMs / 1000 as TurnTimerSeconds,
+        serverNow: payload.serverNow,
+      } : currentRoom);
+    };
+
     socket.on('room_updated', handleRoomUpdated);
     socket.on('secret_number_set', handleRoomUpdated);
     socket.on('guess_made', handleRoomUpdated);
@@ -88,6 +100,7 @@ export default function GameRoom() {
     socket.on('player_joined', handleRoomUpdated);
     socket.on('player_left', handleRoomUpdated);
     socket.on('player_reconnected', handleRoomUpdated);
+    socket.on('turn_started', handleTurnStarted);
     socket.on('error', handleError);
     socket.on('rematch_offer', handleRematchOffer);
     socket.on('rematch_offer_sent', handleRematchOfferSent);
@@ -106,6 +119,7 @@ export default function GameRoom() {
       socket.off('player_joined', handleRoomUpdated);
       socket.off('player_left', handleRoomUpdated);
       socket.off('player_reconnected', handleRoomUpdated);
+      socket.off('turn_started', handleTurnStarted);
       socket.off('error', handleError);
       socket.off('rematch_offer', handleRematchOffer);
       socket.off('rematch_offer_sent', handleRematchOfferSent);
@@ -198,6 +212,16 @@ export default function GameRoom() {
 
         {error && (
           <div className="alert alert-danger mb-4">{error}</div>
+        )}
+
+        {room.gameStatus === 'playing' && (
+          <TurnTimer
+            currentTurn={room.currentTurn}
+            durationMs={(room.turnTimerSeconds ?? 0) * 1000}
+            prominent={isMyTurn}
+            serverNow={room.serverNow}
+            turnDeadline={room.turnDeadline}
+          />
         )}
 
         <div className={settings.sideBySideBoard && opponent ? 'row row-cols-1 row-cols-md-2 g-3' : 'row row-cols-1 row-cols-lg-3 g-3'}>
