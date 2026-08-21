@@ -80,6 +80,7 @@
     },
     "errors": {
       "nameRequired": "Please enter your name",
+      "reservedName": "The name Bot is reserved. Please choose another name.",
       "connectionError": "Not connected to server. Please refresh the page.",
       "roomCreationError": "Error",
       "roomJoinError": "Error",
@@ -93,7 +94,21 @@
     "english": "English",
     "french": "French"
   },
+  "settings": {
+    "title": "Settings",
+    "close": "Close",
+    "openAriaLabel": "Open settings",
+    "sideBySideBoard": {
+      "label": "Side-by-side game board",
+      "description": "Show your guess history beside your opponent's history on larger screens."
+    },
+    "revealSecretsOnWin": {
+      "label": "Reveal secret numbers after a win",
+      "description": "Show both secret numbers when the game ends."
+    }
+  },
   "gameRoom": {
+    "opponentHistoryTitle": "{name}'s Guesses",
     "loading": {
       "title": "Loading game room...",
       "roomId": "Room ID",

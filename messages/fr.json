@@ -80,6 +80,7 @@
     },
     "errors": {
       "nameRequired": "Veuillez entrer votre nom",
+      "reservedName": "Le nom Bot est réservé. Veuillez choisir un autre nom.",
       "connectionError": "Non connecté au serveur. Veuillez actualiser la page.",
       "roomCreationError": "Erreur",
       "roomJoinError": "Erreur",
@@ -93,7 +94,21 @@
     "english": "English",
     "french": "Français"
   },
+  "settings": {
+    "title": "Paramètres",
+    "close": "Fermer",
+    "openAriaLabel": "Ouvrir les paramètres",
+    "sideBySideBoard": {
+      "label": "Plateau de jeu côte à côte",
+      "description": "Afficher votre historique de tentatives à côté de celui de votre adversaire sur les grands écrans."
+    },
+    "revealSecretsOnWin": {
+      "label": "Révéler les nombres secrets après une victoire",
+      "description": "Afficher les deux nombres secrets à la fin de la partie."
+    }
+  },
   "gameRoom": {
+    "opponentHistoryTitle": "Tentatives de {name}",
     "loading": {
       "title": "Chargement de la salle de jeu...",
       "roomId": "ID de salle",
