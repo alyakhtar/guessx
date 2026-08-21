@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { socketService } from '../lib/socket';
 import { GameRoom } from '../types/game';
 import LocaleSelector from './LocaleSelector';
+import ShareRoomButton from './ShareRoomButton';
 
 // Minimal shape of a room payload the lobby receives on socket callbacks.
 type RoomSummary = { id: string; isPrivate?: boolean; accessCode?: string };
@@ -21,6 +22,7 @@ export default function Lobby() {
       const key = error.slice('SERVER_ERROR:'.length);
       if (key === 'duplicateName') return t('errors.server.duplicateName');
       if (key === 'invalidCode') return t('errors.server.invalidCode');
+      if (key === 'roomFull') return t('errors.server.roomFull');
     }
     return error;
   };
@@ -40,6 +42,7 @@ export default function Lobby() {
   const [modalRoom, setModalRoom] = useState<string | null>(null);
   const [codeDigits, setCodeDigits] = useState<string[]>(['', '', '']);
   const [joinError, setJoinError] = useState('');
+  const [createdRoom, setCreatedRoom] = useState<{ id: string; code: string } | null>(null);
   const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
   const router = useRouter();
 
@@ -78,7 +81,8 @@ export default function Lobby() {
     const handleRoomCreated = (newRoomId: string, room: RoomSummary) => {
       setIsCreating(false);
       if (room && room.isPrivate && room.accessCode) {
-        alert(t('createGame.privateRoomCreated', { code: room.accessCode }));
+        setCreatedRoom({ id: newRoomId, code: room.accessCode });
+        return;
       }
       router.push(`/${locale}/game/${newRoomId}`);
     };
@@ -362,6 +366,19 @@ export default function Lobby() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {createdRoom && (
+        <div className="modal show d-block" role="dialog" aria-modal="true" aria-labelledby="createdRoomTitle" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+          <div className="modal-dialog modal-dialog-centered"><div className="modal-content">
+            <div className="modal-header"><h5 className="modal-title" id="createdRoomTitle">{t('createGame.privateRoomCreated', { code: createdRoom.code })}</h5></div>
+            <div className="modal-body text-center">
+              <div className="display-4 fw-bold mb-3">{createdRoom.code}</div>
+              <ShareRoomButton roomId={createdRoom.id} accessCode={createdRoom.code} />
+              <button type="button" className="btn btn-primary ms-2" onClick={() => router.push(`/${locale}/game/${createdRoom.id}`)}>{t('createGame.goToRoom')}</button>
+            </div>
+          </div></div>
         </div>
       )}
 

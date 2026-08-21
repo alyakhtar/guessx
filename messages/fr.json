@@ -40,6 +40,7 @@
         "description": "Créez une salle privée. Un code de 3 caractères est généré à partager avec votre adversaire."
       },
       "privateRoomCreated": "Salle privée créée ! Partagez ce code avec votre ami pour rejoindre : {code}",
+      "goToRoom": "Aller à la salle",
       "buttons": {
         "create": "Créer une nouvelle partie",
         "creating": "Création de la salle...",
@@ -85,7 +86,8 @@
       "roomJoinError": "Erreur",
       "server": {
         "duplicateName": "Un joueur portant ce nom est déjà dans la salle.",
-        "invalidCode": "Code d'accès invalide. Vérifiez le code et réessayez."
+        "invalidCode": "Code d'accès invalide. Vérifiez le code et réessayez.",
+        "roomFull": "Cette salle est pleine."
       }
     }
   },
@@ -94,6 +96,12 @@
     "french": "Français"
   },
   "gameRoom": {
+    "share": {
+      "button": "Partager la salle",
+      "title": "Rejoignez ma salle GuessX",
+      "text": "Rejoignez ma partie GuessX",
+      "copied": "Lien copié"
+    },
     "loading": {
       "title": "Chargement de la salle de jeu...",
       "roomId": "ID de salle",
