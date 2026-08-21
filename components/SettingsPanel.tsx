@@ -15,7 +15,10 @@ export default function SettingsPanel({ isOpen, onClose }: {
   const settings = useSyncExternalStore(subscribe, getSettings, () => DEFAULTS);
   const [, forceTheme] = useReducer((x) => x + 1, 0);
   const theme = getTheme();
-  useEffect(() => subscribe(forceTheme), []);
+  useEffect(() => {
+    const unsub = subscribe(forceTheme);
+    return () => { unsub(); };
+  }, []);
 
   if (!isOpen) return null;
 
