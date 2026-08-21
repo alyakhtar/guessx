@@ -1,36 +1,25 @@
-import type { GameRoom, TurnTimerSeconds } from '../types/game';
+import type { GameRoom } from '../types/game';
 
 export interface UserSettings {
   sideBySideBoard: boolean;
   revealSecretsOnWin: boolean;
-  turnTimerSeconds: TurnTimerSeconds;
 }
 
 export const DEFAULTS: UserSettings = {
   sideBySideBoard: false,
   revealSecretsOnWin: false,
-  turnTimerSeconds: 0,
 };
 
 export const SETTINGS_SCHEMA = [
   {
     key: 'sideBySideBoard',
-    type: 'toggle',
     labelKey: 'settings.sideBySideBoard.label',
     descriptionKey: 'settings.sideBySideBoard.description',
   },
   {
     key: 'revealSecretsOnWin',
-    type: 'toggle',
     labelKey: 'settings.revealSecretsOnWin.label',
     descriptionKey: 'settings.revealSecretsOnWin.description',
-  },
-  {
-    key: 'turnTimerSeconds',
-    type: 'select',
-    labelKey: 'settings.turnTimer',
-    descriptionKey: 'settings.turnTimer.description',
-    options: [0, 15, 30, 60] as const,
   },
 ] as const;
 
@@ -51,13 +40,7 @@ function readSettings(): UserSettings {
     const values = parsed as Record<string, unknown>;
     return SETTINGS_SCHEMA.reduce<UserSettings>((settings, setting) => {
       const value = values[setting.key];
-      if (setting.type === 'toggle') {
-        settings[setting.key] = typeof value === 'boolean' ? value : DEFAULTS[setting.key];
-      } else {
-        settings[setting.key] = typeof value === 'number' && setting.options.includes(value as TurnTimerSeconds)
-          ? value as TurnTimerSeconds
-          : DEFAULTS[setting.key];
-      }
+      settings[setting.key] = typeof value === 'boolean' ? value : DEFAULTS[setting.key];
       return settings;
     }, { ...DEFAULTS });
   } catch {
