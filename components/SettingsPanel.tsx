@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useSyncExternalStore } from 'react';
+import { useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import { SETTINGS_SCHEMA, setSetting, subscribe, getSettings, DEFAULTS } from '../lib/userSettings';
 import type { UserSettings } from '../lib/userSettings';
@@ -12,18 +12,8 @@ export default function SettingsPanel({ isOpen, onClose }: {
   onClose: () => void;
 }) {
   const t = useTranslations();
-  const [settings, setSettingsState] = useSyncExternalStore(
-    subscribe,
-    getSettings,
-    () => DEFAULTS,
-  );
+  const settings = useSyncExternalStore(subscribe, getSettings, () => DEFAULTS);
   const theme = getTheme();
-
-  useEffect(() => {
-    const apply = () => setSettingsState(getSettings());
-    const unsub = subscribe(apply);
-    return () => { unsub(); };
-  }, [setSettingsState]);
 
   if (!isOpen) return null;
 

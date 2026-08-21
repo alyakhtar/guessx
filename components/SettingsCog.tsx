@@ -18,7 +18,7 @@ export default function SettingsCog() {
       >
         ⚙️
       </button>
-      <SettingsPanel open={open} onClose={() => setOpen(false)} />
+      <SettingsPanel isOpen={open} onClose={() => setOpen(false)} />
     </>
   );
 }
