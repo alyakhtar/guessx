@@ -107,7 +107,6 @@
       "nameLabel": "Votre nom",
       "namePlaceholder": "Entrez votre nom",
       "codeLabel": "Entrez le code d'accès à 3 caractères",
-      "codePlaceholder": "ABC",
       "button": "Rejoindre la salle"
     },
     "notFound": {

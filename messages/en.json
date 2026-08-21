@@ -107,7 +107,6 @@
       "nameLabel": "Your name",
       "namePlaceholder": "Enter your name",
       "codeLabel": "Enter the 3-character access code",
-      "codePlaceholder": "ABC",
       "button": "Join room"
     },
     "notFound": {
