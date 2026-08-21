@@ -1,12 +1,9 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useParams } from 'next/navigation';
 import GameRoom from '../../../../components/GameRoom';
 
 export default function GamePage() {
-    const params = useParams();
-
     useEffect(() => {
         // Prevent zoom on mobile
         const viewport = document.querySelector('meta[name="viewport"]');

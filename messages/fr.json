@@ -40,6 +40,7 @@
         "description": "Créez une salle privée. Un code de 3 caractères est généré pour le partager avec votre adversaire."
       },
       "privateRoomCreated": "Salle privée créée ! Partagez ce code avec votre ami pour le rejoindre : {code}",
+      "goToRoom": "Aller à la salle",
       "buttons": {
         "create": "Créer une nouvelle partie",
         "creating": "Création de la salle...",
@@ -86,7 +87,8 @@
       "roomJoinError": "Erreur",
       "server": {
         "duplicateName": "Un joueur avec ce nom est déjà dans la salle.",
-        "invalidCode": "Code d'accès invalide. Veuillez vérifier le code et réessayer."
+        "invalidCode": "Code d'accès invalide. Veuillez vérifier le code et réessayer.",
+        "roomFull": "Cette salle est pleine."
       }
     }
   },
@@ -119,6 +121,26 @@
   },
   "gameRoom": {
     "opponentHistoryTitle": "Tentatives de {name}",
+    "share": {
+      "button": "Partager la salle",
+      "title": "Rejoignez ma salle GuessX",
+      "text": "Rejoignez ma partie GuessX",
+      "copied": "Lien copié"
+    },
+    "join": {
+      "heading": "Rejoindre cette salle",
+      "nameLabel": "Votre nom",
+      "namePlaceholder": "Entrez votre nom",
+      "codeLabel": "Entrez le code d'accès à 3 caractères",
+      "button": "Rejoindre la salle"
+    },
+    "notFound": {
+      "title": "Salle introuvable",
+      "backToLobby": "Retour à l'accueil"
+    },
+    "accessCode": {
+      "label": "Code d'accès"
+    },
     "loading": {
       "title": "Chargement de la salle de jeu...",
       "roomId": "ID de salle",
