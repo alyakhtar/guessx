@@ -12,8 +12,7 @@ export default function SettingsCog() {
     <>
       <button
         type="button"
-        className="btn btn-secondary position-fixed rounded-circle"
-        style={{ top: '56px', right: '1rem', zIndex: 1030 }}
+        className="btn btn-sm btn-outline-secondary"
         aria-label={t('openAriaLabel')}
         onClick={() => setOpen(true)}
       >
