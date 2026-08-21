@@ -13,6 +13,7 @@ import GuessInput from './GuessInput';
 import PlayerList from './PlayerList';
 import ShareRoomButton from './ShareRoomButton';
 import TurnTimer from './TurnTimer';
+import SettingsCog from './SettingsCog';
 
 type FlowState = { roomId: string; access: RoomAccessState };
 
@@ -294,9 +295,12 @@ export default function GameRoom() {
     <div className="container p-2 p-md-4 min-vh-100 d-flex flex-column align-items-center">
       <div className="w-100">
         <div className="card p-4 mb-4 shadow position-relative">
-          <button className="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 m-2" onClick={() => setDarkMode(!darkMode)}>
-            {darkMode ? '🌞' : '🌙'}
-          </button>
+          <div className="d-flex gap-2 position-absolute top-0 end-0 m-2">
+            <button className="btn btn-sm btn-outline-secondary" onClick={() => setDarkMode(!darkMode)}>
+              {darkMode ? '🌞' : '🌙'}
+            </button>
+            <SettingsCog />
+          </div>
           <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
             <div className="text-center text-md-start">
               <h1 className="h2 fw-bold text-primary">

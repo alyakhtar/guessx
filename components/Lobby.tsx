@@ -7,6 +7,7 @@ import { socketService } from '../lib/socket';
 import { getSettings } from '../lib/userSettings';
 import { GameRoom } from '../types/game';
 import LocaleSelector from './LocaleSelector';
+import SettingsCog from './SettingsCog';
 import ShareRoomButton from './ShareRoomButton';
 
 // Minimal shape of a room payload the lobby receives on socket callbacks.
@@ -157,6 +158,7 @@ export default function Lobby() {
         <button className="btn btn-sm btn-outline-secondary" onClick={() => setDarkMode(!darkMode)}>
           {darkMode ? '🌞' : '🌙'}
         </button>
+        <SettingsCog />
       </div>
       <div className="text-center mb-4">
         <h1 className="display-5 display-sm-4 fw-bold text-primary mb-2">
