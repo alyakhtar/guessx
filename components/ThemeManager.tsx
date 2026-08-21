@@ -11,13 +11,13 @@ import { getTheme, subscribe, type Theme } from '../lib/theme';
 export default function ThemeManager() {
   const [theme, setTheme] = useState<Theme>('dark');
 
+  const apply = () => {
+    const current = getTheme();
+    setTheme(current);
+    document.documentElement.setAttribute('data-bs-theme', current);
+  };
+  apply();
   useEffect(() => {
-    const apply = () => {
-      const current = getTheme();
-      setTheme(current);
-      document.documentElement.setAttribute('data-bs-theme', current);
-    };
-    apply();
     const unsub = subscribe(apply);
     return () => { unsub(); };
   }, []);

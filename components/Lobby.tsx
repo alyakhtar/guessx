@@ -222,7 +222,6 @@ export default function Lobby() {
                 {t('createGame.spectatorMode.label')}
               </label>
             </div>
-            <div className="form-text small text-muted">{t('createGame.spectatorMode.description')}</div>
           </div>
         )}
         {/* Private room toggle (default off) */}
@@ -235,7 +234,6 @@ export default function Lobby() {
                 {t('createGame.privateRoom.label')}
               </label>
             </div>
-            <div className="form-text small text-muted">{t('createGame.privateRoom.description')}</div>
           </div>
         )}
         {/* Turn timer - room-level setting (applies to both players) */}

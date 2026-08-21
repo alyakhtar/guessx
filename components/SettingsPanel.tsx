@@ -1,6 +1,6 @@
 'use client';
 
-import { useSyncExternalStore } from 'react';
+import { useSyncExternalStore, useEffect, useReducer } from 'react';
 import { useTranslations } from 'next-intl';
 import { SETTINGS_SCHEMA, setSetting, subscribe, getSettings, DEFAULTS } from '../lib/userSettings';
 import type { UserSettings } from '../lib/userSettings';
@@ -13,7 +13,9 @@ export default function SettingsPanel({ isOpen, onClose }: {
 }) {
   const t = useTranslations();
   const settings = useSyncExternalStore(subscribe, getSettings, () => DEFAULTS);
+  const [, forceTheme] = useReducer((x) => x + 1, 0);
   const theme = getTheme();
+  useEffect(() => subscribe(forceTheme), []);
 
   if (!isOpen) return null;
 
@@ -30,10 +32,10 @@ export default function SettingsPanel({ isOpen, onClose }: {
               <label className="form-label fw-semibold">{t('settings.language')}</label>
               <LocaleSelector />
             </div>
-            <div className="mb-3">
-              <label className="form-label fw-semibold">{t('settings.theme')}</label>
-              <button type="button" className="btn btn-outline-secondary w-100" onClick={() => toggleTheme()} aria-label={t('settings.toggleTheme')}>
-                {theme === 'dark' ? '🌞 Light' : '🌙 Dark'}
+                        <div className="mb-3 d-flex justify-content-between align-items-center">
+              <label className="form-label fw-semibold mb-0">{t('settings.theme')}</label>
+              <button type="button" className="btn btn-outline-secondary" onClick={() => toggleTheme()} aria-label={t('settings.toggleTheme')}>
+                {theme === 'dark' ? 'Light' : 'Dark'}
               </button>
             </div>
             <hr />
@@ -48,7 +50,7 @@ export default function SettingsPanel({ isOpen, onClose }: {
                   onChange={(event) => setSetting(setting.key, event.target.checked as UserSettings[typeof setting.key])}
                 />
                 <label className="form-check-label" htmlFor={`setting-${setting.key}`}>
-                  {t(`${setting.labelKey}.label`)}
+                  {t(setting.labelKey)}
                   <div className="form-text text-muted">{t(setting.descriptionKey)}</div>
                 </label>
               </div>
