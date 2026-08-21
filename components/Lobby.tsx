@@ -4,9 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { socketService } from '../lib/socket';
-import { getSettings } from '../lib/userSettings';
 import { GameRoom } from '../types/game';
-import LocaleSelector from './LocaleSelector';
 import SettingsCog from './SettingsCog';
 import ShareRoomButton from './ShareRoomButton';
 
@@ -36,10 +34,11 @@ export default function Lobby() {
   const [isSinglePlayer, setIsSinglePlayer] = useState(false);
   const [botDifficulty, setBotDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
   const [socket, setSocket] = useState<ReturnType<typeof socketService.connect> | null>(null);
-  const [darkMode, setDarkMode] = useState(true);
   const [rooms, setRooms] = useState<GameRoom[]>([]);
   // Private room toggle (default off, per issue AC)
   const [isPrivate, setIsPrivate] = useState(false);
+  // Turn timer: room-level setting chosen at creation (default Off).
+  const [turnTimerSeconds, setTurnTimerSeconds] = useState<0 | 15 | 30 | 60>(0);
   // Private-room join modal state (opened from a private row's Join button)
   const [modalRoom, setModalRoom] = useState<string | null>(null);
   const [codeDigits, setCodeDigits] = useState<string[]>(['', '', '']);
@@ -65,10 +64,6 @@ export default function Lobby() {
     return () => {};
   }, []);
 
-  useEffect(() => {
-    document.documentElement.setAttribute('data-bs-theme', darkMode ? 'dark' : 'light');
-  }, [darkMode]);
-
   const blurActive = () => {
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
   };
@@ -80,7 +75,7 @@ export default function Lobby() {
     localStorage.setItem('playerName', trimmedName);
     if (!socket) { alert(t('errors.connectionError')); return; }
     setIsCreating(true);
-    socket.emit('create_room', trimmedName, numberLength, spectatorModeEnabled, isSinglePlayer, botDifficulty, isPrivate, getSettings().turnTimerSeconds);
+    socket.emit('create_room', trimmedName, numberLength, spectatorModeEnabled, isSinglePlayer, botDifficulty, isPrivate, turnTimerSeconds);
     const handleRoomCreated = (newRoomId: string, room: RoomSummary) => {
       setIsCreating(false);
       if (room && room.isPrivate && room.accessCode) {
@@ -154,10 +149,6 @@ export default function Lobby() {
   return (
     <div className="card p-2 p-sm-4 shadow position-relative">
       <div className="d-flex justify-content-end gap-2 position-absolute top-0 end-0 m-2">
-        <LocaleSelector />
-        <button className="btn btn-sm btn-outline-secondary" onClick={() => setDarkMode(!darkMode)}>
-          {darkMode ? '🌞' : '🌙'}
-        </button>
         <SettingsCog />
       </div>
       <div className="text-center mb-4">
@@ -247,6 +238,23 @@ export default function Lobby() {
             <div className="form-text small text-muted">{t('createGame.privateRoom.description')}</div>
           </div>
         )}
+        {/* Turn timer - room-level setting (applies to both players) */}
+        <div className="mb-3">
+          <label className="form-label fw-medium small">{t('createGame.turnTimer.label')}</label>
+          <div className="btn-group w-100" role="group" aria-label={t('createGame.turnTimer.label')}>
+            {([0, 15, 30, 60] as const).map((value) => (
+              <button
+                key={value}
+                type="button"
+                className={`btn btn-outline-secondary ${turnTimerSeconds === value ? 'active' : ''}`}
+                onClick={() => setTurnTimerSeconds(value)}
+              >
+                {value === 0 ? t('createGame.turnTimer.options.off') : t('createGame.turnTimer.options.seconds', { count: value })}
+              </button>
+            ))}
+          </div>
+          <div className="form-text small text-muted">{t('createGame.turnTimer.description')}</div>
+        </div>
         <button
           onClick={handleCreateRoom}
           disabled={isCreating || !socket?.connected}

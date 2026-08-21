@@ -33,12 +33,12 @@ export default function GameHistory({ gameHistory, currentPlayerName, title }: G
       <h2 className="card-title h5 fw-semibold mb-4">{heading}</h2>
 
       <div className="table-responsive">
-        <table className="table table-striped table-hover table-bordered">
+        <table className="table table-striped table-hover table-bordered" style={{ tableLayout: "fixed" }}>
           <thead className="table-dark">
             <tr>
-              <th className="text-center">{t('table.number')}</th>
+              <th className="text-center" style={{ width: "48px" }}>{t('table.number')}</th>
               <th className="text-center">{t('table.guess')}</th>
-              <th className="text-center">{t('table.correct')}</th>
+              <th className="text-center" style={{ width: "96px" }}>{t('table.correct')}</th>
             </tr>
           </thead>
           <tbody>
@@ -49,11 +49,12 @@ export default function GameHistory({ gameHistory, currentPlayerName, title }: G
                   <code className="fs-5">{guess.guess}</code>
                 </td>
                 <td className="text-center">
-                  <div className="d-flex align-items-center justify-content-center gap-2">
+                  <td className="text-center align-middle" style={{ width: '96px' }}>
+                  <div className="d-flex flex-column align-items-center justify-content-center gap-1">
                     <span className={`fs-4 fw-bold ${guess.correctPositions === 0 ? 'text-danger' : 'text-success'}`}>
                       {guess.correctPositions}
                     </span>
-                    <div className="d-flex gap-1">
+                    <div className="d-flex gap-1 justify-content-center" style={{ minHeight: '8px' }}>
                       {Array.from({ length: guess.guess.length }).map((_, i) => (
                         <span
                           key={i}

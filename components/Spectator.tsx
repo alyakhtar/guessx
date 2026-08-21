@@ -19,11 +19,6 @@ export default function Spectator() {
 
     const [room, setRoom] = useState<GameRoom | null>(null);
     const [error, setError] = useState<string>('');
-    const [darkMode, setDarkMode] = useState(true);
-
-    useEffect(() => {
-        document.documentElement.setAttribute('data-bs-theme', darkMode ? 'dark' : 'light');
-    }, [darkMode]);
 
     useEffect(() => {
         const socket = socketService.getSocket();
@@ -130,9 +125,6 @@ export default function Spectator() {
                 {/* Header */}
                 <div className="card p-4 mb-4 shadow position-relative">
                     <div className="d-flex gap-2 position-absolute top-0 end-0 m-2">
-                        <button className="btn btn-sm btn-outline-secondary" onClick={() => setDarkMode(!darkMode)}>
-                            {darkMode ? '🌞' : '🌙'}
-                        </button>
                         <SettingsCog />
                     </div>
                     <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">

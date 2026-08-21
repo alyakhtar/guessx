@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl';
 import { SETTINGS_SCHEMA, setSetting } from '../lib/userSettings';
 import type { UserSettings } from '../lib/userSettings';
 import { useUserSettings } from '../lib/useUserSettings';
+import { getTheme, toggleTheme } from '../lib/theme';
+import LocaleSelector from './LocaleSelector';
 
 interface SettingsPanelProps {
   open: boolean;
@@ -27,6 +29,8 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
   }, [open, onClose]);
 
   if (!open) return null;
+
+  const theme = getTheme();
 
   return (
     <div
@@ -54,6 +58,23 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
             />
           </div>
           <div className="modal-body">
+            {/* Language + theme - available on every screen via the cog */}
+            <div className="d-flex align-items-center justify-content-between mb-3">
+              <span className="text-muted small">{t('settings.language')}</span>
+              <LocaleSelector />
+            </div>
+            <div className="d-flex align-items-center justify-content-between mb-3">
+              <span className="text-muted small">{t('settings.theme')}</span>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => toggleTheme()}
+                aria-label={t('settings.toggleTheme')}
+              >
+                {theme === 'dark' ? 'Light' : 'Dark'}
+              </button>
+            </div>
+            <hr />
             {SETTINGS_SCHEMA.map((setting) => setting.type === 'toggle' ? (
               <div className="form-check form-switch mb-3" key={setting.key}>
                 <input

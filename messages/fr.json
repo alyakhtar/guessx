@@ -31,7 +31,7 @@
         "medium": "Moyen",
         "hard": "Difficile"
       },
-    "spectatorMode": {
+      "spectatorMode": {
         "label": "Activer le mode spectateur",
         "description": "Permettre à d'autres de regarder la partie en mode lecture seule"
       },
@@ -45,6 +45,14 @@
         "create": "Créer une nouvelle partie",
         "creating": "Création de la salle...",
         "connecting": "Connexion..."
+      },
+      "turnTimer": {
+        "label": "Chrono de tour",
+        "description": "Sapplique aux deux joueurs. Désactivé par défaut.",
+        "options": {
+          "off": "Désactivé",
+          "seconds": "{count}s"
+        }
       }
     },
     "joinGame": {
@@ -117,7 +125,10 @@
         "30": "30 secondes",
         "60": "60 secondes"
       }
-    }
+    },
+    "language": "Langue",
+    "theme": "Thème",
+    "toggleTheme": "Changer de thème"
   },
   "gameRoom": {
     "opponentHistoryTitle": "Tentatives de {name}",

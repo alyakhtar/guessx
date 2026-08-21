@@ -43,7 +43,6 @@ export default function GameRoom() {
   const [codeEntry, setCodeEntry] = useState<{ roomId: string; digits: string[] }>({ roomId, digits: ['', '', ''] });
   const [manualCodeRoomId, setManualCodeRoomId] = useState<string | null>(null);
   const [joinError, setJoinError] = useState<{ roomId: string; message: string } | null>(null);
-  const [darkMode, setDarkMode] = useState(true);
   const [showCelebration, setShowCelebration] = useState(false);
   const [rematchStatus, setRematchStatus] = useState<RematchStatus>('idle');
   const [rematchInfo, setRematchInfo] = useState<RematchInfo | null>(null);
@@ -63,10 +62,6 @@ export default function GameRoom() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (savedName) setPlayerName(savedName);
   }, []);
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-bs-theme', darkMode ? 'dark' : 'light');
-  }, [darkMode]);
 
   useEffect(() => {
     const socket = socketService.connect();
@@ -296,9 +291,6 @@ export default function GameRoom() {
       <div className="w-100">
         <div className="card p-4 mb-4 shadow position-relative">
           <div className="d-flex gap-2 position-absolute top-0 end-0 m-2">
-            <button className="btn btn-sm btn-outline-secondary" onClick={() => setDarkMode(!darkMode)}>
-              {darkMode ? '🌞' : '🌙'}
-            </button>
             <SettingsCog />
           </div>
           <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">

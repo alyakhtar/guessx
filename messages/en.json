@@ -45,6 +45,14 @@
         "create": "Create New Game",
         "creating": "Creating room...",
         "connecting": "Connecting..."
+      },
+      "turnTimer": {
+        "label": "Turn Timer",
+        "description": "Apply to both players. Off by default.",
+        "options": {
+          "off": "Off",
+          "seconds": "{count}s"
+        }
       }
     },
     "joinGame": {
@@ -117,7 +125,10 @@
         "30": "30 seconds",
         "60": "60 seconds"
       }
-    }
+    },
+    "language": "Language",
+    "theme": "Theme",
+    "toggleTheme": "Toggle theme"
   },
   "gameRoom": {
     "opponentHistoryTitle": "{name}'s Guesses",

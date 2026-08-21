@@ -1,15 +1,13 @@
-import type { GameRoom, TurnTimerSeconds } from '../types/game';
+import type { GameRoom } from '../types/game';
 
 export interface UserSettings {
   sideBySideBoard: boolean;
   revealSecretsOnWin: boolean;
-  turnTimerSeconds: TurnTimerSeconds;
 }
 
 export const DEFAULTS: UserSettings = {
   sideBySideBoard: false,
   revealSecretsOnWin: false,
-  turnTimerSeconds: 0,
 };
 
 export const SETTINGS_SCHEMA = [
@@ -24,13 +22,6 @@ export const SETTINGS_SCHEMA = [
     type: 'toggle',
     labelKey: 'settings.revealSecretsOnWin.label',
     descriptionKey: 'settings.revealSecretsOnWin.description',
-  },
-  {
-    key: 'turnTimerSeconds',
-    type: 'select',
-    labelKey: 'settings.turnTimer',
-    descriptionKey: 'settings.turnTimer.description',
-    options: [0, 15, 30, 60] as const,
   },
 ] as const;
 
