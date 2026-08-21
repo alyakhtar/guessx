@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { socketService } from '../lib/socket';
+import { getSettings } from '../lib/userSettings';
 import { GameRoom } from '../types/game';
 import LocaleSelector from './LocaleSelector';
 
@@ -75,7 +76,7 @@ export default function Lobby() {
     localStorage.setItem('playerName', trimmedName);
     if (!socket) { alert(t('errors.connectionError')); return; }
     setIsCreating(true);
-    socket.emit('create_room', trimmedName, numberLength, spectatorModeEnabled, isSinglePlayer, botDifficulty, isPrivate);
+    socket.emit('create_room', trimmedName, numberLength, spectatorModeEnabled, isSinglePlayer, botDifficulty, isPrivate, getSettings().turnTimerSeconds);
     const handleRoomCreated = (newRoomId: string, room: RoomSummary) => {
       setIsCreating(false);
       if (room && room.isPrivate && room.accessCode) {

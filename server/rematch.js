@@ -42,7 +42,8 @@ function createRematch(gs, sourceRoomId) {
     id: newRoomId, players, currentTurn: players[0] ? players[0].id : null, gameHistory: [],
     gameStatus: 'waiting', numberLength: src.numberLength, spectatorModeEnabled: src.spectatorModeEnabled,
     isSinglePlayer: src.isSinglePlayer, isPrivate: src.isPrivate, accessCode: src.isPrivate ? accessCode : undefined,
-    rematchOffer: null
+    rematchOffer: null,
+    turnTimerSeconds: src.turnTimerSeconds || 0
   };
   gs.rooms.set(newRoomId, newRoom);
 
@@ -52,6 +53,7 @@ function createRematch(gs, sourceRoomId) {
   // set_secret_number in the rematch room (game never started).
   src.players.forEach(p => { if (gs.playerRoomMap.get(p.id) === sourceRoomId) gs.playerRoomMap.delete(p.id); });
   gs.rooms.delete(sourceRoomId);
+  if (gs.roomTimers) gs.roomTimers.delete(sourceRoomId);
 
   // Physically move each connected player's socket into the new room.
   connected.forEach(p => {

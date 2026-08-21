@@ -152,14 +152,16 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
 
   // Game is finished
   if (room.gameStatus === 'finished') {
-    const opponent = room.players.find(p => p.id !== currentPlayer?.id);
+    const forfeitedPlayerName = room.players.find(player => player.id === room.forfeitedBy)?.name ?? '';
     return (
       <div className="text-center">
         <div className="card bg-success text-white mb-3">
           <div className="card-body">
             <h2 className="card-title h4 fw-bold mb-2">{t('gameOver.title')}</h2>
             <p className="card-text fs-5">
-              {t('gameOver.winnerText', { name: room.winner })}
+              {room.gameEndReason === 'idle_forfeit'
+                ? t('gameOver.forfeitIdle', { name: forfeitedPlayerName })
+                : t('gameOver.winnerText', { name: room.winner })}
             </p>
           </div>
         </div>
