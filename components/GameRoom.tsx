@@ -1,87 +1,135 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useEffect, useRef, useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { openRoomAccess, RoomAccessState } from '../lib/openRoomAccess';
 import { socketService } from '../lib/socket';
-import { GameRoom as GameRoomType, Player } from '../types/game';
-import PlayerList from './PlayerList';
-import GuessInput from './GuessInput';
-import GameHistory from './GameHistory';
+import { GameRoom as GameRoomType } from '../types/game';
 import Celebration from './Celebration';
+import GameHistory from './GameHistory';
+import GuessInput from './GuessInput';
+import PlayerList from './PlayerList';
+import ShareRoomButton from './ShareRoomButton';
+
+type FlowState = { roomId: string; access: RoomAccessState };
 
 export default function GameRoom() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const locale = useLocale();
   const roomId = params.routeId as string;
+  const initialCode = searchParams.get('code') ?? undefined;
+  const hasValidInitialCode = /^[A-Z0-9]{3}$/i.test(initialCode?.trim() ?? '');
   const t = useTranslations('gameRoom');
+  const tLobby = useTranslations('lobby');
 
-  const [room, setRoom] = useState<GameRoomType | null>(null);
-  const [currentPlayerId, setCurrentPlayerId] = useState<string>('');
-  const [error, setError] = useState<string>('');
+  const [flow, setFlow] = useState<FlowState | null>(null);
+  const [currentPlayerId, setCurrentPlayerId] = useState('');
+  const [playerName, setPlayerName] = useState('');
+  const [codeEntry, setCodeEntry] = useState<{ roomId: string; digits: string[] }>({ roomId, digits: ['', '', ''] });
+  const [manualCodeRoomId, setManualCodeRoomId] = useState<string | null>(null);
+  const [joinError, setJoinError] = useState<{ roomId: string; message: string } | null>(null);
   const [darkMode, setDarkMode] = useState(true);
   const [showCelebration, setShowCelebration] = useState(false);
+  const controllerRef = useRef<ReturnType<typeof openRoomAccess> | null>(null);
+  const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const translateServerError = (error: string) => {
+    if (error === 'SERVER_ERROR:duplicateName') return tLobby('errors.server.duplicateName');
+    if (error === 'SERVER_ERROR:invalidCode') return tLobby('errors.server.invalidCode');
+    if (error === 'SERVER_ERROR:roomFull') return tLobby('errors.server.roomFull');
+    return error;
+  };
+
+  useEffect(() => {
+    const savedName = localStorage.getItem('playerName');
+    // Intentional: restore the persisted name once on mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (savedName) setPlayerName(savedName);
+  }, []);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-bs-theme', darkMode ? 'dark' : 'light');
   }, [darkMode]);
 
   useEffect(() => {
-    const socket = socketService.getSocket();
-    if (!socket) {
-      // Redirect to home if no socket connection
-      router.push('/');
+    const socket = socketService.connect();
+    if (!socket) return;
+
+    const handleGameplayUpdate = (updatedRoom: GameRoomType) => {
+      if (updatedRoom.id !== roomId) return;
+      setFlow((current) => current?.roomId === roomId && current.access.status === 'member'
+        ? { roomId, access: { status: 'member', room: updatedRoom } }
+        : current);
+      if (updatedRoom.gameStatus === 'finished') setShowCelebration(true);
+    };
+
+    const controller = openRoomAccess(socket, roomId, initialCode, {
+      onState: (access) => {
+        setFlow({ roomId, access });
+        if (access.status === 'member') {
+          setCurrentPlayerId(socket.id ?? '');
+          setJoinError(null);
+          if (access.room.gameStatus === 'finished') setShowCelebration(true);
+        }
+      },
+      onError: (error) => {
+        if (error === 'SERVER_ERROR:invalidCode') setManualCodeRoomId(roomId);
+        setJoinError({ roomId, message: error });
+      },
+    });
+    controllerRef.current = controller;
+
+    socket.on('secret_number_set', handleGameplayUpdate);
+    socket.on('guess_made', handleGameplayUpdate);
+    socket.on('game_won', handleGameplayUpdate);
+    socket.on('player_left', handleGameplayUpdate);
+
+    return () => {
+      controller.destroy();
+      if (controllerRef.current === controller) controllerRef.current = null;
+      socket.off('secret_number_set', handleGameplayUpdate);
+      socket.off('guess_made', handleGameplayUpdate);
+      socket.off('game_won', handleGameplayUpdate);
+      socket.off('player_left', handleGameplayUpdate);
+    };
+  }, [initialCode, roomId]);
+
+  const access = flow?.roomId === roomId ? flow.access : null;
+  const digits = codeEntry.roomId === roomId ? codeEntry.digits : ['', '', ''];
+  const error = joinError?.roomId === roomId ? translateServerError(joinError.message) : '';
+  const showCodeEntry = access?.status === 'visitor-private' && (!hasValidInitialCode || manualCodeRoomId === roomId);
+
+  const handleDigit = (index: number, value: string) => {
+    const digit = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 1);
+    const next = [...digits];
+    next[index] = digit;
+    setCodeEntry({ roomId, digits: next });
+    if (digit && index < 2) codeRefs.current[index + 1]?.focus();
+  };
+
+  const handleJoin = () => {
+    const name = playerName.trim();
+    if (!name) {
+      setJoinError({ roomId, message: tLobby('errors.nameRequired') });
       return;
     }
 
-    // Set current player ID
-    setCurrentPlayerId(socket.id);
+    const code = digits.join('');
+    if (showCodeEntry && code.length !== 3) {
+      setJoinError({ roomId, message: tLobby('joinGame.errors.codeRequired') });
+      return;
+    }
 
-    // Socket event listeners
-    const handleRoomUpdated = (updatedRoom: GameRoomType) => {
-      setRoom(updatedRoom);
-      setError('');
+    localStorage.setItem('playerName', name);
+    setPlayerName(name);
+    setJoinError(null);
+    controllerRef.current?.join(name, showCodeEntry ? code : undefined);
+  };
 
-      // Show celebration when game ends
-      if (updatedRoom.gameStatus === 'finished') {
-        setShowCelebration(true);
-      }
-    };
-
-    const handleError = (errorMessage: string) => {
-      setError(errorMessage);
-    };
-
-    socket.on('room_updated', handleRoomUpdated);
-    socket.on('secret_number_set', handleRoomUpdated);
-    socket.on('guess_made', handleRoomUpdated);
-    socket.on('game_won', handleRoomUpdated);
-    socket.on('player_joined', handleRoomUpdated);
-    socket.on('player_left', handleRoomUpdated);
-    socket.on('player_reconnected', handleRoomUpdated);
-    socket.on('error', handleError);
-
-    // Request current room state
-    socket.emit('get_room_state', roomId);
-
-    // Cleanup
-    return () => {
-      socket.off('room_updated', handleRoomUpdated);
-      socket.off('secret_number_set', handleRoomUpdated);
-      socket.off('guess_made', handleRoomUpdated);
-      socket.off('game_won', handleRoomUpdated);
-      socket.off('player_joined', handleRoomUpdated);
-      socket.off('player_left', handleRoomUpdated);
-      socket.off('error', handleError);
-    };
-  }, [roomId, router]);
-
-  const currentPlayer = room?.players.find(p => p.id === currentPlayerId);
-  const isMyTurn = room?.currentTurn === currentPlayerId;
-  const opponent = room?.players.find(p => p.id !== currentPlayerId);
-
-  // Show loading only if room doesn't exist yet
-  if (!room) {
+  if (!access) {
     return (
       <div className="container-fluid min-vh-100 d-flex justify-content-center align-items-center">
         <div className="text-center">
@@ -94,13 +142,81 @@ export default function GameRoom() {
     );
   }
 
-  // Determine celebration type
-  const celebrationType = room?.gameStatus === 'finished' && room?.winner && currentPlayer?.name
+  if (access.status === 'not-found') {
+    return (
+      <div className="container-fluid min-vh-100 d-flex justify-content-center align-items-center">
+        <div className="card p-4 shadow text-center">
+          <h1 className="h3 mb-4">{t('notFound.title')}</h1>
+          <button type="button" className="btn btn-primary" onClick={() => router.push(`/${locale}`)}>
+            {t('notFound.backToLobby')}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (access.status !== 'member') {
+    return (
+      <div className="container-fluid min-vh-100 d-flex justify-content-center align-items-center">
+        <div className="card p-4 shadow w-100" style={{ maxWidth: '30rem' }}>
+          <h1 className="h3 mb-4">{t('join.heading')}</h1>
+          <form onSubmit={(event) => { event.preventDefault(); handleJoin(); }}>
+            <div className="mb-3">
+              <label className="form-label" htmlFor="join-room-name">{t('join.nameLabel')}</label>
+              <input
+                id="join-room-name"
+                type="text"
+                className="form-control form-control-lg"
+                value={playerName}
+                onChange={(event) => setPlayerName(event.target.value)}
+                placeholder={t('join.namePlaceholder')}
+                autoComplete="name"
+              />
+            </div>
+
+            {showCodeEntry && (
+              <fieldset className="mb-3">
+                <legend className="form-label fs-6">{t('join.codeLabel')}</legend>
+                <div className="d-flex justify-content-center gap-2">
+                  {[0, 1, 2].map((index) => (
+                    <input
+                      key={index}
+                      ref={(element) => { codeRefs.current[index] = element; }}
+                      type="text"
+                      inputMode="text"
+                      aria-label={`${t('join.codeLabel')} ${index + 1}`}
+                      value={digits[index]}
+                      onChange={(event) => handleDigit(index, event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Backspace' && !digits[index] && index > 0) codeRefs.current[index - 1]?.focus();
+                      }}
+                      maxLength={1}
+                      className="form-control form-control-lg text-center text-uppercase"
+                      style={{ width: '3.5rem', fontSize: '1.6rem', letterSpacing: '0.15em' }}
+                    />
+                  ))}
+                </div>
+              </fieldset>
+            )}
+
+            {error && <div className="alert alert-danger py-2" role="alert" aria-live="assertive">{error}</div>}
+            <button type="submit" className="btn btn-primary btn-lg w-100">{t('join.button')}</button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  const room = access.room;
+  const currentPlayer = room.players.find((player) => player.id === currentPlayerId);
+  const isMyTurn = room.currentTurn === currentPlayerId;
+  const opponent = room.players.find((player) => player.id !== currentPlayerId);
+  const celebrationType = room.gameStatus === 'finished' && room.winner && currentPlayer?.name
     ? (room.winner === currentPlayer.name ? 'win' : 'lose')
     : null;
 
   const handleNewGame = () => {
-    setShowCelebration(false); // Hide celebration before starting new game
+    setShowCelebration(false);
     socketService.disconnect();
     router.push('/');
   };
@@ -108,7 +224,6 @@ export default function GameRoom() {
   return (
     <div className="container p-2 p-md-4 min-vh-100 d-flex flex-column align-items-center">
       <div className="w-100">
-        {/* Header */}
         <div className="card p-4 mb-4 shadow position-relative">
           <button className="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 m-2" onClick={() => setDarkMode(!darkMode)}>
             {darkMode ? '🌞' : '🌙'}
@@ -118,10 +233,16 @@ export default function GameRoom() {
               <h1 className="h2 fw-bold text-primary">
                 Guess<span className="text-info">X</span>
               </h1>
-              <p className="text-muted small">{t('header.room')}: {roomId}</p>
+              <p className="text-muted small mb-2">{t('header.room')}: {roomId}</p>
+              {room.isPrivate && room.accessCode && (
+                <div className="fs-5 fw-bold">
+                  {t('accessCode.label')}: <span className="badge text-bg-warning text-dark">{room.accessCode}</span>
+                </div>
+              )}
             </div>
 
-            <div className="d-flex flex-wrap gap-2 justify-content-center w-100 w-md-auto">
+            <div className="d-flex flex-wrap gap-2 justify-content-center align-items-center w-100 w-md-auto">
+              <ShareRoomButton roomId={roomId} accessCode={room.isPrivate ? room.accessCode : undefined} />
               <span className="badge text-bg-secondary fs-6">
                 {t('header.digits')}: {room.numberLength}
               </span>
@@ -141,20 +262,12 @@ export default function GameRoom() {
           </div>
         </div>
 
-        {error && (
-          <div className="alert alert-danger mb-4">{error}</div>
-        )}
+        {error && <div className="alert alert-danger mb-4">{error}</div>}
 
         <div className="row row-cols-1 row-cols-lg-3 g-3">
-          {/* Left Column - Players */}
           <div className="col">
-            <PlayerList
-              room={room}
-              currentPlayerId={currentPlayerId}
-            />
+            <PlayerList room={room} currentPlayerId={currentPlayerId} />
           </div>
-
-          {/* Middle Column - Game Input/Status */}
           <div className="col">
             <div className="card p-4 shadow h-100">
               <GuessInput
@@ -166,21 +279,13 @@ export default function GameRoom() {
               />
             </div>
           </div>
-
-          {/* Right Column - Game History */}
           <div className="col">
-            <GameHistory
-              gameHistory={room.gameHistory}
-              currentPlayerName={currentPlayer?.name}
-            />
+            <GameHistory gameHistory={room.gameHistory} currentPlayerName={currentPlayer?.name} />
           </div>
         </div>
       </div>
 
-      {/* Celebration Animation */}
-      {celebrationType && showCelebration && (
-        <Celebration type={celebrationType} show={showCelebration} />
-      )}
+      {celebrationType && showCelebration && <Celebration type={celebrationType} show={showCelebration} />}
     </div>
   );
 }
