@@ -123,9 +123,14 @@
     "revealSecretsOnWin": {
       "label": "Révéler les nombres secrets après une victoire",
       "description": "Afficher les deux nombres secrets à la fin de la partie."
+    },
+    "turnAlertSound": {
+      "label": "Son lorsque c’est votre tour",
+      "description": "Jouer un son lorsque votre tour commence."
     }
   },
   "gameRoom": {
+    "turnAlertTitle": "(À vous !) GuessX",
     "opponentHistoryTitle": "Tentatives de {name}",
     "share": {
       "button": "Partager la salle",

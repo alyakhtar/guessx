@@ -4,12 +4,14 @@ export interface UserSettings {
   darkMode: boolean;
   sideBySideBoard: boolean;
   revealSecretsOnWin: boolean;
+  turnAlertSound: boolean;
 }
 
 export const DEFAULTS: UserSettings = {
   darkMode: true,
   sideBySideBoard: false,
   revealSecretsOnWin: false,
+  turnAlertSound: true,
 };
 
 export const SETTINGS_SCHEMA = [
@@ -23,6 +25,11 @@ export const SETTINGS_SCHEMA = [
     key: 'revealSecretsOnWin',
     labelKey: 'settings.revealSecretsOnWin.label',
     descriptionKey: 'settings.revealSecretsOnWin.description',
+  },
+  {
+    key: 'turnAlertSound',
+    labelKey: 'settings.turnAlertSound.label',
+    descriptionKey: 'settings.turnAlertSound.description',
   },
 ] as const;
 

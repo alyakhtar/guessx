@@ -123,9 +123,14 @@
     "revealSecretsOnWin": {
       "label": "Reveal secret numbers after a win",
       "description": "Show both secret numbers when the game ends."
+    },
+    "turnAlertSound": {
+      "label": "Sound when it is your turn",
+      "description": "Play a sound when it becomes your turn."
     }
   },
   "gameRoom": {
+    "turnAlertTitle": "(Your turn!) GuessX",
     "opponentHistoryTitle": "{name}'s Guesses",
     "share": {
       "button": "Share room",

@@ -210,13 +210,33 @@ describe('server turn timer integration', () => {
     const [[member], [observed]] = await Promise.all([memberTurn, spectatorTurn]);
 
     expect(observed).toEqual(member);
+    expect(member).toMatchObject({ roomId });
     expect(observed).toMatchObject({
+      roomId,
       currentTurn: first.id,
       turnStartedAt: clock.now(),
       turnDeadline: clock.now() + 15_000,
       turnDurationMs: 15_000,
       serverNow: clock.now(),
     });
+  });
+
+  it('delivers turn_started once to a member that hydrated via get_room_state', async () => {
+    const { first } = await twoClients();
+    const { roomId } = await createRoom(first, 15, true, true);
+    const hydrated = waitFor(first, 'room_updated');
+    first.emit('get_room_state', roomId);
+    await hydrated;
+
+    const turns = [];
+    first.on('turn_started', payload => turns.push(payload));
+    first.emit('set_secret_number', '1234');
+    await flushNetwork();
+
+    // get_room_state used to put a member on the spectator channel too, and
+    // startTurn emits to both — so the member heard every turn twice.
+    expect(turns).toHaveLength(1);
+    expect(turns[0]).toMatchObject({ roomId, currentTurn: first.id });
   });
 
   it('stamps a mid-turn get_room_state hydration with fresh server time', async () => {

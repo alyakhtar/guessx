@@ -4,6 +4,7 @@ import { io, Socket } from 'socket.io-client';
 import type { BotDifficulty, GameRoom, Guess, TurnTimerSeconds } from '../types/game';
 
 export interface TurnStartedPayload {
+  roomId: string;
   currentTurn: string;
   turnStartedAt?: number;
   turnDeadline?: number;

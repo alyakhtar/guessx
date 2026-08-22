@@ -39,6 +39,12 @@ afterEach(() => {
 });
 
 describe('getSettings', () => {
+  it('defaults turn alert sound to on', async () => {
+    const { getSettings } = await loadSettings();
+
+    expect(getSettings().turnAlertSound).toBe(true);
+  });
+
   it('returns defaults when storage is empty', async () => {
     const { DEFAULTS, getSettings } = await loadSettings();
 
@@ -71,6 +77,7 @@ describe('getSettings', () => {
       darkMode: true,
       sideBySideBoard: true,
       revealSecretsOnWin: false,
+      turnAlertSound: true,
     });
     expect(getSettings()).not.toHaveProperty('futureSetting');
   });
@@ -86,7 +93,15 @@ describe('getSettings', () => {
       darkMode: true,
       sideBySideBoard: false,
       revealSecretsOnWin: true,
+      turnAlertSound: true,
     });
+  });
+
+  it.each([{}, { turnAlertSound: 'false' }])('uses the default for a missing or wrong-typed turn alert sound setting', async (stored) => {
+    browser.localStorage.values.set(STORAGE_KEY, JSON.stringify(stored));
+    const { getSettings } = await loadSettings();
+
+    expect(getSettings().turnAlertSound).toBe(true);
   });
 
   it('reads a persisted light-theme preference', async () => {
@@ -97,6 +112,7 @@ describe('getSettings', () => {
       darkMode: false,
       sideBySideBoard: false,
       revealSecretsOnWin: false,
+      turnAlertSound: true,
     });
   });
 
@@ -108,6 +124,7 @@ describe('getSettings', () => {
       darkMode: true,
       sideBySideBoard: false,
       revealSecretsOnWin: false,
+      turnAlertSound: true,
     });
   });
 
@@ -122,6 +139,7 @@ describe('getSettings', () => {
         darkMode: true,
         sideBySideBoard: false,
         revealSecretsOnWin: false,
+        turnAlertSound: true,
       });
     } finally {
       schema.unshift(darkModeSetting);
@@ -145,7 +163,21 @@ describe('setSetting', () => {
       darkMode: true,
       sideBySideBoard: true,
       revealSecretsOnWin: false,
+      turnAlertSound: true,
     });
+  });
+
+  it('round-trips turn alert sound changes', async () => {
+    let settings = await loadSettings();
+    settings.setSetting('turnAlertSound', false);
+
+    settings = await loadSettings();
+    expect(settings.getSettings().turnAlertSound).toBe(false);
+
+    settings.setSetting('turnAlertSound', true);
+
+    settings = await loadSettings();
+    expect(settings.getSettings().turnAlertSound).toBe(true);
   });
 
   it('keeps failed writes in the current snapshot and merges the next write onto them', async () => {
@@ -159,6 +191,7 @@ describe('setSetting', () => {
       darkMode: true,
       sideBySideBoard: true,
       revealSecretsOnWin: false,
+      turnAlertSound: true,
     });
 
     settings.setSetting('revealSecretsOnWin', true);
@@ -167,11 +200,13 @@ describe('setSetting', () => {
       darkMode: true,
       sideBySideBoard: true,
       revealSecretsOnWin: true,
+      turnAlertSound: true,
     });
     expect(JSON.parse(browser.localStorage.values.get(STORAGE_KEY)!)).toEqual({
       darkMode: true,
       sideBySideBoard: true,
       revealSecretsOnWin: true,
+      turnAlertSound: true,
     });
   });
 
@@ -210,6 +245,7 @@ describe('storage events', () => {
       darkMode: true,
       sideBySideBoard: false,
       revealSecretsOnWin: true,
+      turnAlertSound: true,
     });
 
     const otherKeyEvent = new Event('storage') as StorageEvent;

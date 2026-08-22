@@ -194,7 +194,13 @@ class GameServer {
       socket.on('get_room_state', (roomId) => {
         const room = this.rooms.get(roomId);
         if (room) {
-          socket.join(`${roomId}_spectators`);
+          // A member hydrating its own room must not land on the spectator
+          // channel: startTurn and the gameplay handlers emit to both channels,
+          // so a socket in both receives every event twice. Same reasoning as
+          // the socket.leave calls on the join and reconnect paths.
+          if (!room.players.some(player => player.id === socket.id)) {
+            socket.join(`${roomId}_spectators`);
+          }
           // Send the full room (incl. accessCode) only to members of this room.
           socket.emit('room_updated', this.withServerNow(this.sanitizeFor(room, socket.id)));
         }
@@ -245,6 +251,7 @@ class GameServer {
     }
 
     const payload = {
+      roomId: room.id,
       currentTurn: room.currentTurn,
       turnStartedAt: room.turnStartedAt,
       turnDeadline: room.turnDeadline,
