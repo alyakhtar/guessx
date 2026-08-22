@@ -8,6 +8,7 @@ import { socketService, TurnStartedPayload } from '../lib/socket';
 import { useUserSettings } from '../lib/useUserSettings';
 import { GameRoom as GameRoomType, TurnTimerSeconds } from '../types/game';
 import Celebration from './Celebration';
+import CopyCodeButton from './CopyCodeButton';
 import GameHistory from './GameHistory';
 import GuessInput from './GuessInput';
 import PlayerList from './PlayerList';
@@ -312,6 +313,7 @@ export default function GameRoom() {
               {room.isPrivate && room.accessCode && (
                 <div className="fs-5 fw-bold">
                   {t('accessCode.label')}: <span className="badge text-bg-warning text-dark">{room.accessCode}</span>
+                  {!(rematchStatus === 'ready' && rematchInfo?.solo) && <CopyCodeButton code={room.accessCode} />}
                 </div>
               )}
             </div>
@@ -325,12 +327,6 @@ export default function GameRoom() {
               {(room.turnTimerSeconds ?? 0) > 0 && (
                 <span className="badge text-bg-warning fs-6">
                   {t('header.timer')}: {room.turnTimerSeconds}s
-                </span>
-              )}
-
-              {room.isPrivate && room.accessCode && (
-                <span className="badge text-bg-info fs-6">
-                  {t('header.code')}: {room.accessCode}
                 </span>
               )}
 
@@ -409,7 +405,10 @@ export default function GameRoom() {
                     <div className="alert alert-info mb-0">
                       <p className="mb-1">{t('rematch.soloHint')}</p>
                       {rematchInfo.accessCode ? (
-                        <p className="mb-0">{t('rematch.soloCode')}: <code className="fs-5">{rematchInfo.accessCode}</code></p>
+                        <p className="mb-0">
+                          {t('rematch.soloCode')}: <code className="fs-5">{rematchInfo.accessCode}</code>
+                          <CopyCodeButton code={rematchInfo.accessCode} />
+                        </p>
                       ) : (
                         <p className="mb-0">{t('rematch.soloRoom')}: <code className="fs-5">{rematchInfo.roomId}</code></p>
                       )}
