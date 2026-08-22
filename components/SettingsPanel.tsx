@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { SETTINGS_SCHEMA, setSetting } from '../lib/userSettings';
 import { useUserSettings } from '../lib/useUserSettings';
+import LocaleSelector from './LocaleSelector';
 
 interface SettingsPanelProps {
   open: boolean;
@@ -53,6 +54,10 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
             />
           </div>
           <div className="modal-body">
+            <div className="d-flex align-items-center justify-content-between mb-3">
+              <span className="form-label mb-0">{t('settings.language')}</span>
+              <LocaleSelector />
+            </div>
             {SETTINGS_SCHEMA.map((setting) => (
               <div className="form-check form-switch mb-3" key={setting.key}>
                 <input

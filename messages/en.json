@@ -108,6 +108,11 @@
     "title": "Settings",
     "close": "Close",
     "openAriaLabel": "Open settings",
+    "language": "Language",
+    "darkMode": {
+      "label": "Dark mode",
+      "description": "Use the dark colour theme on every screen."
+    },
     "sideBySideBoard": {
       "label": "Side-by-side game board",
       "description": "Show your guess history beside your opponent's history on larger screens."
