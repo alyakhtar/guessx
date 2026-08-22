@@ -24,7 +24,7 @@ permissions:
 
 jobs:
   validate:
-    name: Validate (type-check / lint / build)
+    name: Validate (type-check / lint / test / build)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -50,6 +50,10 @@ jobs:
       # Runs as a hard gate; a real lint error fails the check.
       - name: Lint
         run: npm run lint
+
+      # Before Build so a failing test surfaces without waiting on the slower build.
+      - name: Test
+        run: npm test
 
       - name: Build
         run: npm run build
