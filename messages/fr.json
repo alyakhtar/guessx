@@ -21,6 +21,13 @@
         "5": "5 chiffres (10000-99999)",
         "6": "6 chiffres (100000-999999)"
       },
+      "turnTimerLabel": "Minuteur de tour",
+      "turnTimerOptions": {
+        "0": "Désactivé",
+        "15": "15 secondes",
+        "30": "30 secondes",
+        "60": "60 secondes"
+      },
       "singlePlayerMode": {
         "label": "Solo contre un bot",
         "description": "Jouez contre une IA"
@@ -57,6 +64,7 @@
           "public": "Publique",
           "private": "Privée"
         },
+        "timer": "⏱ {seconds}s",
         "player1": "Joueur 1",
         "player2": "Joueur 2",
         "action": "Action"
@@ -100,6 +108,11 @@
     "title": "Paramètres",
     "close": "Fermer",
     "openAriaLabel": "Ouvrir les paramètres",
+    "language": "Langue",
+    "darkMode": {
+      "label": "Mode sombre",
+      "description": "Utiliser le thème sombre sur tous les écrans."
+    },
     "sideBySideBoard": {
       "label": "Plateau de jeu côte à côte",
       "description": "Afficher votre historique de tentatives à côté de celui de votre adversaire sur les grands écrans."
@@ -111,16 +124,6 @@
     "turnAlertSound": {
       "label": "Son lorsque c’est votre tour",
       "description": "Jouer un son lorsque votre tour commence."
-    },
-    "turnTimer": {
-      "label": "Minuteur de tour",
-      "description": "Un joueur perd la partie s’il ne propose pas de nombre avant la fin du délai.",
-      "options": {
-        "0": "Désactivé",
-        "15": "15 secondes",
-        "30": "30 secondes",
-        "60": "60 secondes"
-      }
     }
   },
   "gameRoom": {
@@ -154,6 +157,7 @@
     "header": {
       "room": "Salle",
       "digits": "Chiffres",
+      "timer": "Minuteur",
       "code": "Code"
     },
     "status": {
@@ -225,6 +229,7 @@
       "mode": "👁️ Mode spectateur",
       "room": "Salle",
       "digits": "Chiffres",
+      "timer": "Minuteur",
       "turn": "⏳ Tour de {name}",
       "winner": "Gagnant"
     },

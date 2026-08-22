@@ -33,31 +33,31 @@ export default function GameHistory({ gameHistory, currentPlayerName, title }: G
       <h2 className="card-title h5 fw-semibold mb-4">{heading}</h2>
 
       <div className="table-responsive">
-        <table className="table table-striped table-hover table-bordered">
+        <table className="table table-striped table-hover table-bordered" style={{ tableLayout: 'fixed' }}>
           <thead className="table-dark">
             <tr>
-              <th className="text-center">{t('table.number')}</th>
+              <th className="text-center" style={{ width: '3rem' }}>{t('table.number')}</th>
               <th className="text-center">{t('table.guess')}</th>
-              <th className="text-center">{t('table.correct')}</th>
+              <th className="text-center" style={{ width: '6rem' }}>{t('table.correct')}</th>
             </tr>
           </thead>
           <tbody>
             {myGuesses.map((guess, index) => (
               <tr key={index}>
-                <td className="text-center font-mono">{myGuesses.length - index}</td>
-                <td className="text-center">
+                <td className="text-center font-mono align-middle">{myGuesses.length - index}</td>
+                <td className="text-center align-middle">
                   <code className="fs-5">{guess.guess}</code>
                 </td>
-                <td className="text-center">
-                  <div className="d-flex align-items-center justify-content-center gap-2">
-                    <span className={`fs-4 fw-bold ${guess.correctPositions === 0 ? 'text-danger' : 'text-success'}`}>
+                <td className="text-center align-middle">
+                  <div className="d-flex flex-column align-items-center gap-1">
+                    <span className={`fs-4 fw-bold lh-1 ${guess.correctPositions === 0 ? 'text-danger' : 'text-success'}`}>
                       {guess.correctPositions}
                     </span>
-                    <div className="d-flex gap-1">
+                    <div className="d-flex gap-1" style={{ height: '8px' }}>
                       {Array.from({ length: guess.guess.length }).map((_, i) => (
                         <span
                           key={i}
-                          className={`badge ${i < guess.correctPositions ? 'bg-success' : 'bg-secondary'}`}
+                          className={`badge p-0 ${i < guess.correctPositions ? 'bg-success' : 'bg-secondary'}`}
                           style={{ width: '8px', height: '8px', borderRadius: '50%' }}
                         ></span>
                       ))}

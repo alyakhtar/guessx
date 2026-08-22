@@ -21,6 +21,13 @@
         "5": "5 Digits (10000-99999)",
         "6": "6 Digits (100000-999999)"
       },
+      "turnTimerLabel": "Turn timer",
+      "turnTimerOptions": {
+        "0": "Off",
+        "15": "15 seconds",
+        "30": "30 seconds",
+        "60": "60 seconds"
+      },
       "singlePlayerMode": {
         "label": "Single Player vs Bot",
         "description": "Play against an AI opponent"
@@ -57,6 +64,7 @@
           "public": "Public",
           "private": "Private"
         },
+        "timer": "⏱ {seconds}s",
         "player1": "Player 1",
         "player2": "Player 2",
         "action": "Action"
@@ -100,6 +108,11 @@
     "title": "Settings",
     "close": "Close",
     "openAriaLabel": "Open settings",
+    "language": "Language",
+    "darkMode": {
+      "label": "Dark mode",
+      "description": "Use the dark colour theme on every screen."
+    },
     "sideBySideBoard": {
       "label": "Side-by-side game board",
       "description": "Show your guess history beside your opponent's history on larger screens."
@@ -111,16 +124,6 @@
     "turnAlertSound": {
       "label": "Sound when it is your turn",
       "description": "Play a sound when it becomes your turn."
-    },
-    "turnTimer": {
-      "label": "Turn timer",
-      "description": "Forfeit a player who does not guess before time runs out.",
-      "options": {
-        "0": "Off",
-        "15": "15 seconds",
-        "30": "30 seconds",
-        "60": "60 seconds"
-      }
     }
   },
   "gameRoom": {
@@ -154,6 +157,7 @@
     "header": {
       "room": "Room",
       "digits": "Digits",
+      "timer": "Timer",
       "code": "Code"
     },
     "status": {
@@ -225,6 +229,7 @@
       "mode": "👁️ Spectator Mode",
       "room": "Room",
       "digits": "Digits",
+      "timer": "Timer",
       "turn": "⏳ {name}'s Turn",
       "winner": "Winner"
     },

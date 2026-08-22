@@ -2,11 +2,13 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
+import { useUserSettings } from '../lib/useUserSettings';
 
 export default function LocaleSelector() {
     const locale = useLocale();
     const pathname = usePathname();
     const t = useTranslations('localeSelector');
+    const { darkMode } = useUserSettings();
 
     // Debug logging
     // console.debug('🏴 LocaleSelector debug:', { locale, pathname });
@@ -36,7 +38,7 @@ export default function LocaleSelector() {
     return (
         <div className="dropdown">
             <button
-                className="btn btn-sm btn-outline-light dropdown-toggle"
+                className={`btn btn-sm ${darkMode ? 'btn-outline-light' : 'btn-outline-dark'} dropdown-toggle`}
                 type="button"
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
