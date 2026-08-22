@@ -3,12 +3,14 @@ import type { GameRoom, TurnTimerSeconds } from '../types/game';
 export interface UserSettings {
   sideBySideBoard: boolean;
   revealSecretsOnWin: boolean;
+  turnAlertSound: boolean;
   turnTimerSeconds: TurnTimerSeconds;
 }
 
 export const DEFAULTS: UserSettings = {
   sideBySideBoard: false,
   revealSecretsOnWin: false,
+  turnAlertSound: true,
   turnTimerSeconds: 0,
 };
 
@@ -24,6 +26,12 @@ export const SETTINGS_SCHEMA = [
     type: 'toggle',
     labelKey: 'settings.revealSecretsOnWin.label',
     descriptionKey: 'settings.revealSecretsOnWin.description',
+  },
+  {
+    key: 'turnAlertSound',
+    type: 'toggle',
+    labelKey: 'settings.turnAlertSound.label',
+    descriptionKey: 'settings.turnAlertSound.description',
   },
   {
     key: 'turnTimerSeconds',

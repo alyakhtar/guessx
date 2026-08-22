@@ -108,6 +108,10 @@
       "label": "Reveal secret numbers after a win",
       "description": "Show both secret numbers when the game ends."
     },
+    "turnAlertSound": {
+      "label": "Sound when it is your turn",
+      "description": "Play a sound when it becomes your turn."
+    },
     "turnTimer": {
       "label": "Turn timer",
       "description": "Forfeit a player who does not guess before time runs out.",
@@ -120,6 +124,7 @@
     }
   },
   "gameRoom": {
+    "turnAlertTitle": "(Your turn!) GuessX",
     "opponentHistoryTitle": "{name}'s Guesses",
     "share": {
       "button": "Share room",

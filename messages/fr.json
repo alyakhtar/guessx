@@ -108,6 +108,10 @@
       "label": "Révéler les nombres secrets après une victoire",
       "description": "Afficher les deux nombres secrets à la fin de la partie."
     },
+    "turnAlertSound": {
+      "label": "Son lorsque c’est votre tour",
+      "description": "Jouer un son lorsque votre tour commence."
+    },
     "turnTimer": {
       "label": "Minuteur de tour",
       "description": "Un joueur perd la partie s’il ne propose pas de nombre avant la fin du délai.",
@@ -120,6 +124,7 @@
     }
   },
   "gameRoom": {
+    "turnAlertTitle": "(À vous !) GuessX",
     "opponentHistoryTitle": "Tentatives de {name}",
     "share": {
       "button": "Partager la salle",

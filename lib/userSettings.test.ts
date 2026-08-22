@@ -45,6 +45,12 @@ describe('getSettings', () => {
     expect(getSettings().turnTimerSeconds).toBe(0);
   });
 
+  it('defaults turn alert sound to on', async () => {
+    const { getSettings } = await loadSettings();
+
+    expect(getSettings().turnAlertSound).toBe(true);
+  });
+
   it('returns defaults when storage is empty', async () => {
     const { DEFAULTS, getSettings } = await loadSettings();
 
@@ -72,7 +78,7 @@ describe('getSettings', () => {
     );
     const { getSettings } = await loadSettings();
 
-    expect(getSettings()).toEqual({ sideBySideBoard: true, revealSecretsOnWin: false, turnTimerSeconds: 0 });
+    expect(getSettings()).toEqual({ sideBySideBoard: true, revealSecretsOnWin: false, turnAlertSound: true, turnTimerSeconds: 0 });
     expect(getSettings()).not.toHaveProperty('futureSetting');
   });
 
@@ -83,7 +89,14 @@ describe('getSettings', () => {
     );
     const { getSettings } = await loadSettings();
 
-    expect(getSettings()).toEqual({ sideBySideBoard: false, revealSecretsOnWin: true, turnTimerSeconds: 0 });
+    expect(getSettings()).toEqual({ sideBySideBoard: false, revealSecretsOnWin: true, turnAlertSound: true, turnTimerSeconds: 0 });
+  });
+
+  it.each([{}, { turnAlertSound: 'false' }])('uses the default for a missing or wrong-typed turn alert sound setting', async (stored) => {
+    browser.localStorage.values.set(STORAGE_KEY, JSON.stringify(stored));
+    const { getSettings } = await loadSettings();
+
+    expect(getSettings().turnAlertSound).toBe(true);
   });
 
   it.each([45, -15, '30'])('defaults an invalid persisted turn timer value %s', async (value) => {
@@ -100,7 +113,7 @@ describe('getSettings', () => {
     const sideBySideSetting = schema.shift()!;
 
     try {
-      expect(getSettings()).toEqual({ sideBySideBoard: false, revealSecretsOnWin: false, turnTimerSeconds: 0 });
+      expect(getSettings()).toEqual({ sideBySideBoard: false, revealSecretsOnWin: false, turnAlertSound: true, turnTimerSeconds: 0 });
     } finally {
       schema.unshift(sideBySideSetting);
     }
@@ -127,7 +140,20 @@ describe('setSetting', () => {
     settings.setSetting('sideBySideBoard', true);
 
     settings = await loadSettings();
-    expect(settings.getSettings()).toEqual({ sideBySideBoard: true, revealSecretsOnWin: false, turnTimerSeconds: 0 });
+    expect(settings.getSettings()).toEqual({ sideBySideBoard: true, revealSecretsOnWin: false, turnAlertSound: true, turnTimerSeconds: 0 });
+  });
+
+  it('round-trips turn alert sound changes', async () => {
+    let settings = await loadSettings();
+    settings.setSetting('turnAlertSound', false);
+
+    settings = await loadSettings();
+    expect(settings.getSettings().turnAlertSound).toBe(false);
+
+    settings.setSetting('turnAlertSound', true);
+
+    settings = await loadSettings();
+    expect(settings.getSettings().turnAlertSound).toBe(true);
   });
 
   it('keeps failed writes in the current snapshot and merges the next write onto them', async () => {
@@ -137,14 +163,15 @@ describe('setSetting', () => {
     });
 
     settings.setSetting('sideBySideBoard', true);
-    expect(settings.getSettings()).toEqual({ sideBySideBoard: true, revealSecretsOnWin: false, turnTimerSeconds: 0 });
+    expect(settings.getSettings()).toEqual({ sideBySideBoard: true, revealSecretsOnWin: false, turnAlertSound: true, turnTimerSeconds: 0 });
 
     settings.setSetting('revealSecretsOnWin', true);
 
-    expect(settings.getSettings()).toEqual({ sideBySideBoard: true, revealSecretsOnWin: true, turnTimerSeconds: 0 });
+    expect(settings.getSettings()).toEqual({ sideBySideBoard: true, revealSecretsOnWin: true, turnAlertSound: true, turnTimerSeconds: 0 });
     expect(JSON.parse(browser.localStorage.values.get(STORAGE_KEY)!)).toEqual({
       sideBySideBoard: true,
       revealSecretsOnWin: true,
+      turnAlertSound: true,
       turnTimerSeconds: 0,
     });
   });
@@ -180,7 +207,7 @@ describe('storage events', () => {
     browser.dispatchEvent(sameKeyEvent);
 
     expect(listener).toHaveBeenCalledTimes(1);
-    expect(getSettings()).toEqual({ sideBySideBoard: false, revealSecretsOnWin: true, turnTimerSeconds: 0 });
+    expect(getSettings()).toEqual({ sideBySideBoard: false, revealSecretsOnWin: true, turnAlertSound: true, turnTimerSeconds: 0 });
 
     const otherKeyEvent = new Event('storage') as StorageEvent;
     Object.defineProperty(otherKeyEvent, 'key', { value: 'other.key' });

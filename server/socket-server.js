@@ -245,6 +245,7 @@ class GameServer {
     }
 
     const payload = {
+      roomId: room.id,
       currentTurn: room.currentTurn,
       turnStartedAt: room.turnStartedAt,
       turnDeadline: room.turnDeadline,

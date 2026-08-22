@@ -5,6 +5,8 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { openRoomAccess, RoomAccessState } from '../lib/openRoomAccess';
 import { socketService, TurnStartedPayload } from '../lib/socket';
+import { createChimePlayer, createTitleFlasher, createTurnAlertController } from '../lib/turnAlerts';
+import { getSettings } from '../lib/userSettings';
 import { useUserSettings } from '../lib/useUserSettings';
 import { GameRoom as GameRoomType, TurnTimerSeconds } from '../types/game';
 import Celebration from './Celebration';
@@ -72,8 +74,18 @@ export default function GameRoom() {
     const socket = socketService.connect();
     if (!socket) return;
 
+    const turnAlertController = createTurnAlertController({
+      roomId,
+      getMySocketId: () => socket.id,
+      getSoundEnabled: () => getSettings().turnAlertSound,
+      getIsHidden: () => document.hidden,
+      chime: createChimePlayer(),
+      flasher: createTitleFlasher(t('turnAlertTitle')),
+    });
+
     const handleGameplayUpdate = (updatedRoom: GameRoomType) => {
       if (updatedRoom.id !== roomId) return;
+      if (updatedRoom.gameStatus === 'finished') turnAlertController.stop();
       setFlow((current) => current?.roomId === roomId && current.access.status === 'member'
         ? { roomId, access: { status: 'member', room: updatedRoom } }
         : current);
@@ -97,6 +109,8 @@ export default function GameRoom() {
     };
 
     const handleTurnStarted = (payload: TurnStartedPayload) => {
+      if (payload.roomId !== roomId) return;
+      turnAlertController.handleTurnStarted(payload);
       setFlow((current) => current?.roomId === roomId && current.access.status === 'member'
         ? {
             roomId,
@@ -113,6 +127,16 @@ export default function GameRoom() {
             },
           }
         : current);
+    };
+
+    const handlePlayerLeft = (updatedRoom: GameRoomType) => {
+      if (updatedRoom.id !== roomId) return;
+      turnAlertController.stop();
+      handleGameplayUpdate(updatedRoom);
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) turnAlertController.stop();
     };
 
     const controller = openRoomAccess(socket, roomId, initialCode, {
@@ -134,27 +158,30 @@ export default function GameRoom() {
     socket.on('secret_number_set', handleGameplayUpdate);
     socket.on('guess_made', handleGameplayUpdate);
     socket.on('game_won', handleGameplayUpdate);
-    socket.on('player_left', handleGameplayUpdate);
+    socket.on('player_left', handlePlayerLeft);
     socket.on('turn_started', handleTurnStarted);
     socket.on('rematch_offer', handleRematchOffer);
     socket.on('rematch_offer_sent', handleRematchOfferSent);
     socket.on('rematch_declined', handleRematchDeclined);
     socket.on('rematch_room_ready', handleRematchReady);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       controller.destroy();
       if (controllerRef.current === controller) controllerRef.current = null;
+      turnAlertController.stop();
       socket.off('secret_number_set', handleGameplayUpdate);
       socket.off('guess_made', handleGameplayUpdate);
       socket.off('game_won', handleGameplayUpdate);
-      socket.off('player_left', handleGameplayUpdate);
+      socket.off('player_left', handlePlayerLeft);
       socket.off('turn_started', handleTurnStarted);
       socket.off('rematch_offer', handleRematchOffer);
       socket.off('rematch_offer_sent', handleRematchOfferSent);
       socket.off('rematch_declined', handleRematchDeclined);
       socket.off('rematch_room_ready', handleRematchReady);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [initialCode, roomId, locale, router]);
+  }, [initialCode, roomId, locale, router, t]);
 
   const access = flow?.roomId === roomId ? flow.access : null;
   const digits = codeEntry.roomId === roomId ? codeEntry.digits : ['', '', ''];

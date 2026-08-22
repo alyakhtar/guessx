@@ -210,7 +210,9 @@ describe('server turn timer integration', () => {
     const [[member], [observed]] = await Promise.all([memberTurn, spectatorTurn]);
 
     expect(observed).toEqual(member);
+    expect(member).toMatchObject({ roomId });
     expect(observed).toMatchObject({
+      roomId,
       currentTurn: first.id,
       turnStartedAt: clock.now(),
       turnDeadline: clock.now() + 15_000,
