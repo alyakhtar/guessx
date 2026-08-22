@@ -124,7 +124,7 @@
     }
   },
   "gameRoom": {
-    "turnAlertTitle": "(À vous !) GuessX",
+    "turnAlertTitle": "(À vous !) GuessX",
     "opponentHistoryTitle": "Tentatives de {name}",
     "share": {
       "button": "Partager la salle",

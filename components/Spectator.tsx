@@ -49,6 +49,7 @@ export default function Spectator() {
         };
 
         const handleTurnStarted = (payload: TurnStartedPayload) => {
+            if (payload.roomId !== roomId) return;
             setRoom(currentRoom => currentRoom ? {
                 ...currentRoom,
                 currentTurn: payload.currentTurn,
