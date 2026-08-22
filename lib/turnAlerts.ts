@@ -9,6 +9,9 @@ export interface TitleFlasher {
   stop(): void;
 }
 
+// Module-level on purpose: every createChimePlayer() shares one AudioContext for the page
+// lifetime (browsers cap how many a document may open). `null` means "unavailable, stop
+// trying"; `undefined` means "not created yet". Tests must vi.resetModules() to clear it.
 let audioContext: AudioContext | null | undefined;
 
 function getAudioContext() {
