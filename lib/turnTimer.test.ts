@@ -1,5 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { getRemainingTimeMs } from './turnTimer';
+import { getRemainingTimeMs, parseTurnTimerSeconds } from './turnTimer';
+
+describe('parseTurnTimerSeconds', () => {
+  it.each([
+    [null, 0],
+    ['', 0],
+    ['30', 30],
+    [60, 60],
+    ['45', 0],
+    ['abc', 0],
+  ] as const)('parses %s as %s', (raw, expected) => {
+    expect(parseTurnTimerSeconds(raw)).toBe(expected);
+  });
+});
 
 describe('getRemainingTimeMs', () => {
   it('uses the server clock at turn start', () => {

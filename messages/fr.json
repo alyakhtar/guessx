@@ -21,6 +21,13 @@
         "5": "5 chiffres (10000-99999)",
         "6": "6 chiffres (100000-999999)"
       },
+      "turnTimerLabel": "Minuteur de tour",
+      "turnTimerOptions": {
+        "0": "Désactivé",
+        "15": "15 secondes",
+        "30": "30 secondes",
+        "60": "60 secondes"
+      },
       "singlePlayerMode": {
         "label": "Solo contre un bot",
         "description": "Jouez contre une IA"
@@ -57,6 +64,7 @@
           "public": "Publique",
           "private": "Privée"
         },
+        "timer": "⏱ {seconds}s",
         "player1": "Joueur 1",
         "player2": "Joueur 2",
         "action": "Action"
@@ -107,16 +115,6 @@
     "revealSecretsOnWin": {
       "label": "Révéler les nombres secrets après une victoire",
       "description": "Afficher les deux nombres secrets à la fin de la partie."
-    },
-    "turnTimer": {
-      "label": "Minuteur de tour",
-      "description": "Un joueur perd la partie s’il ne propose pas de nombre avant la fin du délai.",
-      "options": {
-        "0": "Désactivé",
-        "15": "15 secondes",
-        "30": "30 secondes",
-        "60": "60 secondes"
-      }
     }
   },
   "gameRoom": {
@@ -149,6 +147,7 @@
     "header": {
       "room": "Salle",
       "digits": "Chiffres",
+      "timer": "Minuteur",
       "code": "Code"
     },
     "status": {
@@ -220,6 +219,7 @@
       "mode": "👁️ Mode spectateur",
       "room": "Salle",
       "digits": "Chiffres",
+      "timer": "Minuteur",
       "turn": "⏳ Tour de {name}",
       "winner": "Gagnant"
     },

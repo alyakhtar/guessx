@@ -218,7 +218,14 @@ export default function GameRoom() {
     return (
       <div className="container-fluid min-vh-100 d-flex justify-content-center align-items-center">
         <div className="card p-4 shadow w-100" style={{ maxWidth: '30rem' }}>
-          <h1 className="h3 mb-4">{t('join.heading')}</h1>
+          <h1 className="h3 mb-4">
+            {t('join.heading')}
+            {(access.room.turnTimerSeconds ?? 0) > 0 && (
+              <span className="badge text-bg-warning fs-6 ms-2">
+                {t('header.timer')}: {access.room.turnTimerSeconds}s
+              </span>
+            )}
+          </h1>
           <form onSubmit={(event) => { event.preventDefault(); handleJoin(); }}>
             <div className="mb-3">
               <label className="form-label" htmlFor="join-room-name">{t('join.nameLabel')}</label>
@@ -319,6 +326,12 @@ export default function GameRoom() {
               <span className="badge text-bg-secondary fs-6">
                 {t('header.digits')}: {room.numberLength}
               </span>
+
+              {(room.turnTimerSeconds ?? 0) > 0 && (
+                <span className="badge text-bg-warning fs-6">
+                  {t('header.timer')}: {room.turnTimerSeconds}s
+                </span>
+              )}
 
               {room.isPrivate && room.accessCode && (
                 <span className="badge text-bg-info fs-6">

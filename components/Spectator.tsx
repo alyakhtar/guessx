@@ -162,6 +162,12 @@ export default function Spectator() {
                                 {t('header.digits')}: {room.numberLength}
                             </span>
 
+                            {(room.turnTimerSeconds ?? 0) > 0 && (
+                                <span className="badge text-bg-warning fs-6">
+                                    {t('header.timer')}: {room.turnTimerSeconds}s
+                                </span>
+                            )}
+
                             {room.gameStatus === 'playing' && currentPlayerName && (
                                 <span className="badge text-bg-warning fs-6">
                                     {t('header.turn', { name: currentPlayerName })}
