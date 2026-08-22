@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { socketService } from '../lib/socket';
+import { showToast } from '../lib/toast';
 import { getSettings } from '../lib/userSettings';
 import { GameRoom } from '../types/game';
 import LocaleSelector from './LocaleSelector';
@@ -75,10 +76,10 @@ export default function Lobby() {
 
   const handleCreateRoom = () => {
     const trimmedName = playerName.trim();
-    if (!trimmedName) { alert(t('errors.nameRequired')); return; }
-    if (trimmedName.toLowerCase() === 'bot') { alert(t('errors.reservedName')); return; }
+    if (!trimmedName) { showToast(t('errors.nameRequired')); return; }
+    if (trimmedName.toLowerCase() === 'bot') { showToast(t('errors.reservedName')); return; }
     localStorage.setItem('playerName', trimmedName);
-    if (!socket) { alert(t('errors.connectionError')); return; }
+    if (!socket) { showToast(t('errors.connectionError')); return; }
     setIsCreating(true);
     socket.emit('create_room', trimmedName, numberLength, spectatorModeEnabled, isSinglePlayer, botDifficulty, isPrivate, getSettings().turnTimerSeconds);
     const handleRoomCreated = (newRoomId: string, room: RoomSummary) => {
@@ -89,7 +90,7 @@ export default function Lobby() {
       }
       router.push(`/${locale}/game/${newRoomId}`);
     };
-    const handleError = (error: string) => { alert(translateServerError(error)); setIsCreating(false); };
+    const handleError = (error: string) => { showToast(translateServerError(error)); setIsCreating(false); };
     socket.once('room_created', handleRoomCreated);
     socket.once('error', handleError);
     setTimeout(() => { socket.off('room_created', handleRoomCreated); socket.off('error', handleError); }, 5000);
@@ -99,13 +100,13 @@ export default function Lobby() {
   // Public room join (table row)
   const handleJoinRoomTable = (roomId: string) => {
     const trimmedName = playerName.trim();
-    if (!trimmedName) { alert(t('errors.nameRequired')); return; }
-    if (trimmedName.toLowerCase() === 'bot') { alert(t('errors.reservedName')); return; }
+    if (!trimmedName) { showToast(t('errors.nameRequired')); return; }
+    if (trimmedName.toLowerCase() === 'bot') { showToast(t('errors.reservedName')); return; }
     localStorage.setItem('playerName', trimmedName);
-    if (!socket) { alert(t('errors.connectionError')); return; }
+    if (!socket) { showToast(t('errors.connectionError')); return; }
     socket.emit('join_room', roomId, trimmedName);
     const handleRoomUpdated = (room: RoomSummary) => router.push(`/${locale}/game/${room.id}`);
-    const handleError = (error: string) => alert(translateServerError(error));
+    const handleError = (error: string) => showToast(translateServerError(error));
     socket.once('room_updated', handleRoomUpdated);
     socket.once('error', handleError);
     setTimeout(() => { socket.off('room_updated', handleRoomUpdated); socket.off('error', handleError); }, 5000);

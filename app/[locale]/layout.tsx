@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
+import ToastHost from '../../components/ToastHost';
 import '../globals.css';
 import Script from 'next/script';
 
@@ -32,6 +33,7 @@ export default async function RootLayout({ children, params }: LayoutProps) {
             <body className={inter.className} suppressHydrationWarning>
                 <NextIntlClientProvider locale={validLocale} messages={messages}>
                     {children}
+                    <ToastHost />
                 </NextIntlClientProvider>
                 <Script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" />
             </body>

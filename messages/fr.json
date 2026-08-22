@@ -3,6 +3,9 @@
     "title": "GuessX - Jeu de devinette de nombres",
     "description": "Un jeu de devinette de nombres en temps réel pour deux joueurs"
   },
+  "toast": {
+    "close": "Fermer"
+  },
   "lobby": {
     "title": "GuessX",
     "subtitle": "Un jeu de devinette de nombres en temps réel - jouez avec des amis ou défiez un bot !",

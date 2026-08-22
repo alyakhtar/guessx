@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { socketService } from '../lib/socket';
+import { showToast } from '../lib/toast';
 import { GameRoom, Player } from '../types/game';
 import { validateNumber } from '../lib/gameLogic';
 
@@ -29,7 +30,7 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
 
   const handleSetSecretNumber = () => {
     if (!validateNumber(secretNumber, numberLength)) {
-      alert(t('validation.invalidNumber', { length: numberLength }));
+      showToast(t('validation.invalidNumber', { length: numberLength }));
       return;
     }
 
@@ -41,7 +42,7 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
 
   const handleMakeGuess = () => {
     if (!validateNumber(guess, numberLength)) {
-      alert(t('validation.invalidNumber', { length: numberLength }));
+      showToast(t('validation.invalidNumber', { length: numberLength }));
       return;
     }
 

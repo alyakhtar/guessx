@@ -3,6 +3,9 @@
     "title": "GuessX - Number Guessing Game",
     "description": "A real-time number guessing game for two players"
   },
+  "toast": {
+    "close": "Close"
+  },
   "lobby": {
     "title": "GuessX",
     "subtitle": "A real-time number guessing game - play with friends or challenge a bot!",
