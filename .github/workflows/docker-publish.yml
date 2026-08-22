@@ -51,6 +51,10 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # Before Build so a failing test surfaces without waiting on the slower build.
+      - name: Test
+        run: npm test
+
       - name: Build
         run: npm run build
 
