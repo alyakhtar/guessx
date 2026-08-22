@@ -12,7 +12,7 @@ export default function ToastHost() {
 
   return (
     <div
-      className="toast-container position-fixed top-0 end-0 p-3 mt-5"
+      className="toast-container position-fixed top-0 end-0 p-3 pt-4 mt-5"
       aria-live="polite"
       aria-atomic="true"
     >
@@ -26,7 +26,7 @@ export default function ToastHost() {
             <div className="toast-body text-break">{message}</div>
             <button
               type="button"
-              className="btn-close btn-close-white me-2 m-auto"
+              className="btn-close btn-close-white p-2 me-2 m-auto"
               aria-label={t('close')}
               onClick={() => dismissToast(id)}
             />
