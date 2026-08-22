@@ -24,7 +24,7 @@ permissions:
 
 jobs:
   validate:
-    name: Validate (type-check / lint / build)
+    name: Validate (type-check / lint / test / build)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
