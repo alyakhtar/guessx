@@ -139,7 +139,9 @@
       "backToLobby": "Retour à l'accueil"
     },
     "accessCode": {
-      "label": "Code d'accès"
+      "label": "Code d'accès",
+      "copy": "Copier",
+      "copied": "Copié"
     },
     "loading": {
       "title": "Chargement de la salle de jeu...",
@@ -148,8 +150,7 @@
     },
     "header": {
       "room": "Salle",
-      "digits": "Chiffres",
-      "code": "Code"
+      "digits": "Chiffres"
     },
     "status": {
       "yourTurn": "À votre tour !",

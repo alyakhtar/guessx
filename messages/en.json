@@ -139,7 +139,9 @@
       "backToLobby": "Back to lobby"
     },
     "accessCode": {
-      "label": "Access code"
+      "label": "Access code",
+      "copy": "Copy",
+      "copied": "Copied"
     },
     "loading": {
       "title": "Loading game room...",
@@ -148,8 +150,7 @@
     },
     "header": {
       "room": "Room",
-      "digits": "Digits",
-      "code": "Code"
+      "digits": "Digits"
     },
     "status": {
       "yourTurn": "Your Turn!",
