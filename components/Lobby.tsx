@@ -5,9 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { socketService } from '../lib/socket';
 import { showToast } from '../lib/toast';
-import { getSettings } from '../lib/userSettings';
-import { GameRoom } from '../types/game';
-import LocaleSelector from './LocaleSelector';
+import { parseTurnTimerSeconds } from '../lib/turnTimer';
+import type { GameRoom, TurnTimerSeconds } from '../types/game';
 import SettingsCog from './SettingsCog';
 import ShareRoomButton from './ShareRoomButton';
 
@@ -32,12 +31,12 @@ export default function Lobby() {
 
   const [playerName, setPlayerName] = useState('');
   const [numberLength, setNumberLength] = useState(4);
+  const [turnTimerSeconds, setTurnTimerSeconds] = useState<TurnTimerSeconds>(0);
   const [spectatorModeEnabled, setSpectatorModeEnabled] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [isSinglePlayer, setIsSinglePlayer] = useState(false);
   const [botDifficulty, setBotDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
   const [socket, setSocket] = useState<ReturnType<typeof socketService.connect> | null>(null);
-  const [darkMode, setDarkMode] = useState(true);
   const [rooms, setRooms] = useState<GameRoom[]>([]);
   // Private room toggle (default off, per issue AC)
   const [isPrivate, setIsPrivate] = useState(false);
@@ -54,6 +53,7 @@ export default function Lobby() {
     // Intentional: restore the persisted name once on mount.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (savedName) setPlayerName(savedName);
+    setTurnTimerSeconds(parseTurnTimerSeconds(localStorage.getItem('guessx.turnTimerSeconds')));
   }, []);
 
   useEffect(() => {
@@ -66,10 +66,6 @@ export default function Lobby() {
     return () => {};
   }, []);
 
-  useEffect(() => {
-    document.documentElement.setAttribute('data-bs-theme', darkMode ? 'dark' : 'light');
-  }, [darkMode]);
-
   const blurActive = () => {
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
   };
@@ -81,7 +77,7 @@ export default function Lobby() {
     localStorage.setItem('playerName', trimmedName);
     if (!socket) { showToast(t('errors.connectionError')); return; }
     setIsCreating(true);
-    socket.emit('create_room', trimmedName, numberLength, spectatorModeEnabled, isSinglePlayer, botDifficulty, isPrivate, getSettings().turnTimerSeconds);
+    socket.emit('create_room', trimmedName, numberLength, spectatorModeEnabled, isSinglePlayer, botDifficulty, isPrivate, turnTimerSeconds);
     const handleRoomCreated = (newRoomId: string, room: RoomSummary) => {
       setIsCreating(false);
       if (room && room.isPrivate && room.accessCode) {
@@ -155,10 +151,6 @@ export default function Lobby() {
   return (
     <div className="card p-2 p-sm-4 shadow position-relative">
       <div className="d-flex justify-content-end gap-2 position-absolute top-0 end-0 m-2">
-        <LocaleSelector />
-        <button className="btn btn-sm btn-outline-secondary" onClick={() => setDarkMode(!darkMode)}>
-          {darkMode ? '🌞' : '🌙'}
-        </button>
         <SettingsCog />
       </div>
       <div className="text-center mb-4">
@@ -197,6 +189,23 @@ export default function Lobby() {
             <option value={4}>{t('createGame.numberLengthOptions.4')}</option>
             <option value={5}>{t('createGame.numberLengthOptions.5')}</option>
             <option value={6}>{t('createGame.numberLengthOptions.6')}</option>
+          </select>
+        </div>
+        <div className="mb-3">
+          <label className="form-label fw-medium small">{t('createGame.turnTimerLabel')}</label>
+          <select
+            value={turnTimerSeconds}
+            onChange={(e) => {
+              const v = parseTurnTimerSeconds(e.target.value);
+              setTurnTimerSeconds(v);
+              localStorage.setItem('guessx.turnTimerSeconds', String(v));
+            }}
+            className="form-select form-select-lg"
+          >
+            <option value={0}>{t('createGame.turnTimerOptions.0')}</option>
+            <option value={15}>{t('createGame.turnTimerOptions.15')}</option>
+            <option value={30}>{t('createGame.turnTimerOptions.30')}</option>
+            <option value={60}>{t('createGame.turnTimerOptions.60')}</option>
           </select>
         </div>
         <div className="mb-3">
@@ -295,6 +304,11 @@ export default function Lobby() {
                           <span className="badge bg-warning text-dark">{t('joinGame.table.type.private')}</span>
                         ) : (
                           <span className="badge bg-secondary">{t('joinGame.table.type.public')}</span>
+                        )}
+                        {room.turnTimerSeconds > 0 && (
+                          <span className="badge text-bg-warning ms-1">
+                            {t('joinGame.table.timer', { seconds: room.turnTimerSeconds })}
+                          </span>
                         )}
                       </td>
                       <td className="d-none d-sm-table-cell">{p1?.name} {p1?.isConnected ? '' : t('joinGame.statuses.disconnected')}</td>

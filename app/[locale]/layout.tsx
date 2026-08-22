@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import ToastHost from '../../components/ToastHost';
 import '../globals.css';
 import Script from 'next/script';
+import ThemeApplier from '../../components/ThemeApplier';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -31,6 +32,7 @@ export default async function RootLayout({ children, params }: LayoutProps) {
     return (
         <html lang={validLocale} suppressHydrationWarning>
             <body className={inter.className} suppressHydrationWarning>
+                <ThemeApplier />
                 <NextIntlClientProvider locale={validLocale} messages={messages}>
                     {children}
                     <ToastHost />

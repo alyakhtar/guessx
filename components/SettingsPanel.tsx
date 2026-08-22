@@ -3,8 +3,8 @@
 import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { SETTINGS_SCHEMA, setSetting } from '../lib/userSettings';
-import type { UserSettings } from '../lib/userSettings';
 import { useUserSettings } from '../lib/useUserSettings';
+import LocaleSelector from './LocaleSelector';
 
 interface SettingsPanelProps {
   open: boolean;
@@ -54,7 +54,11 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
             />
           </div>
           <div className="modal-body">
-            {SETTINGS_SCHEMA.map((setting) => setting.type === 'toggle' ? (
+            <div className="d-flex align-items-center justify-content-between mb-3">
+              <span className="form-label mb-0">{t('settings.language')}</span>
+              <LocaleSelector />
+            </div>
+            {SETTINGS_SCHEMA.map((setting) => (
               <div className="form-check form-switch mb-3" key={setting.key}>
                 <input
                   className="form-check-input"
@@ -67,28 +71,6 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
                 <label className="form-check-label" htmlFor={`setting-${setting.key}`}>
                   {t(setting.labelKey)}
                 </label>
-                <div className="form-text text-muted">{t(setting.descriptionKey)}</div>
-              </div>
-            ) : (
-              <div className="mb-3" key={setting.key}>
-                <label className="form-label" htmlFor={`setting-${setting.key}`}>
-                  {t(`${setting.labelKey}.label`)}
-                </label>
-                <select
-                  className="form-select"
-                  id={`setting-${setting.key}`}
-                  value={settings[setting.key]}
-                  onChange={(event) => setSetting(
-                    setting.key,
-                    Number(event.target.value) as UserSettings[typeof setting.key],
-                  )}
-                >
-                  {setting.options.map((option) => (
-                    <option key={option} value={option}>
-                      {t(`${setting.labelKey}.options.${option}`)}
-                    </option>
-                  ))}
-                </select>
                 <div className="form-text text-muted">{t(setting.descriptionKey)}</div>
               </div>
             ))}

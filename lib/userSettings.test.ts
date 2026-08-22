@@ -39,16 +39,11 @@ afterEach(() => {
 });
 
 describe('getSettings', () => {
-  it('defaults the turn timer to off', async () => {
-    const { getSettings } = await loadSettings();
-
-    expect(getSettings().turnTimerSeconds).toBe(0);
-  });
-
   it('returns defaults when storage is empty', async () => {
     const { DEFAULTS, getSettings } = await loadSettings();
 
     expect(getSettings()).toBe(DEFAULTS);
+    expect(DEFAULTS.darkMode).toBe(true);
   });
 
   it('returns defaults without throwing for corrupt JSON', async () => {
@@ -72,7 +67,11 @@ describe('getSettings', () => {
     );
     const { getSettings } = await loadSettings();
 
-    expect(getSettings()).toEqual({ sideBySideBoard: true, revealSecretsOnWin: false, turnTimerSeconds: 0 });
+    expect(getSettings()).toEqual({
+      darkMode: true,
+      sideBySideBoard: true,
+      revealSecretsOnWin: false,
+    });
     expect(getSettings()).not.toHaveProperty('futureSetting');
   });
 
@@ -83,26 +82,49 @@ describe('getSettings', () => {
     );
     const { getSettings } = await loadSettings();
 
-    expect(getSettings()).toEqual({ sideBySideBoard: false, revealSecretsOnWin: true, turnTimerSeconds: 0 });
+    expect(getSettings()).toEqual({
+      darkMode: true,
+      sideBySideBoard: false,
+      revealSecretsOnWin: true,
+    });
   });
 
-  it.each([45, -15, '30'])('defaults an invalid persisted turn timer value %s', async (value) => {
-    browser.localStorage.values.set(STORAGE_KEY, JSON.stringify({ turnTimerSeconds: value }));
+  it('reads a persisted light-theme preference', async () => {
+    browser.localStorage.values.set(STORAGE_KEY, JSON.stringify({ darkMode: false }));
     const { getSettings } = await loadSettings();
 
-    expect(getSettings().turnTimerSeconds).toBe(0);
+    expect(getSettings()).toEqual({
+      darkMode: false,
+      sideBySideBoard: false,
+      revealSecretsOnWin: false,
+    });
+  });
+
+  it('uses the default for a wrong-typed dark-mode preference', async () => {
+    browser.localStorage.values.set(STORAGE_KEY, JSON.stringify({ darkMode: 'light' }));
+    const { getSettings } = await loadSettings();
+
+    expect(getSettings()).toEqual({
+      darkMode: true,
+      sideBySideBoard: false,
+      revealSecretsOnWin: false,
+    });
   });
 
   it('uses the schema as the allowlist for stored keys', async () => {
-    browser.localStorage.values.set(STORAGE_KEY, JSON.stringify({ sideBySideBoard: true }));
+    browser.localStorage.values.set(STORAGE_KEY, JSON.stringify({ darkMode: false }));
     const { SETTINGS_SCHEMA, getSettings } = await loadSettings();
     const schema = SETTINGS_SCHEMA as unknown as Array<(typeof SETTINGS_SCHEMA)[number]>;
-    const sideBySideSetting = schema.shift()!;
+    const darkModeSetting = schema.shift()!;
 
     try {
-      expect(getSettings()).toEqual({ sideBySideBoard: false, revealSecretsOnWin: false, turnTimerSeconds: 0 });
+      expect(getSettings()).toEqual({
+        darkMode: true,
+        sideBySideBoard: false,
+        revealSecretsOnWin: false,
+      });
     } finally {
-      schema.unshift(sideBySideSetting);
+      schema.unshift(darkModeSetting);
     }
   });
 
@@ -114,20 +136,16 @@ describe('getSettings', () => {
 });
 
 describe('setSetting', () => {
-  it('round-trips a valid persisted turn timer value', async () => {
-    let settings = await loadSettings();
-    settings.setSetting('turnTimerSeconds', 30);
-
-    settings = await loadSettings();
-    expect(settings.getSettings().turnTimerSeconds).toBe(30);
-  });
-
   it('persists a change that a fresh module reads back', async () => {
     let settings = await loadSettings();
     settings.setSetting('sideBySideBoard', true);
 
     settings = await loadSettings();
-    expect(settings.getSettings()).toEqual({ sideBySideBoard: true, revealSecretsOnWin: false, turnTimerSeconds: 0 });
+    expect(settings.getSettings()).toEqual({
+      darkMode: true,
+      sideBySideBoard: true,
+      revealSecretsOnWin: false,
+    });
   });
 
   it('keeps failed writes in the current snapshot and merges the next write onto them', async () => {
@@ -137,15 +155,23 @@ describe('setSetting', () => {
     });
 
     settings.setSetting('sideBySideBoard', true);
-    expect(settings.getSettings()).toEqual({ sideBySideBoard: true, revealSecretsOnWin: false, turnTimerSeconds: 0 });
+    expect(settings.getSettings()).toEqual({
+      darkMode: true,
+      sideBySideBoard: true,
+      revealSecretsOnWin: false,
+    });
 
     settings.setSetting('revealSecretsOnWin', true);
 
-    expect(settings.getSettings()).toEqual({ sideBySideBoard: true, revealSecretsOnWin: true, turnTimerSeconds: 0 });
-    expect(JSON.parse(browser.localStorage.values.get(STORAGE_KEY)!)).toEqual({
+    expect(settings.getSettings()).toEqual({
+      darkMode: true,
       sideBySideBoard: true,
       revealSecretsOnWin: true,
-      turnTimerSeconds: 0,
+    });
+    expect(JSON.parse(browser.localStorage.values.get(STORAGE_KEY)!)).toEqual({
+      darkMode: true,
+      sideBySideBoard: true,
+      revealSecretsOnWin: true,
     });
   });
 
@@ -180,7 +206,11 @@ describe('storage events', () => {
     browser.dispatchEvent(sameKeyEvent);
 
     expect(listener).toHaveBeenCalledTimes(1);
-    expect(getSettings()).toEqual({ sideBySideBoard: false, revealSecretsOnWin: true, turnTimerSeconds: 0 });
+    expect(getSettings()).toEqual({
+      darkMode: true,
+      sideBySideBoard: false,
+      revealSecretsOnWin: true,
+    });
 
     const otherKeyEvent = new Event('storage') as StorageEvent;
     Object.defineProperty(otherKeyEvent, 'key', { value: 'other.key' });
