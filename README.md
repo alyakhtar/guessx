@@ -4,7 +4,7 @@
 
 [![CI · Build & Publish](https://github.com/alyakhtar/guessx/actions/workflows/docker-publish.yml/badge.svg?branch=main)](https://github.com/alyakhtar/guessx/actions/workflows/docker-publish.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Node](https://img.shields.io/badge/Node-20%2B-339933?logo=node.js&logoColor=white)](https://nodejs.org)
+[![Node](https://img.shields.io/badge/Node-22%20LTS-339933?logo=node.js&logoColor=white)](https://nodejs.org)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Real-time](https://img.shields.io/badge/Real--time-Socket.IO-010101?logo=socket.io&logoColor=white)](https://socket.io)
@@ -96,6 +96,23 @@ docker run -d -p 8082:8082 \
 ```
 
 > Requires a MongoDB connection (`MONGODB_URI`). Game results are persisted there.
+
+The production image uses the pinned Node.js `22.23.2` LTS Alpine runtime. CI
+uses the Node 22 LTS line for dependency installation and validation. Deploy an
+immutable SHA tag rather than `latest` when promoting a build:
+
+```bash
+IMAGE=ghcr.io/alyakhtar/guessx:sha-<validated-sha> \
+  docker compose up -d --force-recreate
+```
+
+To roll back, replace the image with the previously deployed immutable SHA tag
+and recreate the container:
+
+```bash
+IMAGE=ghcr.io/alyakhtar/guessx:sha-<previous-production-sha> \
+  docker compose up -d --force-recreate
+```
 
 ---
 

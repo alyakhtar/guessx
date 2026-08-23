@@ -1,5 +1,5 @@
 # Stage 1: Install dependencies
-FROM node:20-alpine AS deps
+FROM node:22.23.2-alpine3.23 AS deps
 WORKDIR /app
 
 # Copy BOTH package files and install from the committed lockfile with `npm ci`,
@@ -9,7 +9,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 # Stage 2: Build the Next.js app
-FROM node:20-alpine AS builder
+FROM node:22.23.2-alpine3.23 AS builder
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
@@ -20,7 +20,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 # Stage 3: Production image
-FROM node:20-alpine AS runner
+FROM node:22.23.2-alpine3.23 AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
