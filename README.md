@@ -116,7 +116,7 @@ render time.
 | **Hard** | Near-optimal guessing pattern |
 
 Administrators can tune per-digit-length guess windows from the **Admin panel**
-(`/<locale>/admin`) — changes apply server-wide to new games.
+(`/admin`) — changes apply server-wide to new games.
 
 ---
 
@@ -141,6 +141,39 @@ i18n.ts       next-intl config
 | `NODE_ENV` | `development` | `production` for prod builds |
 | `PORT` | `8082` | Server port (dev defaults to 3000) |
 | `MONGODB_URI` | — | MongoDB connection string (required for result persistence) |
+| `CF_ACCESS_TEAM_DOMAIN` | — | Cloudflare Access team domain used to validate admin JWTs |
+| `CF_ACCESS_AUDIENCE` | — | One or more comma-separated Cloudflare Access application Audience (AUD) tags |
+| `CF_ACCESS_ALLOWED_EMAILS` | — | Comma-separated Google email allowlist for administration |
+
+### Admin access
+
+The admin page and admin APIs require a valid Cloudflare Access application JWT;
+the application also checks that the verified email is present in
+`CF_ACCESS_ALLOWED_EMAILS`. Configure Cloudflare Access in front of every admin
+path before setting these variables in production. Do not trust an email header
+or the browser cookie directly: GuessX verifies the signed
+`Cf-Access-Jwt-Assertion` against Cloudflare's rotating public keys, issuer, and
+application audience.
+
+Protect these paths with a Cloudflare Access self-hosted application:
+
+```text
+/admin
+/admin/*
+/api/admin/*
+```
+
+The admin UI is intentionally not localized and uses the canonical `/admin`
+path. Protect both `/admin` and `/admin/*`; the exact path is required for the
+initial page request, while the wildcard covers child routes if they are added
+later. If separate applications are used for the UI and API, put both
+application AUD tags in `CF_ACCESS_AUDIENCE`, separated by commas.
+
+For the Google identity provider, add an Access policy that allows only your
+specific email address. The Google provider may allow any Google account to
+authenticate, but the policy's Include rule is what decides who may reach the
+application. Keep the application allowlist in sync as a second server-side
+check.
 
 ---
 
