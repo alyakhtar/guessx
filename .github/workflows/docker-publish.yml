@@ -64,7 +64,9 @@ jobs:
     name: Build and Push to GHCR
     needs: validate
     if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    # Build the target architecture natively. Running an ARM64 Docker build
+    # through QEMU on an x86 runner can crash native Node tooling with SIGILL.
+    runs-on: ubuntu-24.04-arm
 
     steps:
       - name: Checkout
