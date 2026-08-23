@@ -1,5 +1,6 @@
 import cwv from 'eslint-config-next/core-web-vitals';
 import ts from 'eslint-config-next/typescript';
+import reactHooks from 'eslint-plugin-react-hooks';
 
 // Real Next.js 16 flat config (Core Web Vitals + TypeScript). These subpath
 // exports load correctly as flat-config arrays under ESLint 9 and bring in the
@@ -14,13 +15,12 @@ const nextConfig = [
     // guidance: keep the framework checks as the gate, stage-clean the legacy
     // noise explicitly rather than silencing the whole ruleset.
     rules: {
-      // Legacy `any` throughout lib/ and types/ — tracked for a later refactor.
-      '@typescript-eslint/no-explicit-any': 'warn',
-      // Strict React Hooks purity / mount-time setState are intentional patterns
-      // in this app's effect usage; surfaced as warnings, not hard errors.
       'react-hooks/purity': 'warn',
       'react-hooks/set-state-in-effect': 'warn',
+      // Legacy `any` throughout lib/ and types/ — tracked for a later refactor.
+      '@typescript-eslint/no-explicit-any': 'warn',
     },
+    plugins: { 'react-hooks': reactHooks },
   },
   {
     // All .js files in this repo are CommonJS Node scripts/configs (server/*,
