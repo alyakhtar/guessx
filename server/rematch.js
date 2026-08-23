@@ -10,6 +10,8 @@
 // config is created and connected players are auto-invited. A dropped player
 // rejoins from the shared list (public) or the shown access code (private).
 
+const { isValidRoomId } = require('./socketValidation.cjs');
+
 function generateRoomId() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
@@ -126,9 +128,21 @@ function handleRematchDecline(gs, socket, sourceRoomId) {
 // Wire the rematch socket handlers onto a GameServer instance.
 function attachRematch(gs) {
   gs.io.on('connection', (socket) => {
-    socket.on('rematch_request', (sourceRoomId) => handleRematchRequest(gs, socket, sourceRoomId));
-    socket.on('rematch_accept', (sourceRoomId) => handleRematchAccept(gs, socket, sourceRoomId));
-    socket.on('rematch_decline', (sourceRoomId) => handleRematchDecline(gs, socket, sourceRoomId));
+    socket.on('rematch_request', (sourceRoomId, ...extra) => {
+      if (extra.length || !isValidRoomId(sourceRoomId)) return gs.reject(socket);
+      if (!gs.rateLimit(socket, 'rematch')) return;
+      handleRematchRequest(gs, socket, sourceRoomId);
+    });
+    socket.on('rematch_accept', (sourceRoomId, ...extra) => {
+      if (extra.length || !isValidRoomId(sourceRoomId)) return gs.reject(socket);
+      if (!gs.rateLimit(socket, 'rematch')) return;
+      handleRematchAccept(gs, socket, sourceRoomId);
+    });
+    socket.on('rematch_decline', (sourceRoomId, ...extra) => {
+      if (extra.length || !isValidRoomId(sourceRoomId)) return gs.reject(socket);
+      if (!gs.rateLimit(socket, 'rematch')) return;
+      handleRematchDecline(gs, socket, sourceRoomId);
+    });
   });
 }
 

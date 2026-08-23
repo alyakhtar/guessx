@@ -1,6 +1,11 @@
 const { Server } = require('socket.io');
 const mongoose = require('mongoose');
 const { attachRematch } = require('./rematch');
+const {
+  ExpiringRateLimiter, RATE_LIMITS, isValidDifficulty, isValidNumber,
+  isValidNumberLength, isValidRoomId, isValidTimerSeconds, normalizeAccessCode,
+  normalizePlayerName,
+} = require('./socketValidation.cjs');
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 const debugLog = (...args) => { if (isDevelopment) console.debug(...args); };
@@ -41,15 +46,6 @@ async function saveGameResult(room) {
     await gameResult.save();
     console.log(`Game result saved: ${player1} vs ${player2}, winner: ${winner}`);
   } catch (error) { console.error('Error saving game result:', error); }
-}
-
-function validateNumber(number, length = 4) {
-  if (number.length !== length) return false;
-  if (!/^\d+$/.test(number)) return false;
-  const min = Math.pow(10, length - 1);
-  const max = Math.pow(10, length) - 1;
-  const num = parseInt(number);
-  return num >= min && num <= max;
 }
 
 function calculateCorrectPositions(guess, secret) {
@@ -168,6 +164,7 @@ class GameServer {
     this.rooms = new Map();
     this.playerRoomMap = new Map();
     this.roomTimers = new Map();
+    this.rateLimiter = new ExpiringRateLimiter();
     this.setupSocketHandlers();
     this.broadcastRoomList();
     prodLog('GameServer initialized');
@@ -178,20 +175,32 @@ class GameServer {
   setupSocketHandlers() {
     this.io.on('connection', (socket) => {
       console.log('Player connected:', socket.id);
-      socket.on('get_rooms', () => this.sendRoomList(socket));
+      socket.on('get_rooms', (...args) => {
+        if (args.length === 0) this.sendRoomList(socket);
+        else this.reject(socket);
+      });
 
-      socket.on('create_room', async (playerName, numberLength = 4, spectatorModeEnabled = false, isSinglePlayer = false, botDifficulty = 'medium', isPrivate = false, turnTimerSeconds = 0) => {
+      socket.on('create_room', async (...args) => {
+        if (args.length > 7) return this.reject(socket);
+        const [playerName, numberLength = 4, spectatorModeEnabled = false, isSinglePlayer = false, botDifficulty = 'medium', isPrivate = false, turnTimerSeconds = 0] = args;
         await this.createRoom(socket, playerName, numberLength, spectatorModeEnabled, isSinglePlayer, botDifficulty, isPrivate, turnTimerSeconds);
       });
 
       // Join a private room by its 3-char access code
-      socket.on('join_room_by_code', (accessCode, playerName, roomId) => {
+      socket.on('join_room_by_code', (accessCode, playerName, roomId, ...extra) => {
+        if (extra.length) return this.reject(socket);
         this.joinRoomByCode(socket, accessCode, playerName, roomId);
       });
 
-      socket.on('join_room', (roomId, playerName) => this.joinRoom(socket, roomId, playerName));
+      socket.on('join_room', (roomId, playerName, ...extra) => {
+        if (extra.length) return this.reject(socket);
+        this.joinRoom(socket, roomId, playerName);
+      });
 
-      socket.on('get_room_state', (roomId) => {
+      socket.on('get_room_state', (roomId, ...extra) => {
+        if (extra.length) return this.reject(socket);
+        if (!this.allow(socket, 'hydration')) return;
+        if (!isValidRoomId(roomId)) return this.reject(socket);
         const room = this.rooms.get(roomId);
         if (room) {
           // A member hydrating its own room must not land on the spectator
@@ -206,14 +215,32 @@ class GameServer {
         }
       });
 
-      socket.on('set_secret_number', (secretNumber) => this.setSecretNumber(socket, secretNumber));
-      socket.on('make_guess', (guess) => this.handleGuess(socket, guess));
+      socket.on('set_secret_number', (secretNumber, ...extra) => {
+        if (extra.length || !this.allow(socket, 'gameplay')) return this.reject(socket);
+        this.setSecretNumber(socket, secretNumber);
+      });
+      socket.on('make_guess', (guess, ...extra) => {
+        if (extra.length || !this.allow(socket, 'gameplay')) return this.reject(socket);
+        this.handleGuess(socket, guess);
+      });
       socket.on('disconnect', (reason) => this.handleDisconnect(socket));
-      socket.on('new_game', () => this.handleNewGame(socket));
+      socket.on('new_game', (...args) => {
+        if (args.length || !this.allow(socket, 'roomJoin')) return this.reject(socket);
+        this.handleNewGame(socket);
+      });
       socket.emit('connected', { socketId: socket.id });
     });
     // Rematch handlers live in server/rematch.js (issue #4).
     attachRematch(this);
+  }
+
+  reject(socket) { socket.emit('error', 'SERVER_ERROR:invalidRequest'); }
+
+  allow(socket, category) {
+    const { limit, windowMs } = RATE_LIMITS[category];
+    if (this.rateLimiter.consume(`${socket.id}:${category}`, limit, windowMs)) return true;
+    socket.emit('error', 'SERVER_ERROR:rateLimited');
+    return false;
   }
 
   sanitizeFor(room, socketId) {
@@ -283,8 +310,14 @@ class GameServer {
 
   async createRoom(socket, playerName, numberLength, spectatorModeEnabled = false, isSinglePlayer = false, botDifficulty = 'medium', isPrivate = false, turnTimerSeconds = 0) {
     try {
+      if (!this.allow(socket, 'roomCreation')) return;
+      const normalizedName = normalizePlayerName(playerName);
+      if (!normalizedName || !isValidNumberLength(numberLength) ||
+        typeof spectatorModeEnabled !== 'boolean' || typeof isSinglePlayer !== 'boolean' ||
+        !isValidDifficulty(botDifficulty) || typeof isPrivate !== 'boolean' ||
+        !isValidTimerSeconds(turnTimerSeconds)) return this.reject(socket);
       const roomId = generateRoomId();
-      const player = { id: socket.id, name: playerName, isConnected: true, isReady: false };
+      const player = { id: socket.id, name: normalizedName, isConnected: true, isReady: false };
       const players = [player];
       if (isSinglePlayer) {
         await buildConfigs();
@@ -307,7 +340,7 @@ class GameServer {
       this.rooms.set(roomId, room);
       this.playerRoomMap.set(socket.id, roomId);
       socket.join(roomId);
-      console.log(`Room ${roomId} created by ${playerName} (${isSinglePlayer ? 'single player' : 'multiplayer'}${isPrivate ? ', private' : ''})`);
+      console.log(`Room ${roomId} created by ${normalizedName} (${isSinglePlayer ? 'single player' : 'multiplayer'}${isPrivate ? ', private' : ''})`);
       // Only the creator (a member) gets the access code back.
       socket.emit('room_created', roomId, this.withServerNow(room));
       this.broadcastRoomList();
@@ -357,23 +390,28 @@ class GameServer {
   // Join a private room using its access code
   joinRoomByCode(socket, accessCode, playerName, roomId) {
     try {
-      if (!accessCode || typeof accessCode !== 'string') { socket.emit('error', 'Please provide a valid access code.'); return; }
-      const normalized = accessCode.trim().toUpperCase();
+      if (!this.allow(socket, 'privateCode')) return;
+      const normalized = normalizeAccessCode(accessCode);
+      const normalizedName = normalizePlayerName(playerName);
+      if (!normalized || !normalizedName || (roomId !== undefined && !isValidRoomId(roomId))) return this.reject(socket);
       const room = roomId === undefined
         ? Array.from(this.rooms.values()).find(r => r.isPrivate && r.accessCode === normalized)
         : this.rooms.get(roomId);
       if (!room || !room.isPrivate || room.accessCode !== normalized) { socket.emit('error', 'SERVER_ERROR:invalidCode'); return; }
-      const result = this.admitPlayer(room, socket, playerName, { byCode: true });
+      const result = this.admitPlayer(room, socket, normalizedName, { byCode: true });
       if (result.error) { socket.emit('error', result.error); return; }
     } catch (error) { console.error('Error joining room by code:', error); socket.emit('error', 'Failed to join room'); }
   }
 
   joinRoom(socket, roomId, playerName) {
     try {
+      if (!this.allow(socket, 'roomJoin')) return;
+      const normalizedName = normalizePlayerName(playerName);
+      if (!isValidRoomId(roomId) || !normalizedName) return this.reject(socket);
       const room = this.rooms.get(roomId);
       if (!room) { socket.emit('error', `Room "${roomId}" not found. Please check the room code.`); return; }
       if (room.isPrivate) { socket.emit('error', 'This is a private room. Join using its access code.'); return; }
-      const result = this.admitPlayer(room, socket, playerName);
+      const result = this.admitPlayer(room, socket, normalizedName);
       if (result.error) { socket.emit('error', result.error); return; }
     } catch (error) { console.error('Error joining room:', error); socket.emit('error', 'Failed to join room'); }
   }
@@ -385,7 +423,7 @@ class GameServer {
     if (!room) return;
     const player = room.players.find(p => p.id === socket.id);
     if (!player) return;
-    if (!validateNumber(secretNumber, room.numberLength)) { socket.emit('error', `Please enter a valid ${room.numberLength}-digit number`); return; }
+    if (!isValidNumber(secretNumber, room.numberLength)) { socket.emit('error', 'SERVER_ERROR:invalidNumber'); return; }
     player.secretNumber = secretNumber;
     player.isReady = true;
     const bot = room.players.find(p => p.isBot);
@@ -410,7 +448,7 @@ class GameServer {
     const guessingPlayer = room.players.find(p => p.id === socket.id);
     const opponent = room.players.find(p => p.id !== socket.id);
     if (!guessingPlayer || !opponent || !opponent.secretNumber) return;
-    if (!validateNumber(guess, room.numberLength)) { socket.emit('error', `Please enter a valid ${room.numberLength}-digit number`); return; }
+    if (!isValidNumber(guess, room.numberLength)) { socket.emit('error', 'SERVER_ERROR:invalidNumber'); return; }
     this.clearRoomTimer(roomId);
     const correctPositions = calculateCorrectPositions(guess, opponent.secretNumber);
     const guessRecord = { playerName: guessingPlayer.name, guess, correctPositions, timestamp: new Date() };
