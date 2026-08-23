@@ -116,7 +116,7 @@ render time.
 | **Hard** | Near-optimal guessing pattern |
 
 Administrators can tune per-digit-length guess windows from the **Admin panel**
-(`/<locale>/admin`) — changes apply server-wide to new games.
+(`/admin`) — changes apply server-wide to new games.
 
 ---
 
@@ -158,14 +158,16 @@ application audience.
 Protect these paths with a Cloudflare Access self-hosted application:
 
 ```text
-/<locale>/admin/*
+/admin
+/admin/*
 /api/admin/*
 ```
 
-You may use one Access application with a wildcard path, or separate precise
-applications for the localized admin UI and API. If separate applications are
-used, put both application AUD tags in `CF_ACCESS_AUDIENCE`, separated by
-commas.
+The admin UI is intentionally not localized and uses the canonical `/admin`
+path. Protect both `/admin` and `/admin/*`; the exact path is required for the
+initial page request, while the wildcard covers child routes if they are added
+later. If separate applications are used for the UI and API, put both
+application AUD tags in `CF_ACCESS_AUDIENCE`, separated by commas.
 
 For the Google identity provider, add an Access policy that allows only your
 specific email address. The Google provider may allow any Google account to

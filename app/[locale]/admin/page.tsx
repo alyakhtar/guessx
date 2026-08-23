@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import LocaleSelector from '../../../components/LocaleSelector';
 import { useUserSettings } from '../../../lib/useUserSettings';
 import { setSetting } from '../../../lib/userSettings';
 
@@ -33,7 +32,6 @@ interface PlayerStats {
 
 export default function AdminPage() {
     const t = useTranslations('admin');
-    const locale = useLocale();
     const [configs, setConfigs] = useState<Record<string, Config>>({});
     const [playerStats, setPlayerStats] = useState<PlayerStats[]>([]);
     const [loading, setLoading] = useState(true);
@@ -138,14 +136,13 @@ export default function AdminPage() {
             {/* Navigation Header */}
             <nav className="navbar navbar-expand-lg mb-4 shadow-sm">
                 <div className="container-fluid">
-                    <Link href={`/${locale}`} className="text-decoration-none me-3">
+                    <Link href="/" className="text-decoration-none me-3">
                         <h1 className="display-4 fw-bold text-primary mb-0 mt-0 h-auto">
                             Guess<span className="text-info">X</span>
                         </h1>
                     </Link>
 
                     <div className="d-flex ms-auto">
-                        <LocaleSelector />
                         <button
                             className="btn btn-sm btn-outline-secondary ms-2"
                             onClick={() => setSetting('darkMode', !darkMode)}
