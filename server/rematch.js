@@ -130,17 +130,17 @@ function attachRematch(gs) {
   gs.io.on('connection', (socket) => {
     socket.on('rematch_request', (sourceRoomId, ...extra) => {
       if (extra.length || !isValidRoomId(sourceRoomId)) return gs.reject(socket);
-      if (!gs.rateLimit(socket, 'rematch')) return;
+      if (!gs.allow(socket, 'rematch')) return;
       handleRematchRequest(gs, socket, sourceRoomId);
     });
     socket.on('rematch_accept', (sourceRoomId, ...extra) => {
       if (extra.length || !isValidRoomId(sourceRoomId)) return gs.reject(socket);
-      if (!gs.rateLimit(socket, 'rematch')) return;
+      if (!gs.allow(socket, 'rematch')) return;
       handleRematchAccept(gs, socket, sourceRoomId);
     });
     socket.on('rematch_decline', (sourceRoomId, ...extra) => {
       if (extra.length || !isValidRoomId(sourceRoomId)) return gs.reject(socket);
-      if (!gs.rateLimit(socket, 'rematch')) return;
+      if (!gs.allow(socket, 'rematch')) return;
       handleRematchDecline(gs, socket, sourceRoomId);
     });
   });

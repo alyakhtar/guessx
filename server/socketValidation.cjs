@@ -1,6 +1,6 @@
 const NAME_MAX_LENGTH = 32;
 const ROOM_ID_PATTERN = /^[A-Z0-9]{6}$/;
-const ACCESS_CODE_PATTERN = /^[A-Z2-9]{3}$/;
+const ACCESS_CODE_PATTERN = /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{3}$/;
 const DIFFICULTIES = new Set(['easy', 'medium', 'hard']);
 const NUMBER_LENGTHS = new Set([3, 4, 5, 6]);
 const TIMER_VALUES = new Set([0, 15, 30, 60]);
@@ -8,7 +8,8 @@ const TIMER_VALUES = new Set([0, 15, 30, 60]);
 function normalizePlayerName(value) {
   if (typeof value !== 'string') return null;
   const name = value.trim().normalize('NFKC');
-  if (!name || [...name].length > NAME_MAX_LENGTH) return null;
+  if (!name || [...name].length > NAME_MAX_LENGTH ||
+    /[\u0000-\u001F\u007F\u200B-\u200F\u202A-\u202E\u2060\u2066-\u2069\uFEFF]/u.test(name)) return null;
   return name;
 }
 

@@ -216,16 +216,19 @@ class GameServer {
       });
 
       socket.on('set_secret_number', (secretNumber, ...extra) => {
-        if (extra.length || !this.allow(socket, 'gameplay')) return this.reject(socket);
+        if (extra.length) return this.reject(socket);
+        if (!this.allow(socket, 'gameplay')) return;
         this.setSecretNumber(socket, secretNumber);
       });
       socket.on('make_guess', (guess, ...extra) => {
-        if (extra.length || !this.allow(socket, 'gameplay')) return this.reject(socket);
+        if (extra.length) return this.reject(socket);
+        if (!this.allow(socket, 'gameplay')) return;
         this.handleGuess(socket, guess);
       });
       socket.on('disconnect', (reason) => this.handleDisconnect(socket));
       socket.on('new_game', (...args) => {
-        if (args.length || !this.allow(socket, 'roomJoin')) return this.reject(socket);
+        if (args.length) return this.reject(socket);
+        if (!this.allow(socket, 'roomJoin')) return;
         this.handleNewGame(socket);
       });
       socket.emit('connected', { socketId: socket.id });

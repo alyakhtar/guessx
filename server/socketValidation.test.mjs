@@ -12,6 +12,7 @@ describe('Socket.IO input validation', () => {
     expect(normalizePlayerName('  Alice  ')).toBe('Alice');
     expect(normalizePlayerName('   ')).toBeNull();
     expect(normalizePlayerName('x'.repeat(33))).toBeNull();
+    expect(normalizePlayerName('Alice\u200B')).toBeNull();
   });
 
   it('accepts only supported game configuration values', () => {
@@ -28,6 +29,7 @@ describe('Socket.IO input validation', () => {
     expect(isValidRoomId('bad room')).toBe(false);
     expect(normalizeAccessCode(' ab2 ')).toBe('AB2');
     expect(normalizeAccessCode('AB1')).toBeNull();
+    expect(normalizeAccessCode('A0B')).toBeNull();
     expect(isValidNumber('1234', 4)).toBe(true);
     expect(isValidNumber('0123', 4)).toBe(false);
     expect(isValidNumber('12345', 4)).toBe(false);
