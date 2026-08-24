@@ -539,10 +539,7 @@ class GameServer {
         return (hasSpaceForJoin || canSpectate) &&
           (room.gameStatus === 'waiting' || room.gameStatus === 'setup' || room.gameStatus === 'playing');
       })
-      .map(room => {
-        const { accessCode, ...safeRoom } = room;
-        return { ...safeRoom, hasAccessCode: !!accessCode };
-      });
+      .map(room => this.sanitizeFor(room, null));
   }
 
   sendRoomList(socket) {
