@@ -215,6 +215,21 @@ requests use `SERVER_ERROR:invalidRequest`.
 
 The build badge at the top of this README tracks the `main` branch.
 
+### Dependency maintenance
+
+Dependabot checks npm packages and GitHub Actions weekly. Patch and minor updates
+are grouped to keep maintenance PRs reviewable; major upgrades remain separate
+work so runtime, framework, and compatibility changes can be tested deliberately.
+
+The scheduled Dependency Audit workflow installs from `package-lock.json` with
+`npm ci` and fails when production dependencies contain a high or critical npm
+advisory. It can also be started manually from the Actions tab. Dependency PRs
+must pass the normal type-check, test, lint, and Docker build checks before merge.
+
+When an update needs to be rolled back, redeploy the previously approved image
+tag and close or revert the dependency PR. Do not commit generated lockfile
+changes outside the dependency PR that introduced them.
+
 ---
 
 ## 🤝 Contributing

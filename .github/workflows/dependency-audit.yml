@@ -1,0 +1,30 @@
+name: Dependency Audit
+
+on:
+  schedule:
+    - cron: '30 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  production-audit:
+    name: Audit production dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Fail on high or critical production advisories
+        run: npm audit --omit=dev --audit-level=high
