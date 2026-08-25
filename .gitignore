@@ -93,7 +93,9 @@ dist/
 
 # Gatsby files
 .cache/
-public/
+public/*
+!public/guessx-sso-icon.png
+!public/logo.svg
 
 # Storybook build outputs
 .out/

@@ -11,6 +11,11 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
     title: 'GuessX - Number Guessing Game',
     description: 'A real-time number guessing game for two players',
+    icons: {
+        icon: '/logo.svg',
+        shortcut: '/logo.svg',
+        apple: '/logo.svg',
+    },
 };
 
 interface LayoutProps {
