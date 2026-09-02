@@ -210,11 +210,6 @@
       "waitingForBoth": "⏳ Waiting for both players...",
       "waitingForGuess": "Waiting for {name} to make a guess..."
     },
-    "progress": {
-      "title": "Game Progress",
-      "yourGuesses": "Your Guesses",
-      "opponentGuesses": "Opponent's Guesses"
-    },
     "validation": {
       "invalidNumber": "Please enter a valid {length}-digit number"
     }

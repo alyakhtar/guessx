@@ -210,11 +210,6 @@
       "waitingForBoth": "⏳ En attente des deux joueurs...",
       "waitingForGuess": "En attente que {name} fasse une supposition..."
     },
-    "progress": {
-      "title": "Progression du jeu",
-      "yourGuesses": "Vos suppositions",
-      "opponentGuesses": "Suppositions de l'adversaire"
-    },
     "validation": {
       "invalidNumber": "Veuillez entrer un nombre valide à {length} chiffres"
     }

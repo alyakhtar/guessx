@@ -267,26 +267,6 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
         </div>
       )}
 
-      {/* Quick Stats */}
-      <div className="card">
-        <div className="card-body">
-          <h3 className="card-title h6 fw-semibold mb-3 text-center text-md-start">{t('progress.title')}</h3>
-          <div className="row text-center">
-            <div className="col-6">
-              <div className="display-6 fw-bold text-info">
-                {room.gameHistory.filter(g => g.playerName === currentPlayer?.name).length}
-              </div>
-              <div className="text-muted small">{t('progress.yourGuesses')}</div>
-            </div>
-            <div className="col-6">
-              <div className="display-6 fw-bold text-primary">
-                {room.gameHistory.filter(g => g.playerName !== currentPlayer?.name).length}
-              </div>
-              <div className="text-muted small">{t('progress.opponentGuesses')}</div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

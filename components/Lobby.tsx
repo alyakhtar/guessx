@@ -406,13 +406,6 @@ export default function Lobby() {
         </div>
       )}
 
-      {/* Connection Status */}
-      <div className="alert alert-secondary small">
-        <span className="me-2">
-          <span className={`badge ${socket?.connected ? 'bg-success' : 'bg-danger'}`}>●</span>
-        </span>
-        {socket?.connected ? `${t('connectionStatus.connected')} (${socket.id})` : t('connectionStatus.disconnected')}
-      </div>
     </div>
   );
 }
