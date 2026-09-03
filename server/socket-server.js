@@ -219,13 +219,35 @@ class GameServer {
   sanitizeFor(room, socketId) {
     if (!room) return room;
     const isMember = room.players.some(p => p.id === socketId);
-    if (isMember) return room;
-    const { accessCode, ...safe } = room;
-    return { ...safe, hasAccessCode: !!accessCode };
+    const revealSecrets = room.gameStatus === 'finished';
+    const players = room.players.map(player => {
+      if (revealSecrets || (isMember && player.id === socketId)) return { ...player };
+      const { secretNumber, ...safePlayer } = player;
+      return safePlayer;
+    });
+    const safe = { ...room, players };
+    if (isMember) return safe;
+    const { accessCode, ...withoutAccessCode } = safe;
+    return { ...withoutAccessCode, hasAccessCode: !!accessCode };
   }
 
   withServerNow(room) {
     return { ...room, serverNow: Date.now() };
+  }
+
+  emitRoomEvent(room, event, ...args) {
+    if (!room) return;
+    room.players.forEach(player => {
+      const socket = this.io.sockets.sockets.get(player.id);
+      if (socket) socket.emit(event, this.withServerNow(this.sanitizeFor(room, player.id)), ...args);
+    });
+    if (room.spectatorModeEnabled) {
+      this.io.to(`${room.id}_spectators`).emit(
+        event,
+        this.withServerNow(this.sanitizeFor(room, null)),
+        ...args,
+      );
+    }
   }
 
   clearRoomTimer(roomId) {
@@ -275,10 +297,7 @@ class GameServer {
     room.forfeitedBy = idle.id;
     saveGameResult(room);
     this.clearRoomTimer(roomId);
-    this.io.to(roomId).emit('game_won', this.withServerNow(room), opponent.name);
-    if (room.spectatorModeEnabled) {
-      this.io.to(`${roomId}_spectators`).emit('game_won', this.withServerNow(this.sanitizeFor(room, null)), opponent.name);
-    }
+    this.emitRoomEvent(room, 'game_won', opponent.name);
   }
 
   async createRoom(socket, playerName, numberLength, spectatorModeEnabled = false, isSinglePlayer = false, botDifficulty = 'medium', isPrivate = false, turnTimerSeconds = 0) {
@@ -309,7 +328,7 @@ class GameServer {
       socket.join(roomId);
       console.log(`Room ${roomId} created by ${playerName} (${isSinglePlayer ? 'single player' : 'multiplayer'}${isPrivate ? ', private' : ''})`);
       // Only the creator (a member) gets the access code back.
-      socket.emit('room_created', roomId, this.withServerNow(room));
+      socket.emit('room_created', roomId, this.withServerNow(this.sanitizeFor(room, socket.id)));
       this.broadcastRoomList();
     } catch (error) { console.error('Error creating room:', error); socket.emit('error', 'Failed to create room'); }
   }
@@ -330,8 +349,8 @@ class GameServer {
       // the accessCode-stripped room view, which would otherwise race with (and
       // intermittently overwrite) the full member broadcast on room.id.
       socket.leave(`${room.id}_spectators`);
-      this.io.to(room.id).emit('player_reconnected', this.withServerNow(room));
-      this.io.to(room.id).emit('room_updated', this.withServerNow(room));
+      this.emitRoomEvent(room, 'player_reconnected');
+      this.emitRoomEvent(room, 'room_updated');
       this.broadcastRoomList();
       return { reconnected: true };
     }
@@ -348,8 +367,8 @@ class GameServer {
     socket.leave(`${room.id}_spectators`);
     if (room.players.filter(p => p.isConnected).length === 2) room.gameStatus = 'setup';
     console.log(`Player ${playerName} joined room ${room.id}${byCode ? ' via code' : ''}`);
-    this.io.to(room.id).emit('player_joined', this.withServerNow(room));
-    this.io.to(room.id).emit('room_updated', this.withServerNow(room));
+    this.emitRoomEvent(room, 'player_joined');
+    this.emitRoomEvent(room, 'room_updated');
     this.broadcastRoomList();
     return { joined: true };
   }
@@ -397,8 +416,8 @@ class GameServer {
       else { room.gameStatus = 'playing'; room.currentTurn = room.players[Math.floor(Math.random() * 2)].id; }
       this.startTurn(room);
     }
-    this.io.to(roomId).emit('secret_number_set', this.withServerNow(room));
-    this.io.to(roomId).emit('room_updated', this.withServerNow(room));
+    this.emitRoomEvent(room, 'secret_number_set');
+    this.emitRoomEvent(room, 'room_updated');
   }
 
   handleGuess(socket, guess) {
@@ -419,21 +438,18 @@ class GameServer {
       room.gameStatus = 'finished';
       room.winner = guessingPlayer.name;
       saveGameResult(room);
-      this.io.to(roomId).emit('game_won', this.withServerNow(room), guessingPlayer.name);
-      if (room.spectatorModeEnabled) this.io.to(`${roomId}_spectators`).emit('game_won', this.withServerNow(this.sanitizeFor(room, null)), guessingPlayer.name);
+      this.emitRoomEvent(room, 'game_won', guessingPlayer.name);
     } else {
       room.currentTurn = opponent.id;
       this.startTurn(room);
-      this.io.to(roomId).emit('guess_made', this.withServerNow(room), guessRecord);
-      if (room.spectatorModeEnabled) this.io.to(`${roomId}_spectators`).emit('guess_made', this.withServerNow(this.sanitizeFor(room, null)), guessRecord);
+      this.emitRoomEvent(room, 'guess_made', guessRecord);
       const currentPlayer = room.players.find(p => p.id === room.currentTurn);
       if (currentPlayer && currentPlayer.isBot) {
         setTimeout(() => this.makeBotGuess(roomId), 1000);
         if (Date.now() - lastConfigLoad > 5000) buildConfigs().catch(console.error);
       }
     }
-    this.io.to(roomId).emit('room_updated', this.withServerNow(room));
-    if (room.spectatorModeEnabled) this.io.to(`${roomId}_spectators`).emit('room_updated', this.withServerNow(this.sanitizeFor(room, null)));
+    this.emitRoomEvent(room, 'room_updated');
   }
 
   async makeBotGuess(roomId) {
@@ -464,16 +480,13 @@ class GameServer {
     room.gameHistory.push(guessRecord);
     if (correctPositions === room.numberLength) {
       room.gameStatus = 'finished'; room.winner = bot.name; saveGameResult(room);
-      this.io.to(roomId).emit('game_won', this.withServerNow(room), bot.name);
-      if (room.spectatorModeEnabled) this.io.to(`${roomId}_spectators`).emit('game_won', this.withServerNow(this.sanitizeFor(room, null)), bot.name);
+      this.emitRoomEvent(room, 'game_won', bot.name);
     } else {
       room.currentTurn = opponent.id;
       this.startTurn(room);
-      this.io.to(roomId).emit('guess_made', this.withServerNow(room), guessRecord);
-      if (room.spectatorModeEnabled) this.io.to(`${roomId}_spectators`).emit('guess_made', this.withServerNow(this.sanitizeFor(room, null)), guessRecord);
+      this.emitRoomEvent(room, 'guess_made', guessRecord);
     }
-    this.io.to(roomId).emit('room_updated', this.withServerNow(room));
-    if (room.spectatorModeEnabled) this.io.to(`${roomId}_spectators`).emit('room_updated', this.withServerNow(this.sanitizeFor(room, null)));
+    this.emitRoomEvent(room, 'room_updated');
   }
 
   handleDisconnect(socket) {
@@ -484,8 +497,8 @@ class GameServer {
         const player = room.players.find(p => p.id === socket.id);
         if (player) {
           player.isConnected = false;
-          this.io.to(roomId).emit('player_left', this.withServerNow(room));
-          this.io.to(roomId).emit('room_updated', this.withServerNow(room));
+          this.emitRoomEvent(room, 'player_left');
+          this.emitRoomEvent(room, 'room_updated');
         }
         if (room.players.every(p => !p.isConnected)) {
           this.clearRoomTimer(roomId);
@@ -526,10 +539,7 @@ class GameServer {
         return (hasSpaceForJoin || canSpectate) &&
           (room.gameStatus === 'waiting' || room.gameStatus === 'setup' || room.gameStatus === 'playing');
       })
-      .map(room => {
-        const { accessCode, ...safeRoom } = room;
-        return { ...safeRoom, hasAccessCode: !!accessCode };
-      });
+      .map(room => this.sanitizeFor(room, null));
   }
 
   sendRoomList(socket) {
