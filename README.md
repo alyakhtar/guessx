@@ -192,6 +192,17 @@ authenticate, but the policy's Include rule is what decides who may reach the
 application. Keep the application allowlist in sync as a second server-side
 check.
 
+### Socket.IO abuse controls
+
+Socket.IO clients are treated as untrusted. The server normalizes and validates
+names, room IDs, private codes, game numbers, difficulty, timer values, event
+argument counts, and room-state requests before handling them. Per-socket
+expiring limits are currently set to 5 room creations/minute, 12 normal
+room-join attempts/minute, 8 private-code attempts/minute, 10 rematch actions/
+minute, 30 state hydrations/10 seconds, and 60 gameplay actions/10 seconds.
+Rate-limit failures use the stable `SERVER_ERROR:rateLimited` key; malformed
+requests use `SERVER_ERROR:invalidRequest`.
+
 ---
 
 ## 🧪 CI
