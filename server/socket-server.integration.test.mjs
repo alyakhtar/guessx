@@ -181,20 +181,11 @@ describe('server turn timer integration', () => {
     });
   });
 
-  it('falls back to an untimed room for an invalid seventh create_room argument', async () => {
-    const game = await startMultiplayer(13);
-    const wins = [];
-    game.first.on('game_won', (...args) => wins.push(args));
-
-    expect(game.room.turnTimerSeconds).toBe(0);
-    expect(game.turn).toMatchObject({ currentTurn: game.room.currentTurn, turnDurationMs: 0 });
-    expect(game.turn).not.toHaveProperty('turnDeadline');
-    expect(game.turn).not.toHaveProperty('serverNow');
-    expect(clock.activeCount()).toBe(0);
-
-    clock.advance(60_000);
-    await flushNetwork();
-    expect(wins).toHaveLength(0);
+  it('rejects an unsupported turn timer value', async () => {
+    const { first } = await twoClients();
+    const error = waitFor(first, 'error');
+    first.emit('create_room', 'Alice', 4, false, false, 'medium', false, 13);
+    await expect(error).resolves.toEqual(['SERVER_ERROR:invalidRequest']);
   });
 
   it('sends the same turn_started deadline to spectators', async () => {
