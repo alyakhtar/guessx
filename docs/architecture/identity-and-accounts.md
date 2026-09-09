@@ -57,6 +57,26 @@ shared identity repository will expose only the fields needed by the game and
 Socket.IO server, avoiding a second, competing user store. Existing Mongoose
 models may continue to own game/configuration collections.
 
+The persistence contract is implemented in `lib/models/User.model.ts`,
+`lib/models/ProviderIdentity.model.ts`, and `lib/identity/userIdentity.ts`:
+
+| Collection | Important fields | Indexes |
+| --- | --- | --- |
+| `users` | `_id`, `displayName`, optional `email`, optional verified-email timestamp, optional image, `lastSeenAt`, timestamps | Non-unique sparse `email` index for lookup only. |
+| `accounts` | `userId`, `type`, `provider`, `providerAccountId`, optional provider email, timestamps | Unique `(provider, providerAccountId)` identity mapping; unique `(userId, provider)` to prevent linking the same provider twice. |
+
+Provider access tokens, refresh tokens, and ID tokens are not part of the
+GuessX provider-identity schema. If Auth.js requires a provider token for a
+future capability, that capability must explicitly justify its storage,
+minimize its scope and lifetime, and add encryption/rotation handling.
+
+Before enabling application login in an environment, run the idempotent
+`npm run db:ensure-identity-indexes` command with that environment's
+`MONGODB_URI`. The command creates the documented indexes without modifying
+existing game-result data. If it reports a duplicate-key error, stop the
+rollout, inspect the conflicting `accounts` documents, and resolve the data
+conflict before rerunning it.
+
 Auth.js will use **database sessions**, not stateless JWT sessions. Sessions
 are revocable, can be invalidated on account deletion, and give the Socket.IO
 server a server-verified identity. Cookies remain host-only, `HttpOnly`,

@@ -162,6 +162,19 @@ i18n.ts       next-intl config
 | `CF_ACCESS_AUDIENCE` | — | One or more comma-separated Cloudflare Access application Audience (AUD) tags |
 | `CF_ACCESS_ALLOWED_EMAILS` | — | Comma-separated Google email allowlist for administration |
 
+### Identity database preparation
+
+Before the v1.4 application-login feature is enabled in an environment, create
+the user/provider indexes once against that environment's MongoDB database:
+
+```bash
+MONGODB_URI="$MONGODB_URI" npm run db:ensure-identity-indexes
+```
+
+The command is idempotent and does not alter existing game-result records. Stop
+and investigate any duplicate-key error rather than enabling login with
+ambiguous provider mappings.
+
 ### Admin access
 
 The admin page and admin APIs require a valid Cloudflare Access application JWT;
