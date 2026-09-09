@@ -161,6 +161,35 @@ i18n.ts       next-intl config
 | `CF_ACCESS_TEAM_DOMAIN` | — | Cloudflare Access team domain used to validate admin JWTs |
 | `CF_ACCESS_AUDIENCE` | — | One or more comma-separated Cloudflare Access application Audience (AUD) tags |
 | `CF_ACCESS_ALLOWED_EMAILS` | — | Comma-separated Google email allowlist for administration |
+| `AUTH_SECRET` | — | Random server-only secret for GuessX application sessions |
+| `AUTH_GOOGLE_ID` | — | Google OAuth client ID for GuessX player accounts |
+| `AUTH_GOOGLE_SECRET` | — | Google OAuth client secret for GuessX player accounts |
+| `AUTH_URL` | — | Exact external URL for this environment (for example `https://guessx.alyakhtar.com`) |
+| `AUTH_TRUST_HOST` | — | `true` only when a trusted reverse proxy/tunnel forwards the public Host header |
+
+### Optional player accounts
+
+GuessX player accounts are independent of Cloudflare Access. Google OAuth is
+optional and open to any Google account; guests can always continue into the
+public game without a login. Create separate Google OAuth **Web application**
+clients for local, dev, and production, and register only the matching callback
+URL for each environment:
+
+| Environment | Callback URL |
+| --- | --- |
+| Local | `http://localhost:3000/api/auth/callback/google` |
+| Dev | `https://dev.alyakhtar.com/api/auth/callback/google` |
+| Production | `https://guessx.alyakhtar.com/api/auth/callback/google` |
+
+Generate a session secret with `openssl rand -base64 32`. Add `AUTH_SECRET`,
+`AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `AUTH_URL`, and (for the Cloudflare
+Tunnel deployment) `AUTH_TRUST_HOST=true` as **runtime** container variables.
+Do not put them in the Dockerfile, a committed `.env` file, or a
+`NEXT_PUBLIC_` variable. Before enabling the provider, run
+`npm run db:ensure-identity-indexes` against that environment's database.
+
+Signing out invalidates the GuessX database session only; it does not sign the
+person out of Google itself.
 
 ### Identity database preparation
 

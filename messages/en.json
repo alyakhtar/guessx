@@ -14,6 +14,17 @@
       "connecting": "Connecting...",
       "disconnected": "Disconnected"
     },
+    "account": {
+      "loading": "Checking account…",
+      "unavailable": "Sign-in is unavailable; you can still play as a guest.",
+      "signInWithGoogle": "Sign in with Google",
+      "signingIn": "Opening Google…",
+      "signedInAs": "Signed in as {name}",
+      "playerFallback": "player",
+      "signOut": "Sign out",
+      "signingOut": "Signing out…",
+      "failure": "Sign-in could not be started. Please try again or continue as a guest."
+    },
     "createGame": {
       "heading": "Create New Game",
       "nameLabel": "Your Name",

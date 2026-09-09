@@ -14,6 +14,17 @@
       "connecting": "Connexion...",
       "disconnected": "Déconnecté"
     },
+    "account": {
+      "loading": "Vérification du compte…",
+      "unavailable": "La connexion est indisponible ; vous pouvez toujours jouer en invité.",
+      "signInWithGoogle": "Se connecter avec Google",
+      "signingIn": "Ouverture de Google…",
+      "signedInAs": "Connecté en tant que {name}",
+      "playerFallback": "joueur",
+      "signOut": "Se déconnecter",
+      "signingOut": "Déconnexion…",
+      "failure": "La connexion n’a pas pu démarrer. Réessayez ou continuez en invité."
+    },
     "createGame": {
       "heading": "Créer une nouvelle partie",
       "nameLabel": "Votre nom",
