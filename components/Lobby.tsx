@@ -155,9 +155,11 @@ export default function Lobby() {
   };
 
   return (
-    <div className="card p-2 p-sm-4 shadow position-relative">
-      <div className="d-flex justify-content-end align-items-center gap-2 position-absolute top-0 end-0 m-2">
-        <AuthControls />
+    <div className="card p-2 p-sm-4 shadow">
+      <div className="d-flex justify-content-end align-items-center gap-2 mb-3">
+        <div className="flex-grow-1" style={{ minWidth: 0 }}>
+          <AuthControls />
+        </div>
         <SettingsCog />
       </div>
       <div className="text-center mb-4">
