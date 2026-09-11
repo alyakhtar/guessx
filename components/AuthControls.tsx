@@ -5,6 +5,7 @@ import { signIn, signOut, useSession } from 'next-auth/react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { useApplicationAuthAvailable } from './AuthProvider';
+import GoogleIcon from './GoogleIcon';
 
 function UnavailableAuthControl() {
   const t = useTranslations('lobby.account');
@@ -60,8 +61,14 @@ function AvailableAuthControl() {
 
   return (
     <div className="d-flex flex-column align-items-end gap-1">
-      <button type="button" className="btn btn-outline-primary btn-sm" disabled={isWorking} onClick={startGoogleLogin}>
-        {isWorking ? t('signingIn') : t('signInWithGoogle')}
+      <button
+        type="button"
+        className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1"
+        aria-label={t('signInWithGoogle')}
+        disabled={isWorking}
+        onClick={startGoogleLogin}
+      >
+        {isWorking ? t('signingIn') : <><GoogleIcon /> <span>{t('signIn')}</span></>}
       </button>
       {hasFailure && <span className="small text-danger" role="status">{t('failure')}</span>}
     </div>

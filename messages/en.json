@@ -18,6 +18,7 @@
       "loading": "Checking account…",
       "unavailable": "Sign-in is unavailable; you can still play as a guest.",
       "signInWithGoogle": "Sign in with Google",
+      "signIn": "Sign in",
       "signingIn": "Opening Google…",
       "signedInAs": "Signed in as {name}",
       "playerFallback": "player",

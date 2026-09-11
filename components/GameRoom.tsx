@@ -17,6 +17,7 @@ import PlayerList from './PlayerList';
 import ShareRoomButton from './ShareRoomButton';
 import TurnTimer from './TurnTimer';
 import SettingsCog from './SettingsCog';
+import { PLAYER_NAME_UPDATED_EVENT } from '../lib/auth/playerName';
 
 type FlowState = { roomId: string; access: RoomAccessState };
 
@@ -64,6 +65,9 @@ export default function GameRoom() {
     // Intentional: restore the persisted name once on mount.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (savedName) setPlayerName(savedName);
+    const syncAuthenticatedPlayerName = () => setPlayerName(localStorage.getItem('playerName') ?? '');
+    window.addEventListener(PLAYER_NAME_UPDATED_EVENT, syncAuthenticatedPlayerName);
+    return () => window.removeEventListener(PLAYER_NAME_UPDATED_EVENT, syncAuthenticatedPlayerName);
   }, []);
 
   useEffect(() => {
