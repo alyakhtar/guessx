@@ -37,7 +37,6 @@ COPY --from=builder /app/package-lock.json ./package-lock.json
 COPY --from=builder /app/server.js ./server.js
 COPY --from=builder /app/server ./server
 COPY --from=builder /app/lib ./lib
-COPY --from=builder /app/scripts/migrate-game-result-identities.mjs ./scripts/migrate-game-result-identities.mjs
 COPY --from=builder /app/next.config.js ./next.config.js
 COPY --from=builder /app/i18n.ts ./i18n.ts
 COPY --from=builder /app/i18n ./i18n
