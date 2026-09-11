@@ -9,6 +9,8 @@ import { parseTurnTimerSeconds } from '../lib/turnTimer';
 import type { GameRoom, TurnTimerSeconds } from '../types/game';
 import SettingsCog from './SettingsCog';
 import ShareRoomButton from './ShareRoomButton';
+import AuthControls from './AuthControls';
+import { PLAYER_NAME_UPDATED_EVENT } from '../lib/auth/playerName';
 
 // Minimal shape of a room payload the lobby receives on socket callbacks.
 type RoomSummary = { id: string; isPrivate?: boolean; accessCode?: string };
@@ -53,7 +55,10 @@ export default function Lobby() {
     // Intentional: restore the persisted name once on mount.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (savedName) setPlayerName(savedName);
+    const syncAuthenticatedPlayerName = () => setPlayerName(localStorage.getItem('playerName') ?? '');
+    window.addEventListener(PLAYER_NAME_UPDATED_EVENT, syncAuthenticatedPlayerName);
     setTurnTimerSeconds(parseTurnTimerSeconds(localStorage.getItem('guessx.turnTimerSeconds')));
+    return () => window.removeEventListener(PLAYER_NAME_UPDATED_EVENT, syncAuthenticatedPlayerName);
   }, []);
 
   useEffect(() => {
@@ -150,7 +155,8 @@ export default function Lobby() {
 
   return (
     <div className="card p-2 p-sm-4 shadow position-relative">
-      <div className="d-flex justify-content-end gap-2 position-absolute top-0 end-0 m-2">
+      <div className="d-flex justify-content-end align-items-center gap-2 position-absolute top-0 end-0 m-2">
+        <AuthControls />
         <SettingsCog />
       </div>
       <div className="text-center mb-4">

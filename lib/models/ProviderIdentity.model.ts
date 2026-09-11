@@ -3,7 +3,7 @@ import mongoose, { Schema, model, models, type HydratedDocument, type Types } fr
 export interface ProviderIdentity {
   _id: Types.ObjectId;
   userId: Types.ObjectId;
-  type: 'oauth';
+  type: 'oauth' | 'oidc';
   provider: string;
   providerAccountId: string;
   providerEmail?: string;
@@ -14,7 +14,9 @@ export interface ProviderIdentity {
 const ProviderIdentitySchema = new Schema<ProviderIdentity>(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    type: { type: String, required: true, enum: ['oauth'], default: 'oauth' },
+    // Google is an OpenID Connect provider. Keep the protocol type for Auth.js
+    // compatibility, while provider + providerAccountId remains the identity key.
+    type: { type: String, required: true, enum: ['oauth', 'oidc'], default: 'oauth' },
     provider: { type: String, required: true, trim: true, minlength: 1, maxlength: 64 },
     providerAccountId: { type: String, required: true, trim: true, minlength: 1, maxlength: 512 },
     providerEmail: { type: String, trim: true, lowercase: true, maxlength: 320 },

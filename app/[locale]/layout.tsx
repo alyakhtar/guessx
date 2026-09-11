@@ -5,6 +5,9 @@ import ToastHost from '../../components/ToastHost';
 import '../globals.css';
 import Script from 'next/script';
 import ThemeApplier from '../../components/ThemeApplier';
+import AuthProvider from '../../components/AuthProvider';
+import { auth } from '../../auth';
+import { isApplicationAuthConfigured } from '../../lib/auth/config';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -33,15 +36,29 @@ export default async function RootLayout({ children, params }: LayoutProps) {
 
     // Load messages directly on server
     const messages = (await import(`../../messages/${validLocale}.json`)).default;
+    const applicationAuthAvailable = isApplicationAuthConfigured();
+    let session = null;
+
+    // A session lookup must never turn a temporary identity/database outage into
+    // a login wall for casual guests.
+    if (applicationAuthAvailable) {
+        try {
+            session = await auth();
+        } catch {
+            session = null;
+        }
+    }
 
     return (
         <html lang={validLocale} suppressHydrationWarning>
             <body className={inter.className} suppressHydrationWarning>
                 <ThemeApplier />
-                <NextIntlClientProvider locale={validLocale} messages={messages}>
-                    {children}
-                    <ToastHost />
-                </NextIntlClientProvider>
+                <AuthProvider available={applicationAuthAvailable} session={session}>
+                    <NextIntlClientProvider locale={validLocale} messages={messages}>
+                        {children}
+                        <ToastHost />
+                    </NextIntlClientProvider>
+                </AuthProvider>
                 <Script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" />
             </body>
         </html>
