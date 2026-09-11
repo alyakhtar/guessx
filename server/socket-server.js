@@ -1,4 +1,5 @@
 const { Server } = require('socket.io');
+const { randomUUID } = require('node:crypto');
 const mongoose = require('mongoose');
 const { attachRematch } = require('./rematch');
 const { createSocketIdentityResolver, guestIdentity } = require('./socket-auth');
@@ -26,6 +27,37 @@ async function initializeDatabase() {
   }
 }
 
+async function findGameResults(query) {
+  if (!GameResultModel) return null;
+  return GameResultModel.find(query).lean();
+}
+
+function buildMatchupStats(gameResults, player, opponentKind, opponentName) {
+  const wins = gameResults.filter((game) => {
+    if (player.kind === 'account') return String(game.winnerUserId ?? '') === player.userId;
+    return !game.winnerUserId && game.winner === player.name;
+  }).length;
+  const games = gameResults.length;
+  return {
+    opponentKind,
+    opponentName,
+    games,
+    wins,
+    losses: games - wins,
+    winRate: games ? (wins / games) * 100 : 0,
+    isNameBased: opponentKind === 'guest',
+  };
+}
+
+function accountGuestMatchupQuery(accountId, guestName) {
+  return {
+    $or: [
+      { player1UserId: accountId, player2IdentityKind: 'guest', player2DisplayName: guestName },
+      { player2UserId: accountId, player1IdentityKind: 'guest', player1DisplayName: guestName },
+    ],
+  };
+}
+
 function identityForGameResult(player) {
   if (player.isBot) return { kind: 'bot' };
   if (player.accountId) return { kind: 'account', userId: player.accountId };
@@ -42,6 +74,9 @@ function buildGameResultPayload(room) {
   const winnerPlayer = players.find((player) => player.name === winner);
   const winnerIdentity = winnerPlayer ? identityForGameResult(winnerPlayer) : null;
   const totalGuesses = room.gameHistory.length;
+  const player1Guesses = room.gameHistory.filter((guess) => guess.playerName === player1).length;
+  const player2Guesses = room.gameHistory.filter((guess) => guess.playerName === player2).length;
+  const winnerGuesses = room.gameHistory.filter((guess) => guess.playerName === winner).length;
   const isVsBot = players.some(p => p.isBot);
   const botPlayer = players.find(p => p.isBot);
   const difficulty = botPlayer ? botPlayer.botDifficulty : undefined;
@@ -53,6 +88,7 @@ function buildGameResultPayload(room) {
   }
 
   return {
+    resultId: randomUUID(),
     player1,
     player2,
     winner,
@@ -66,19 +102,28 @@ function buildGameResultPayload(room) {
     identityVersion: 1,
     gameDuration,
     totalGuesses,
+    player1Guesses,
+    player2Guesses,
+    winnerGuesses,
     numberLength: room.numberLength,
     difficulty,
     isVsBot,
   };
 }
 
-async function saveGameResult(room) {
+function saveGameResult(room) {
+  const payload = buildGameResultPayload(room);
+  // Keep the just-finished result on the authoritative room only. This makes
+  // an immediate matchup-stat request correct even before Mongo acknowledges
+  // the write, without making game completion depend on database availability.
+  room.latestGameResult = payload;
+
   if (!GameResultModel) { console.log('GameResultModel not initialized, skipping save'); return; }
   try {
-    const payload = buildGameResultPayload(room);
     const gameResult = new GameResultModel(payload);
-    await gameResult.save();
-    console.log(`Game result saved: ${payload.player1} vs ${payload.player2}, winner: ${payload.winner}`);
+    void gameResult.save()
+      .then(() => console.log(`Game result saved: ${payload.player1} vs ${payload.player2}, winner: ${payload.winner}`))
+      .catch((error) => console.error('Error saving game result:', error));
   } catch (error) { console.error('Error saving game result:', error); }
 }
 
@@ -191,7 +236,10 @@ async function getDifficultyConfig(difficulty, numberLength = 4) {
 }
 
 class GameServer {
-  constructor(server, { resolveSocketIdentity = createSocketIdentityResolver() } = {}) {
+  constructor(server, {
+    resolveSocketIdentity = createSocketIdentityResolver(),
+    findGameResults: findResults = findGameResults,
+  } = {}) {
     this.io = new Server(server, {
       cors: { origin: '*', methods: ['GET', 'POST'], credentials: true }
     });
@@ -200,6 +248,7 @@ class GameServer {
     this.roomTimers = new Map();
     this.rateLimiter = new ExpiringRateLimiter();
     this.resolveSocketIdentity = resolveSocketIdentity;
+    this.findGameResults = findResults;
     this.setupSocketHandlers();
     this.broadcastRoomList();
     prodLog('GameServer initialized');
@@ -265,6 +314,11 @@ class GameServer {
         if (!this.allow(socket, 'gameplay')) return;
         this.handleGuess(socket, guess);
       });
+      socket.on('get_matchup_stats', (...args) => {
+        if (args.length) return this.reject(socket);
+        if (!this.allow(socket, 'stats')) return;
+        this.sendMatchupStats(socket);
+      });
       socket.on('disconnect', (reason) => this.handleDisconnect(socket));
       socket.on('new_game', (...args) => {
         if (args.length) return this.reject(socket);
@@ -305,6 +359,73 @@ class GameServer {
     return false;
   }
 
+  async sendMatchupStats(socket) {
+    try {
+      const identity = this.socketIdentity(socket);
+      const roomId = this.playerRoomMap.get(socket.id);
+      const room = roomId ? this.rooms.get(roomId) : null;
+      const player = room?.players.find((entry) => entry.id === socket.id);
+      const opponent = room?.players.find((entry) => entry.id !== socket.id);
+
+      if (!player || !opponent) {
+        socket.emit('matchup_stats', null);
+        return;
+      }
+
+      const playerIsVerifiedAccount = identity.kind === 'account'
+        && player.accountId === identity.userId;
+      // Matchup statistics are an account benefit. Guests never receive them,
+      // including when their opponent has a verified account.
+      if (!playerIsVerifiedAccount) {
+        socket.emit('matchup_stats', null);
+        return;
+      }
+
+      let opponentKind;
+      let query;
+
+      if (opponent.accountId) {
+        opponentKind = 'account';
+        query = {
+          $or: [
+            { player1UserId: identity.userId, player2UserId: opponent.accountId },
+            { player2UserId: identity.userId, player1UserId: opponent.accountId },
+          ],
+        };
+      } else if (opponent.isBot) {
+        opponentKind = 'bot';
+        query = {
+          $or: [
+            { player1UserId: identity.userId, player2IdentityKind: 'bot' },
+            { player2UserId: identity.userId, player1IdentityKind: 'bot' },
+          ],
+        };
+      } else {
+        opponentKind = 'guest';
+        query = accountGuestMatchupQuery(identity.userId, opponent.name);
+      }
+
+      const storedGameResults = await this.findGameResults(query);
+      if (!storedGameResults && !room.latestGameResult) {
+        socket.emit('matchup_stats', null);
+        return;
+      }
+      const gameResults = [...(storedGameResults ?? [])];
+      if (room.latestGameResult && !gameResults.some((game) => game.resultId === room.latestGameResult.resultId)) {
+        gameResults.push(room.latestGameResult);
+      }
+      socket.emit('matchup_stats', buildMatchupStats(
+        gameResults,
+        { kind: 'account', userId: identity.userId },
+        opponentKind,
+        opponent.name,
+      ));
+    } catch (error) {
+      console.error('Error fetching matchup stats:', error);
+      socket.emit('matchup_stats', null);
+    }
+  }
+
   sanitizeFor(room, socketId) {
     if (!room) return room;
     const isMember = room.players.some(p => p.id === socketId);
@@ -321,6 +442,7 @@ class GameServer {
       return safePlayer;
     });
     const safe = { ...room, players };
+    delete safe.latestGameResult;
     if (isMember) return safe;
     const { accessCode, ...withoutAccessCode } = safe;
     return { ...withoutAccessCode, hasAccessCode: !!accessCode };
@@ -670,3 +792,4 @@ class GameServer {
 
 module.exports = GameServer;
 module.exports.buildGameResultPayload = buildGameResultPayload;
+module.exports.buildMatchupStats = buildMatchupStats;

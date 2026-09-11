@@ -7,8 +7,8 @@
 // accept/decline screen (the opponent's "Rematch" button is replaced by the
 // prompt the moment the offer is made). On accept (or automatically when the
 // opponent is disconnected / it's a bot room) a fresh room with identical
-// config is created and connected players are auto-invited. A dropped player
-// rejoins from the shared list (public) or the shown access code (private).
+// config is created and connected players are moved into it. A dropped player
+// can rejoin from the shared list (public) or a shared access code (private).
 
 const { isValidRoomId } = require('./socketValidation.cjs');
 
@@ -74,10 +74,11 @@ function createRematch(gs, sourceRoomId) {
       if (s) s.emit('rematch_room_ready', payload);
     });
   } else if (connected.length === 1) {
-    // Only the requester is present -> show them the room id / code so the
-    // other player can rejoin from the list or by code.
+    // The requester is already a member of the new room. Navigate them there
+    // just as we do when both players are connected; otherwise their old-room
+    // UI discards updates when the dropped player later joins the new room.
     const s = gs.io.sockets.sockets.get(connected[0].id);
-    if (s) s.emit('rematch_room_ready', { ...payload, solo: true });
+    if (s) s.emit('rematch_room_ready', payload);
   }
 }
 

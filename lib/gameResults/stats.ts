@@ -1,6 +1,6 @@
 export type ParticipantIdentityKind = 'account' | 'guest' | 'legacy-guest' | 'bot';
 
-type GameResultRecord = {
+export type GameResultRecord = {
   player1?: string;
   player2?: string;
   winner?: string;
@@ -12,6 +12,7 @@ type GameResultRecord = {
   player1IdentityKind?: ParticipantIdentityKind;
   player2IdentityKind?: ParticipantIdentityKind;
   gameDuration?: number | null;
+  winnerGuesses?: number | null;
   totalGuesses: number;
   numberLength: number;
   difficulty?: string;
@@ -38,6 +39,8 @@ export type PlayerStats = {
   vsBotGames: number;
   vsBotWins: number;
   averageGuesses: number;
+  averageGuessesToWin: number | null;
+  bestWinGuesses: number | null;
   totalGuesses: number;
   fastestWin: number | null;
   slowestWin: number | null;
@@ -59,6 +62,11 @@ export type PlayerStatsResponse = {
     current: PlayerStats[];
     legacy: PlayerStats[];
   };
+};
+
+type WorkingPlayerStats = PlayerStats & {
+  winsWithGuessCounts: number;
+  totalWinningGuesses: number;
 };
 
 function stringId(value: unknown) {
@@ -100,7 +108,7 @@ function winnerFor(game: GameResultRecord, participants: Participant[]) {
   return participants.find((participant) => participant.identityKind !== 'account' && participant.displayName === game.winner);
 }
 
-function emptyStats(participant: Participant): PlayerStats {
+function emptyStats(participant: Participant): WorkingPlayerStats {
   const id = participant.identityKind === 'account' ? participant.userId! : participant.displayName;
   return {
     id,
@@ -115,14 +123,22 @@ function emptyStats(participant: Participant): PlayerStats {
     vsBotGames: 0,
     vsBotWins: 0,
     averageGuesses: 0,
+    averageGuessesToWin: null,
+    bestWinGuesses: null,
     totalGuesses: 0,
     fastestWin: null,
     slowestWin: null,
     recentGames: [],
+    winsWithGuessCounts: 0,
+    totalWinningGuesses: 0,
   };
 }
 
-function addGame(stats: PlayerStats, participant: Participant, opponent: Participant, winner: Participant | undefined, game: GameResultRecord) {
+export function emptyAccountStats(userId: string, displayName: string): PlayerStats {
+  return toPlayerStats(emptyStats({ userId, displayName, identityKind: 'account' }));
+}
+
+function addGame(stats: WorkingPlayerStats, participant: Participant, opponent: Participant, winner: Participant | undefined, game: GameResultRecord) {
   const won = winner?.identityKind === participant.identityKind
     && (participant.identityKind === 'account' ? winner.userId === participant.userId : winner.displayName === participant.displayName);
 
@@ -133,6 +149,13 @@ function addGame(stats: PlayerStats, participant: Participant, opponent: Partici
     if (game.gameDuration !== undefined && game.gameDuration !== null) {
       stats.fastestWin = stats.fastestWin === null ? game.gameDuration : Math.min(stats.fastestWin, game.gameDuration);
       stats.slowestWin = stats.slowestWin === null ? game.gameDuration : Math.max(stats.slowestWin, game.gameDuration);
+    }
+    if (game.winnerGuesses !== undefined && game.winnerGuesses !== null) {
+      stats.winsWithGuessCounts += 1;
+      stats.totalWinningGuesses += game.winnerGuesses;
+      stats.bestWinGuesses = stats.bestWinGuesses === null
+        ? game.winnerGuesses
+        : Math.min(stats.bestWinGuesses, game.winnerGuesses);
     }
   } else {
     stats.losses += 1;
@@ -158,23 +181,52 @@ function addGame(stats: PlayerStats, participant: Participant, opponent: Partici
   });
 }
 
-function finalizeStats(stats: Map<string, PlayerStats>) {
+function toPlayerStats(entry: WorkingPlayerStats): PlayerStats {
+  return {
+    id: entry.id,
+    name: entry.name,
+    identityKind: entry.identityKind,
+    totalGames: entry.totalGames,
+    wins: entry.wins,
+    losses: entry.losses,
+    winRate: entry.totalGames ? (entry.wins / entry.totalGames) * 100 : 0,
+    vsHumanGames: entry.vsHumanGames,
+    vsHumanWins: entry.vsHumanWins,
+    vsBotGames: entry.vsBotGames,
+    vsBotWins: entry.vsBotWins,
+    averageGuesses: entry.totalGames ? entry.totalGuesses / entry.totalGames : 0,
+    averageGuessesToWin: entry.winsWithGuessCounts
+      ? entry.totalWinningGuesses / entry.winsWithGuessCounts
+      : null,
+    bestWinGuesses: entry.bestWinGuesses,
+    totalGuesses: entry.totalGuesses,
+    fastestWin: entry.fastestWin,
+    slowestWin: entry.slowestWin,
+    recentGames: [...entry.recentGames]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 10),
+  };
+}
+
+function finalizeStats(stats: Map<string, WorkingPlayerStats>): PlayerStats[] {
   return [...stats.values()]
-    .map((entry) => ({
-      ...entry,
-      winRate: entry.totalGames ? (entry.wins / entry.totalGames) * 100 : 0,
-      averageGuesses: entry.totalGames ? entry.totalGuesses / entry.totalGames : 0,
-      recentGames: [...entry.recentGames]
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 10),
-    }))
+    .map(toPlayerStats)
     .sort((a, b) => b.totalGames - a.totalGames || a.name.localeCompare(b.name));
 }
 
+export function buildAccountStats(
+  gameResults: GameResultRecord[],
+  userId: string,
+  displayName: string,
+): PlayerStats {
+  return buildPlayerStats(gameResults).accounts.find((stats) => stats.id === userId)
+    ?? emptyAccountStats(userId, displayName);
+}
+
 export function buildPlayerStats(gameResults: GameResultRecord[]): PlayerStatsResponse {
-  const accounts = new Map<string, PlayerStats>();
-  const currentGuests = new Map<string, PlayerStats>();
-  const legacyGuests = new Map<string, PlayerStats>();
+  const accounts = new Map<string, WorkingPlayerStats>();
+  const currentGuests = new Map<string, WorkingPlayerStats>();
+  const legacyGuests = new Map<string, WorkingPlayerStats>();
 
   for (const game of gameResults) {
     const participants = [participantFor(game, 1), participantFor(game, 2)];

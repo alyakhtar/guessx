@@ -36,6 +36,14 @@ describe('ensureIdentityIndexes', () => {
       { name: 'winner_account_results' },
     );
     expect(gameResults.createIndex).toHaveBeenCalledWith(
+      { resultId: 1 },
+      { name: 'result_id_unique', unique: true, sparse: true },
+    );
+    expect(gameResults.createIndex).toHaveBeenCalledWith(
+      { player1UserId: 1, player2IdentityKind: 1, player2DisplayName: 1, createdAt: -1 },
+      { name: 'account_guest_matchup_player1' },
+    );
+    expect(gameResults.createIndex).toHaveBeenCalledWith(
       { identityVersion: 1, createdAt: -1 },
       { name: 'identity_migration_status' },
     );

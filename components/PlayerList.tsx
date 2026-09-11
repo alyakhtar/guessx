@@ -1,17 +1,20 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { useSession } from 'next-auth/react';
 import { useUserSettings } from '../lib/useUserSettings';
 import { shouldRevealSecret } from '../lib/userSettings';
-import { GameRoom, Player } from '../types/game';
+import { GameRoom, MatchupStats, Player } from '../types/game';
 
 interface PlayerListProps {
   room: GameRoom;
   currentPlayerId: string;
+  matchupStats: MatchupStats | null;
 }
 
-export default function PlayerList({ room, currentPlayerId }: PlayerListProps) {
+export default function PlayerList({ room, currentPlayerId, matchupStats }: PlayerListProps) {
   const t = useTranslations('playerList');
+  const { status: sessionStatus } = useSession();
   const settings = useUserSettings();
   const currentPlayer = room.players.find(p => p.id === currentPlayerId);
 
@@ -80,6 +83,33 @@ export default function PlayerList({ room, currentPlayerId }: PlayerListProps) {
           </a>
         ))}
       </div>
+
+      {sessionStatus === 'authenticated' && matchupStats && (
+        <div className="card mb-3 border-primary-subtle">
+          <div className="card-body py-3">
+            <h3 className="card-title h6 fw-semibold mb-2">
+              {matchupStats.opponentKind === 'account'
+                ? t('matchup.accountTitle', { name: matchupStats.opponentName })
+                : matchupStats.opponentKind === 'bot'
+                  ? t('matchup.botTitle')
+                  : t('matchup.guestTitle', { name: matchupStats.opponentName })}
+            </h3>
+            {matchupStats.games === 0 ? (
+              <p className="small text-muted mb-0">{t('matchup.noGames')}</p>
+            ) : (
+              <div className="d-flex flex-wrap align-items-baseline gap-2">
+                <span className="fs-5 fw-bold text-success">{matchupStats.wins}-{matchupStats.losses}</span>
+                <span className="small text-muted">
+                  {t('matchup.record', { games: matchupStats.games, winRate: matchupStats.winRate.toFixed(0) })}
+                </span>
+              </div>
+            )}
+            {matchupStats.isNameBased && (
+              <p className="small text-muted mb-0 mt-2">{t('matchup.nameBasedNotice')}</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Secret Numbers */}
       {room.players.map((player) => (

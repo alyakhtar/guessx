@@ -122,6 +122,17 @@ Legacy subsection for pre-migration results. Guest records can never be
 retroactively claimed by a later account or merged into account totals based on
 a matching display name. This reporting policy is implemented in [#64](https://github.com/alyakhtar/guessx/issues/64).
 
+The game room has one deliberately narrow, non-profile exception: during an
+authenticated-versus-guest game, only the authenticated participant may see a
+head-to-head record scoped to their internal ID and the guest's current
+display-name snapshot. It starts at `0–0` when no matching result exists and is
+explicitly labelled name-based in the UI. It can be affected by another guest
+using the same display name. Guests never see matchup statistics, including
+against an authenticated player, and guest-versus-guest games show none. This
+record must not be used for account history, leaderboard calculations,
+authorization, or any account claim. Authenticated-versus-authenticated
+records remain stable-ID head-to-head statistics.
+
 The #64 migration is a manual, explicit operation. It defaults to a dry run,
 adds only identity metadata to existing `gameresults` documents, stamps records
 that it changed, and supports a rollback of only those stamped changes. It must

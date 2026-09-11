@@ -54,6 +54,7 @@ const RATE_LIMITS = {
   privateCode: { limit: 8, windowMs: 60_000 },
   gameplay: { limit: 60, windowMs: 10_000 },
   hydration: { limit: 30, windowMs: 10_000 },
+  stats: { limit: 12, windowMs: 60_000 },
   rematch: { limit: 10, windowMs: 60_000 },
 };
 

@@ -9,8 +9,9 @@ function room(players, winner) {
     players,
     winner,
     gameHistory: [
-      { timestamp: new Date('2026-09-11T00:00:00.000Z') },
-      { timestamp: new Date('2026-09-11T00:00:05.000Z') },
+      { playerName: players[0].name, timestamp: new Date('2026-09-11T00:00:00.000Z') },
+      { playerName: players[1].name, timestamp: new Date('2026-09-11T00:00:05.000Z') },
+      { playerName: winner, timestamp: new Date('2026-09-11T00:00:10.000Z') },
     ],
     numberLength: 4,
   };
@@ -29,6 +30,9 @@ describe('identity-aware game-result persistence', () => {
       player1IdentityKind: 'account',
       player2IdentityKind: 'account',
       winnerUserId: '64b64c4fd6d7e7d6f7d6e001',
+      player1Guesses: 2,
+      player2Guesses: 1,
+      winnerGuesses: 2,
     });
   });
 

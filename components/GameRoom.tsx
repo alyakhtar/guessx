@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { openRoomAccess, RoomAccessState } from '../lib/openRoomAccess';
 import { socketService, TurnStartedPayload } from '../lib/socket';
 import { createChimePlayer, createTitleFlasher, createTurnAlertController } from '../lib/turnAlerts';
 import { getSettings } from '../lib/userSettings';
 import { useUserSettings } from '../lib/useUserSettings';
-import { GameRoom as GameRoomType, TurnTimerSeconds } from '../types/game';
+import { GameRoom as GameRoomType, MatchupStats, TurnTimerSeconds } from '../types/game';
 import Celebration from './Celebration';
 import CopyCodeButton from './CopyCodeButton';
 import GameHistory from './GameHistory';
@@ -26,9 +27,8 @@ type FlowState = { roomId: string; access: RoomAccessState };
 //   idle     -> show "Rematch" button
 //   sent     -> I requested; waiting for opponent to accept/decline
 //   incoming -> opponent requested; I see Accept/Decline
-//   ready    -> new room created; navigate (or show code if solo)
-type RematchStatus = 'idle' | 'sent' | 'incoming' | 'declined' | 'ready';
-interface RematchInfo { roomId: string; accessCode?: string; solo?: boolean }
+//   ready    -> new room created; navigate there
+type RematchStatus = 'idle' | 'sent' | 'incoming' | 'declined';
 
 export default function GameRoom() {
   const params = useParams();
@@ -50,9 +50,10 @@ export default function GameRoom() {
   const [joinError, setJoinError] = useState<{ roomId: string; message: string } | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
   const [rematchStatus, setRematchStatus] = useState<RematchStatus>('idle');
-  const [rematchInfo, setRematchInfo] = useState<RematchInfo | null>(null);
+  const [matchupStats, setMatchupStats] = useState<MatchupStats | null>(null);
   const controllerRef = useRef<ReturnType<typeof openRoomAccess> | null>(null);
   const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const matchupRequestKeyRef = useRef('');
 
   const translateServerError = (error: string) => {
     if (error === 'SERVER_ERROR:duplicateName') return tLobby('errors.server.duplicateName');
@@ -75,6 +76,19 @@ export default function GameRoom() {
     const socket = socketService.connect();
     if (!socket) return;
 
+    const requestMatchupStats = (nextRoom: GameRoomType) => {
+      if (nextRoom.players.length !== 2) {
+        setMatchupStats(null);
+        return;
+      }
+      // Query only when an opponent joins/reconnects or a completed game adds
+      // a result. This avoids one database query per guess or room update.
+      const key = `${nextRoom.id}:${nextRoom.players.map((player) => player.id).sort().join(':')}:${nextRoom.gameStatus === 'finished' ? nextRoom.gameHistory.length : 'active'}`;
+      if (matchupRequestKeyRef.current === key) return;
+      matchupRequestKeyRef.current = key;
+      socket.emit('get_matchup_stats');
+    };
+
     const turnAlertController = createTurnAlertController({
       roomId,
       getMySocketId: () => socket.id,
@@ -91,22 +105,17 @@ export default function GameRoom() {
         ? { roomId, access: { status: 'member', room: updatedRoom } }
         : current);
       if (updatedRoom.gameStatus === 'finished') setShowCelebration(true);
+      requestMatchupStats(updatedRoom);
     };
 
     // Rematch flow (issue #4)
     const handleRematchOffer = () => setRematchStatus('incoming');
     const handleRematchOfferSent = () => setRematchStatus('sent');
     const handleRematchDeclined = () => setRematchStatus('declined');
-    const handleRematchReady = (info: RematchInfo) => {
-      if (info.solo) {
-        // Only I am connected — show the new room id / code so the other
-        // player can rejoin from the list or by code.
-        setRematchInfo(info);
-        setRematchStatus('ready');
-      } else {
-        // Both connected — auto-invited: navigate to the fresh room.
-        router.push(`/${locale}/game/${info.roomId}`);
-      }
+    const handleRematchReady = (info: { roomId: string }) => {
+      // This includes a solo rematch. The socket already belongs to the new
+      // room, so staying on the old route would discard its future updates.
+      router.push(`/${locale}/game/${info.roomId}`);
     };
 
     const handleTurnStarted = (payload: TurnStartedPayload) => {
@@ -135,6 +144,7 @@ export default function GameRoom() {
       turnAlertController.stop();
       handleGameplayUpdate(updatedRoom);
     };
+    const handleMatchupStats = (stats: MatchupStats | null) => setMatchupStats(stats);
 
     const handleVisibilityChange = () => {
       if (!document.hidden) turnAlertController.stop();
@@ -147,6 +157,9 @@ export default function GameRoom() {
           setCurrentPlayerId(socket.id ?? '');
           setJoinError(null);
           if (access.room.gameStatus === 'finished') setShowCelebration(true);
+          requestMatchupStats(access.room);
+        } else {
+          setMatchupStats(null);
         }
       },
       onError: (error) => {
@@ -165,6 +178,7 @@ export default function GameRoom() {
     socket.on('rematch_offer_sent', handleRematchOfferSent);
     socket.on('rematch_declined', handleRematchDeclined);
     socket.on('rematch_room_ready', handleRematchReady);
+    socket.on('matchup_stats', handleMatchupStats);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
@@ -180,6 +194,7 @@ export default function GameRoom() {
       socket.off('rematch_offer_sent', handleRematchOfferSent);
       socket.off('rematch_declined', handleRematchDeclined);
       socket.off('rematch_room_ready', handleRematchReady);
+      socket.off('matchup_stats', handleMatchupStats);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [initialCode, roomId, locale, router, t]);
@@ -347,7 +362,7 @@ export default function GameRoom() {
               {room.isPrivate && room.accessCode && (
                 <div className="fs-5 fw-bold">
                   {t('accessCode.label')}: <span className="badge text-bg-warning text-dark">{room.accessCode}</span>
-                  {!(rematchStatus === 'ready' && rematchInfo?.solo) && <CopyCodeButton code={room.accessCode} />}
+                  <CopyCodeButton code={room.accessCode} />
                 </div>
               )}
             </div>
@@ -393,7 +408,7 @@ export default function GameRoom() {
 
         <div className={settings.sideBySideBoard && opponent ? 'row row-cols-1 row-cols-md-2 g-3' : 'row row-cols-1 row-cols-lg-3 g-3'}>
           <div className="col">
-            <PlayerList room={room} currentPlayerId={currentPlayerId} />
+            <PlayerList room={room} currentPlayerId={currentPlayerId} matchupStats={matchupStats} />
           </div>
           <div className="col">
             <div className="card p-4 shadow h-100">
@@ -406,6 +421,11 @@ export default function GameRoom() {
               />
               {room.gameStatus === 'finished' && (
                 <div className="mt-3" aria-live="polite">
+                  {matchupStats && (
+                    <Link className="btn btn-outline-primary w-100 mb-2" href={`/${locale}/stats`}>
+                      {t('stats.viewMyStats')}
+                    </Link>
+                  )}
                   {rematchStatus === 'idle' && (
                     <button className="btn btn-primary btn-lg w-100" onClick={handleRematchRequest}>
                       {t('rematch.button')}
@@ -433,19 +453,6 @@ export default function GameRoom() {
                           {t('rematch.decline')}
                         </button>
                       </div>
-                    </div>
-                  )}
-                  {rematchStatus === 'ready' && rematchInfo?.solo && (
-                    <div className="alert alert-info mb-0">
-                      <p className="mb-1">{t('rematch.soloHint')}</p>
-                      {rematchInfo.accessCode ? (
-                        <p className="mb-0">
-                          {t('rematch.soloCode')}: <code className="fs-5">{rematchInfo.accessCode}</code>
-                          <CopyCodeButton code={rematchInfo.accessCode} />
-                        </p>
-                      ) : (
-                        <p className="mb-0">{t('rematch.soloRoom')}: <code className="fs-5">{rematchInfo.roomId}</code></p>
-                      )}
                     </div>
                   )}
                 </div>
