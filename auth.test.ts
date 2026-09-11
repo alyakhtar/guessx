@@ -14,6 +14,8 @@ async function loadAuthConfig(environment: Record<string, string | undefined>) {
   vi.stubEnv('AUTH_GOOGLE_ID', environment.AUTH_GOOGLE_ID ?? '');
   vi.stubEnv('AUTH_GOOGLE_SECRET', environment.AUTH_GOOGLE_SECRET ?? '');
   vi.stubEnv('AUTH_SECRET', environment.AUTH_SECRET ?? '');
+  vi.stubEnv('ADMIN_ALLOWED_EMAILS', environment.ADMIN_ALLOWED_EMAILS ?? '');
+  vi.stubEnv('CF_ACCESS_ALLOWED_EMAILS', environment.CF_ACCESS_ALLOWED_EMAILS ?? '');
   return import('./auth');
 }
 
@@ -37,5 +39,15 @@ describe('Auth.js configuration', () => {
     const { authConfig } = await loadAuthConfig({});
 
     expect(authConfig.providers).toEqual([]);
+  });
+
+  it('exposes the server-derived admin flag only for allowlisted sessions', async () => {
+    const { authConfig } = await loadAuthConfig({ ADMIN_ALLOWED_EMAILS: 'admin@example.com' });
+    const callback = authConfig.callbacks.session!;
+    const session = { user: { name: 'Admin', email: 'admin@example.com' } };
+
+    await callback({ session, user: { id: 'user-1', name: 'Admin', email: 'ADMIN@EXAMPLE.COM' } } as never);
+
+    expect(session.user).toMatchObject({ id: 'user-1', name: 'Admin', isAdmin: true });
   });
 });

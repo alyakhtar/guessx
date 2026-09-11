@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '../../../../lib/mongodb';
 import DifficultyConfigModel from '../../../../lib/models/DifficultyConfig.model';
-import { authorizeAdminRequest } from '../../../../lib/adminAuth';
+import { authorizeAdmin } from '../../../../lib/adminAuth';
+import { auth } from '../../../../auth';
 
 export async function GET(request: Request) {
-    const authorization = await authorizeAdminRequest(request);
+    const authorization = await authorizeAdmin(request.headers, await auth().catch(() => null));
     if (authorization.ok === false) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: authorization.status });
     }
@@ -65,7 +66,7 @@ function getDefaultMaxGuesses(difficulty: string, numberLength: number): number 
 }
 
 export async function POST(request: NextRequest) {
-    const authorization = await authorizeAdminRequest(request);
+    const authorization = await authorizeAdmin(request.headers, await auth().catch(() => null));
     if (authorization.ok === false) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: authorization.status });
     }

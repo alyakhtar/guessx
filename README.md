@@ -160,7 +160,8 @@ i18n.ts       next-intl config
 | `MONGODB_URI` | — | MongoDB connection string (required for result persistence) |
 | `CF_ACCESS_TEAM_DOMAIN` | — | Cloudflare Access team domain used to validate admin JWTs |
 | `CF_ACCESS_AUDIENCE` | — | One or more comma-separated Cloudflare Access application Audience (AUD) tags |
-| `CF_ACCESS_ALLOWED_EMAILS` | — | Comma-separated Google email allowlist for administration |
+| `ADMIN_ALLOWED_EMAILS` | — | Preferred comma-separated email allowlist for GuessX administrators |
+| `CF_ACCESS_ALLOWED_EMAILS` | — | Legacy fallback name for the admin allowlist; keep equal to `ADMIN_ALLOWED_EMAILS` during migration |
 | `AUTH_SECRET` | — | Random server-only secret for GuessX application sessions |
 | `AUTH_GOOGLE_ID` | — | Google OAuth client ID for GuessX player accounts |
 | `AUTH_GOOGLE_SECRET` | — | Google OAuth client secret for GuessX player accounts |
@@ -206,13 +207,15 @@ ambiguous provider mappings.
 
 ### Admin access
 
-The admin page and admin APIs require a valid Cloudflare Access application JWT;
-the application also checks that the verified email is present in
-`CF_ACCESS_ALLOWED_EMAILS`. Configure Cloudflare Access in front of every admin
-path before setting these variables in production. Do not trust an email header
-or the browser cookie directly: GuessX verifies the signed
-`Cf-Access-Jwt-Assertion` against Cloudflare's rotating public keys, issuer, and
-application audience.
+The admin page and admin APIs require two matching, server-verified identities:
+a valid Cloudflare Access application JWT **and** a valid GuessX application
+session. Their emails must match and be present in `ADMIN_ALLOWED_EMAILS`
+(`CF_ACCESS_ALLOWED_EMAILS` remains a compatibility fallback). Configure
+Cloudflare Access in front of every admin path before setting these variables in
+production. Do not trust an email header or browser cookie directly: GuessX
+verifies the signed `Cf-Access-Jwt-Assertion` against Cloudflare's rotating
+public keys, issuer, and application audience, and Auth.js verifies the
+database-backed application session.
 
 Protect these paths with a Cloudflare Access self-hosted application:
 
@@ -232,7 +235,8 @@ For the Google identity provider, add an Access policy that allows only your
 specific email address. The Google provider may allow any Google account to
 authenticate, but the policy's Include rule is what decides who may reach the
 application. Keep the application allowlist in sync as a second server-side
-check.
+check. Do not place a Cloudflare Access application in front of `/api/auth/*`;
+Google OAuth callbacks must remain reachable.
 
 ### Socket.IO abuse controls
 

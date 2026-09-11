@@ -1,9 +1,11 @@
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
-import { authorizeAdminHeaders } from '../../../lib/adminAuth';
+import { authorizeAdmin } from '../../../lib/adminAuth';
+import { auth } from '../../../auth';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-    const authorization = await authorizeAdminHeaders(await headers());
+    const session = await auth().catch(() => null);
+    const authorization = await authorizeAdmin(await headers(), session);
 
     if (!authorization.ok) notFound();
 

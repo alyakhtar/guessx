@@ -7,7 +7,8 @@ import Script from 'next/script';
 import ToastHost from '../../components/ToastHost';
 import ThemeApplier from '../../components/ThemeApplier';
 import messages from '../../messages/en.json';
-import { authorizeAdminHeaders } from '../../lib/adminAuth';
+import { authorizeAdmin } from '../../lib/adminAuth';
+import { auth } from '../../auth';
 import '../globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -18,7 +19,8 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-    const authorization = await authorizeAdminHeaders(await headers());
+    const session = await auth().catch(() => null);
+    const authorization = await authorizeAdmin(await headers(), session);
 
     if (!authorization.ok) notFound();
 
