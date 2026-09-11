@@ -20,6 +20,13 @@ Set `MONGODB_URI` to the target database and run:
 MONGODB_URI="$MONGODB_URI" npm run db:migrate-game-result-identities
 ```
 
+For a deployed GuessX container, the same command uses that container's existing
+environment variables. For the current development deployment:
+
+```sh
+docker exec -it guessx-dev-pr91 npm run db:migrate-game-result-identities
+```
+
 The default mode makes no writes. It reports the number of records scanned,
 records that would change, and human/bot participant counts. Existing human
 participants are classified as `legacy-guest`; the historical `Bot` participant
@@ -31,6 +38,12 @@ After reviewing the dry-run output and backup:
 
 ```sh
 MONGODB_URI="$MONGODB_URI" npm run db:migrate-game-result-identities -- --apply
+```
+
+In the development container, append the explicit `--apply` flag as follows:
+
+```sh
+docker exec -it guessx-dev-pr91 npm run db:migrate-game-result-identities -- --apply
 ```
 
 Verify that the output reports the expected `modified` count, then confirm in
