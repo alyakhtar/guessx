@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { useSession } from 'next-auth/react';
 import { useUserSettings } from '../lib/useUserSettings';
 import { shouldRevealSecret } from '../lib/userSettings';
 import { GameRoom, MatchupStats, Player } from '../types/game';
@@ -13,6 +14,7 @@ interface PlayerListProps {
 
 export default function PlayerList({ room, currentPlayerId, matchupStats }: PlayerListProps) {
   const t = useTranslations('playerList');
+  const { status: sessionStatus } = useSession();
   const settings = useUserSettings();
   const currentPlayer = room.players.find(p => p.id === currentPlayerId);
 
@@ -82,7 +84,7 @@ export default function PlayerList({ room, currentPlayerId, matchupStats }: Play
         ))}
       </div>
 
-      {matchupStats && (
+      {sessionStatus === 'authenticated' && matchupStats && (
         <div className="card mb-3 border-primary-subtle">
           <div className="card-body py-3">
             <h3 className="card-title h6 fw-semibold mb-2">
