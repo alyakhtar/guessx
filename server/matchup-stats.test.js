@@ -76,27 +76,17 @@ describe('in-room matchup statistics', () => {
     });
   });
 
-  it('shows the guest the same explicitly name-based record against the account', async () => {
+  it('does not query or show a matchup record to a guest facing an account', async () => {
     const room = createRoom([
       { id: 'socket-g', name: 'Pat' },
       { id: 'socket-a', name: 'Alex', accountId: ACCOUNT_A },
     ]);
-    const context = createContext(room, { socketId: 'socket-g' }, [
-      { winnerUserId: ACCOUNT_A },
-      { winner: 'Pat' },
-    ]);
+    const context = createContext(room, { socketId: 'socket-g' });
 
     const emit = await requestStats(context, 'socket-g', { kind: 'guest' });
 
-    expect(context.findGameResults).toHaveBeenCalledWith({
-      $or: [
-        { player1UserId: ACCOUNT_A, player2IdentityKind: 'guest', player2DisplayName: 'Pat' },
-        { player2UserId: ACCOUNT_A, player1IdentityKind: 'guest', player1DisplayName: 'Pat' },
-      ],
-    });
-    expect(emit).toHaveBeenCalledWith('matchup_stats', {
-      opponentKind: 'account', opponentName: 'Alex', games: 2, wins: 1, losses: 1, winRate: 50, isNameBased: true,
-    });
+    expect(context.findGameResults).not.toHaveBeenCalled();
+    expect(emit).toHaveBeenCalledWith('matchup_stats', null);
   });
 
   it('returns a 0–0 record for a new account-and-guest pairing', async () => {

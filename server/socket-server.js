@@ -45,7 +45,7 @@ function buildMatchupStats(gameResults, player, opponentKind, opponentName) {
     wins,
     losses: games - wins,
     winRate: games ? (wins / games) * 100 : 0,
-    isNameBased: player.kind === 'guest' || opponentKind === 'guest',
+    isNameBased: opponentKind === 'guest',
   };
 }
 
@@ -372,13 +372,19 @@ class GameServer {
         return;
       }
 
-      let opponentKind;
-      let query;
-      let statPlayer;
       const playerIsVerifiedAccount = identity.kind === 'account'
         && player.accountId === identity.userId;
+      // Matchup statistics are an account benefit. Guests never receive them,
+      // including when their opponent has a verified account.
+      if (!playerIsVerifiedAccount) {
+        socket.emit('matchup_stats', null);
+        return;
+      }
 
-      if (playerIsVerifiedAccount && opponent.accountId) {
+      let opponentKind;
+      let query;
+
+      if (opponent.accountId) {
         opponentKind = 'account';
         query = {
           $or: [
@@ -386,8 +392,7 @@ class GameServer {
             { player2UserId: identity.userId, player1UserId: opponent.accountId },
           ],
         };
-        statPlayer = { kind: 'account', userId: identity.userId };
-      } else if (playerIsVerifiedAccount && opponent.isBot) {
+      } else if (opponent.isBot) {
         opponentKind = 'bot';
         query = {
           $or: [
@@ -395,21 +400,9 @@ class GameServer {
             { player2UserId: identity.userId, player1IdentityKind: 'bot' },
           ],
         };
-        statPlayer = { kind: 'account', userId: identity.userId };
-      } else if (playerIsVerifiedAccount) {
+      } else {
         opponentKind = 'guest';
         query = accountGuestMatchupQuery(identity.userId, opponent.name);
-        statPlayer = { kind: 'account', userId: identity.userId };
-      } else if (!player.accountId && opponent.accountId) {
-        // Guests have no durable identity. The user-approved room statistic is
-        // therefore scoped to this display name and explicitly labelled as
-        // non-durable; it must never be used for account authorization.
-        opponentKind = 'account';
-        query = accountGuestMatchupQuery(opponent.accountId, player.name);
-        statPlayer = { kind: 'guest', name: player.name };
-      } else {
-        socket.emit('matchup_stats', null);
-        return;
       }
 
       const storedGameResults = await this.findGameResults(query);
@@ -421,7 +414,12 @@ class GameServer {
       if (room.latestGameResult && !gameResults.some((game) => game.resultId === room.latestGameResult.resultId)) {
         gameResults.push(room.latestGameResult);
       }
-      socket.emit('matchup_stats', buildMatchupStats(gameResults, statPlayer, opponentKind, opponent.name));
+      socket.emit('matchup_stats', buildMatchupStats(
+        gameResults,
+        { kind: 'account', userId: identity.userId },
+        opponentKind,
+        opponent.name,
+      ));
     } catch (error) {
       console.error('Error fetching matchup stats:', error);
       socket.emit('matchup_stats', null);
