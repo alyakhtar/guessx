@@ -48,6 +48,18 @@ describe('active-game payload privacy', () => {
     expect(source.players[1].secretNumber).toBe('5678');
   });
 
+  it('does not leak the pending result or internal account IDs while a database write is in flight', () => {
+    const source = {
+      ...room('finished'),
+      latestGameResult: { resultId: 'result-1', player1UserId: '64b64c4fd6d7e7d6f7d6e001' },
+    };
+
+    const payload = sanitizeFor(source, 'player-1');
+
+    expect(payload).not.toHaveProperty('latestGameResult');
+    expect(JSON.stringify(payload)).not.toContain('64b64c4fd6d7e7d6f7d6e001');
+  });
+
   it('does not leak secrets through the lobby room list', () => {
     const openRoom = {
       ...room(),

@@ -22,6 +22,7 @@
       "signingIn": "Ouverture de Google…",
       "signedInAs": "Connecté en tant que {name}",
       "playerFallback": "joueur",
+      "stats": "Mes statistiques",
       "signOut": "Se déconnecter",
       "signingOut": "Déconnexion…",
       "failure": "La connexion n’a pas pu démarrer. Réessayez ou continuez en invité."
@@ -199,6 +200,9 @@
       "soloHint": "Votre adversaire n'est pas connecté. Partagez la nouvelle salle pour qu'il puisse rejoindre :",
       "soloCode": "Code de salle",
       "soloRoom": "ID de salle"
+    },
+    "stats": {
+      "viewMyStats": "Voir mes statistiques"
     }
   },
   "guessInput": {
@@ -284,6 +288,14 @@
       "status": "Statut :",
       "players": "Joueurs :",
       "waitingForPlayer": "En attente qu'un autre joueur rejoigne..."
+    },
+    "matchup": {
+      "accountTitle": "Votre bilan contre {name}",
+      "botTitle": "Votre bilan contre le bot",
+      "guestTitle": "Votre bilan contre {name}",
+      "noGames": "Aucune partie terminée auparavant",
+      "record": "{games} parties · {winRate} % de victoires",
+      "nameBasedNotice": "Basé sur ce nom d'invité ; il ne s'agit pas d'une identité durable."
     }
   },
   "gameHistory": {
@@ -300,6 +312,33 @@
     "summary": {
       "total": "Total des suppositions :",
       "last": "Dernière supposition :"
+    }
+  },
+  "playerStats": {
+    "title": "Mes statistiques",
+    "subtitle": "Vos résultats enregistrés en tant que {name}",
+    "backToLobby": "Retour à l'accueil",
+    "loading": "Chargement de vos statistiques…",
+    "loadError": "Vos statistiques n'ont pas pu être chargées. Réessayez.",
+    "overview": "Résumé des parties",
+    "noGames": "Terminez une partie en étant connecté pour commencer à construire votre bilan.",
+    "metrics": {
+      "games": "Parties",
+      "wins": "Victoires",
+      "losses": "Défaites",
+      "winRate": "Taux de victoire"
+    },
+    "breakdowns": {
+      "title": "Adversaires",
+      "vsHumans": "Contre des joueurs",
+      "vsBot": "Contre le bot"
+    },
+    "performance": {
+      "title": "Performance",
+      "averageGameGuesses": "Moy. de tentatives par partie",
+      "averageWinningGuesses": "Moy. de tentatives pour gagner",
+      "bestWin": "Meilleure victoire",
+      "fastestWin": "Victoire la plus rapide"
     }
   },
   "admin": {

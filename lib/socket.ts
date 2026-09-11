@@ -1,7 +1,7 @@
 'use client';
 
 import { io, Socket } from 'socket.io-client';
-import type { BotDifficulty, GameRoom, Guess, TurnTimerSeconds } from '../types/game';
+import type { BotDifficulty, GameRoom, Guess, MatchupStats, TurnTimerSeconds } from '../types/game';
 
 export interface TurnStartedPayload {
   roomId: string;
@@ -28,6 +28,7 @@ interface ServerToClientEvents {
   rematch_offer_sent: () => void;
   rematch_declined: () => void;
   rematch_room_ready: (payload: { roomId: string; accessCode?: string; solo?: boolean }) => void;
+  matchup_stats: (stats: MatchupStats | null) => void;
   error: (message: string) => void;
 }
 
@@ -51,6 +52,7 @@ interface ClientToServerEvents {
   rematch_request: (roomId: string) => void;
   rematch_accept: (roomId: string) => void;
   rematch_decline: (roomId: string) => void;
+  get_matchup_stats: () => void;
 }
 
 class SocketService {

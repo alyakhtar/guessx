@@ -44,3 +44,15 @@ export interface GameState {
   room: GameRoom;
   currentPlayer: Player;
 }
+
+export type MatchupOpponentKind = 'account' | 'guest' | 'bot';
+
+export interface MatchupStats {
+  opponentKind: MatchupOpponentKind;
+  opponentName: string;
+  games: number;
+  wins: number;
+  losses: number;
+  winRate: number;
+  isNameBased: boolean;
+}

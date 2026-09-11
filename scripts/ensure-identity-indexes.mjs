@@ -28,6 +28,26 @@ export async function ensureIdentityIndexes(db) {
     { name: 'winner_account_results' },
   );
   await gameResults.createIndex(
+    { resultId: 1 },
+    { name: 'result_id_unique', unique: true, sparse: true },
+  );
+  await gameResults.createIndex(
+    { player1UserId: 1, player2UserId: 1, createdAt: -1 },
+    { name: 'account_matchup_player1' },
+  );
+  await gameResults.createIndex(
+    { player2UserId: 1, player1UserId: 1, createdAt: -1 },
+    { name: 'account_matchup_player2' },
+  );
+  await gameResults.createIndex(
+    { player1UserId: 1, player2IdentityKind: 1, player2DisplayName: 1, createdAt: -1 },
+    { name: 'account_guest_matchup_player1' },
+  );
+  await gameResults.createIndex(
+    { player2UserId: 1, player1IdentityKind: 1, player1DisplayName: 1, createdAt: -1 },
+    { name: 'account_guest_matchup_player2' },
+  );
+  await gameResults.createIndex(
     { player1IdentityKind: 1, createdAt: -1 },
     { name: 'player1_identity_reporting' },
   );

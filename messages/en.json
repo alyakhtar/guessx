@@ -22,6 +22,7 @@
       "signingIn": "Opening Google…",
       "signedInAs": "Signed in as {name}",
       "playerFallback": "player",
+      "stats": "My stats",
       "signOut": "Sign out",
       "signingOut": "Signing out…",
       "failure": "Sign-in could not be started. Please try again or continue as a guest."
@@ -199,6 +200,9 @@
       "soloHint": "Your opponent isn't connected. Share the new room so they can join:",
       "soloCode": "Room code",
       "soloRoom": "Room ID"
+    },
+    "stats": {
+      "viewMyStats": "View my stats"
     }
   },
   "guessInput": {
@@ -284,6 +288,14 @@
       "status": "Status:",
       "players": "Players:",
       "waitingForPlayer": "Waiting for another player to join..."
+    },
+    "matchup": {
+      "accountTitle": "Your record vs {name}",
+      "botTitle": "Your record vs Bot",
+      "guestTitle": "Your record vs {name}",
+      "noGames": "No previous finished games",
+      "record": "{games} games · {winRate}% wins",
+      "nameBasedNotice": "Based on this guest display name; it is not a durable identity."
     }
   },
   "gameHistory": {
@@ -300,6 +312,33 @@
     "summary": {
       "total": "Total Guesses:",
       "last": "Last Guess:"
+    }
+  },
+  "playerStats": {
+    "title": "My stats",
+    "subtitle": "Your recorded results as {name}",
+    "backToLobby": "Back to lobby",
+    "loading": "Loading your stats…",
+    "loadError": "Your statistics could not be loaded. Please try again.",
+    "overview": "Game summary",
+    "noGames": "Finish a game while signed in to start building your record.",
+    "metrics": {
+      "games": "Games",
+      "wins": "Wins",
+      "losses": "Losses",
+      "winRate": "Win rate"
+    },
+    "breakdowns": {
+      "title": "Matchups",
+      "vsHumans": "Vs people",
+      "vsBot": "Vs Bot"
+    },
+    "performance": {
+      "title": "Performance",
+      "averageGameGuesses": "Avg. game guesses",
+      "averageWinningGuesses": "Avg. guesses to win",
+      "bestWin": "Best win",
+      "fastestWin": "Fastest win"
     }
   },
   "admin": {

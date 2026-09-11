@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildPlayerStats } from './stats';
+import { buildAccountStats, buildPlayerStats } from './stats';
 
 describe('identity-aware player statistics', () => {
   it('aggregates account history by user ID, not matching display names', () => {
@@ -69,5 +69,40 @@ describe('identity-aware player statistics', () => {
       expect.objectContaining({ id: 'Guest', totalGames: 2, wins: 0, losses: 2 }),
       expect.objectContaining({ id: 'Visitor', totalGames: 1, wins: 1, losses: 0 }),
     ]));
+  });
+
+  it('reports winning-guess performance only when the result recorded a winner guess count', () => {
+    const stats = buildAccountStats([
+      {
+        player1DisplayName: 'Alex', player2DisplayName: 'Guest', winner: 'Alex', winnerUserId: 'user-a',
+        player1UserId: 'user-a', player1IdentityKind: 'account', player2IdentityKind: 'guest',
+        totalGuesses: 7, winnerGuesses: 4, numberLength: 4, isVsBot: false, createdAt: new Date('2026-01-04'),
+      },
+      {
+        player1DisplayName: 'Alex', player2DisplayName: 'Bot', winner: 'Alex', winnerUserId: 'user-a',
+        player1UserId: 'user-a', player1IdentityKind: 'account', player2IdentityKind: 'bot',
+        totalGuesses: 5, winnerGuesses: 2, numberLength: 4, isVsBot: true, createdAt: new Date('2026-01-03'),
+      },
+      {
+        player1DisplayName: 'Alex', player2DisplayName: 'Guest', winner: 'Guest',
+        player1UserId: 'user-a', player1IdentityKind: 'account', player2IdentityKind: 'guest',
+        totalGuesses: 6, numberLength: 4, isVsBot: false, createdAt: new Date('2026-01-02'),
+      },
+    ], 'user-a', 'Alex');
+
+    expect(stats).toMatchObject({
+      totalGames: 3,
+      wins: 2,
+      averageGuesses: 6,
+      averageGuessesToWin: 3,
+      bestWinGuesses: 2,
+    });
+  });
+
+  it('returns an empty account record when the account has no results', () => {
+    expect(buildAccountStats([], 'user-a', 'Alex')).toMatchObject({
+      id: 'user-a', name: 'Alex', totalGames: 0, wins: 0,
+      averageGuessesToWin: null, bestWinGuesses: null,
+    });
   });
 });

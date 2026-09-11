@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
 import { useLocale, useTranslations } from 'next-intl';
 
@@ -39,6 +40,9 @@ function AvailableAuthControl() {
         >
           {t('signedInAs', { name: name ?? t('playerFallback') })}
         </span>
+        <Link className="btn btn-outline-primary btn-sm" href={`/${locale}/stats`}>
+          {t('stats')}
+        </Link>
         <button
           type="button"
           className="btn btn-outline-secondary btn-sm"
