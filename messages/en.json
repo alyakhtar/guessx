@@ -26,12 +26,12 @@
       "signingOut": "Signing out…",
       "failure": "Sign-in could not be started. Please try again or continue as a guest."
     },
-    "guest": {
-      "title": "Play as a guest",
-      "description": "Choose a display name and start immediately. Guest games are kept separately and are not linked to a player account.",
-      "continue": "Continue as guest",
-      "generate": "Generate another guest name",
-      "ready": "Guest name: {name}"
+    "guestNotice": {
+      "title": "Playing as a guest",
+      "description": "Your results will not be linked to an account or included in personal stats. Sign in to save future progress.",
+      "signIn": "Sign in",
+      "signInWithGoogle": "Sign in with Google",
+      "signingIn": "Opening Google…"
     },
     "createGame": {
       "heading": "Create New Game",
@@ -150,13 +150,6 @@
   },
   "gameRoom": {
     "turnAlertTitle": "(Your turn!) GuessX",
-    "guest": {
-      "title": "Keep future games with an account",
-      "description": "This game was played as a guest and is not linked to an account. Sign in before your next game to start using your account.",
-      "signIn": "Sign in",
-      "signInWithGoogle": "Sign in with Google",
-      "signingIn": "Opening Google…"
-    },
     "opponentHistoryTitle": "{name}'s Guesses",
     "share": {
       "button": "Share room",

@@ -86,12 +86,11 @@ Socket.IO event payload.
 
 ### Guest policy
 
-Guest play remains the default and requires no OAuth redirect. A guest has a
-browser-scoped opaque guest ID plus a validated display name. The lobby offers a
-generated name as the default, lets the guest replace it, and preserves this
-guest state through ordinary refreshes when safe. Guest IDs are not User IDs,
-are not stored as provider identities, and are never accepted as proof of an
-authenticated account.
+Guest play remains the default and requires no OAuth redirect. A guest uses the
+same browser-persisted, validated display name as the pre-account game. The UI
+states that guest results are not linked to an account and offers optional
+sign-in before play; it does not introduce a guest account, generated name, or
+guest identifier.
 
 Guest display names are presentation data only. They are bounded and validated
 server-side but need not be globally unique. Authenticated users may change
@@ -105,7 +104,7 @@ name equality:
 
 | Participants | Persistence rule |
 | --- | --- |
-| Guest vs guest | Persist an admin-only operational result record keyed by opaque guest IDs and display-name snapshots. Do not create public/profile history or User documents. |
+| Guest vs guest | Persist an admin-only operational result record with display-name snapshots. Do not create public/profile history or User documents. |
 | Authenticated vs guest | Persist authenticated player history and a separate admin-only guest result entry; retain a non-account guest snapshot needed to describe that game. |
 | Authenticated vs authenticated | Persist both participants by internal user ID. |
 
@@ -115,11 +114,11 @@ the same display name or email. A future, explicit account-claim feature would
 need a separate security review.
 
 The admin Player Statistics view will expose separate **Accounts** and
-**Guests** tabs. Account statistics aggregate by internal user ID; guest
-statistics aggregate by opaque guest ID. Neither tab may group two records by
-display name alone, and guest records can never be retroactively claimed by a
-later account. This operational reporting policy is implemented in
-[#64](https://github.com/alyakhtar/guessx/issues/64).
+**Guests** tabs. Account statistics aggregate by internal user ID. Guest
+statistics retain the existing name-based operational aggregation and are
+clearly labelled as non-account data; same-name guests can therefore be grouped
+together. Guest records can never be retroactively claimed by a later account.
+This reporting policy is implemented in [#64](https://github.com/alyakhtar/guessx/issues/64).
 
 ### Account lifecycle
 

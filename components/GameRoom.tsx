@@ -18,8 +18,7 @@ import ShareRoomButton from './ShareRoomButton';
 import TurnTimer from './TurnTimer';
 import SettingsCog from './SettingsCog';
 import { PLAYER_NAME_UPDATED_EVENT } from '../lib/auth/playerName';
-import GuestIdentityControls from './GuestIdentityControls';
-import GuestSignInPrompt from './GuestSignInPrompt';
+import GuestNotice from './GuestNotice';
 
 type FlowState = { roomId: string; access: RoomAccessState };
 
@@ -259,7 +258,7 @@ export default function GameRoom() {
             )}
           </h1>
           <form onSubmit={(event) => { event.preventDefault(); handleJoin(); }}>
-            <GuestIdentityControls onNameChange={setPlayerName} />
+            <GuestNotice />
             <div className="mb-3">
               <label className="form-label" htmlFor="join-room-name">{t('join.nameLabel')}</label>
               <input
@@ -449,7 +448,6 @@ export default function GameRoom() {
                       )}
                     </div>
                   )}
-                  <GuestSignInPrompt returnTo={`/${locale}/game/${roomId}`} />
                 </div>
               )}
             </div>
