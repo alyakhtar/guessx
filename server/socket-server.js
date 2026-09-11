@@ -1,6 +1,7 @@
 const { Server } = require('socket.io');
 const mongoose = require('mongoose');
 const { attachRematch } = require('./rematch');
+const { createSocketIdentityResolver, guestIdentity } = require('./socket-auth');
 const {
   ExpiringRateLimiter, RATE_LIMITS, isValidDifficulty, isValidNumber,
   isValidNumberLength, isValidRoomId, isValidTimerSeconds, normalizeAccessCode,
@@ -157,7 +158,7 @@ async function getDifficultyConfig(difficulty, numberLength = 4) {
 }
 
 class GameServer {
-  constructor(server) {
+  constructor(server, { resolveSocketIdentity = createSocketIdentityResolver() } = {}) {
     this.io = new Server(server, {
       cors: { origin: '*', methods: ['GET', 'POST'], credentials: true }
     });
@@ -165,6 +166,7 @@ class GameServer {
     this.playerRoomMap = new Map();
     this.roomTimers = new Map();
     this.rateLimiter = new ExpiringRateLimiter();
+    this.resolveSocketIdentity = resolveSocketIdentity;
     this.setupSocketHandlers();
     this.broadcastRoomList();
     prodLog('GameServer initialized');
@@ -173,6 +175,11 @@ class GameServer {
   }
 
   setupSocketHandlers() {
+    this.io.use(async (socket, next) => {
+      socket.data.identity = await this.resolveSocketIdentity(socket);
+      next();
+    });
+
     this.io.on('connection', (socket) => {
       console.log('Player connected:', socket.id);
       socket.on('get_rooms', (...args) => {
@@ -239,6 +246,25 @@ class GameServer {
 
   reject(socket) { socket.emit('error', 'SERVER_ERROR:invalidRequest'); }
 
+  socketIdentity(socket) {
+    const identity = socket.data.identity;
+    if (identity?.kind === 'account' && mongoose.isValidObjectId(identity.userId)) {
+      return { kind: 'account', userId: new mongoose.Types.ObjectId(identity.userId).toString() };
+    }
+    return guestIdentity();
+  }
+
+  createPlayer(socket, name) {
+    const identity = this.socketIdentity(socket);
+    return {
+      id: socket.id,
+      name,
+      isConnected: true,
+      isReady: false,
+      ...(identity.kind === 'account' ? { accountId: identity.userId } : {}),
+    };
+  }
+
   allow(socket, category) {
     const { limit, windowMs } = RATE_LIMITS[category];
     if (this.rateLimiter.consume(`${socket.id}:${category}`, limit, windowMs)) return true;
@@ -251,8 +277,14 @@ class GameServer {
     const isMember = room.players.some(p => p.id === socketId);
     const revealSecrets = room.gameStatus === 'finished';
     const players = room.players.map(player => {
-      if (revealSecrets || (isMember && player.id === socketId)) return { ...player };
-      const { secretNumber, ...safePlayer } = player;
+      // Internal account IDs are authorization data. They must never be sent to
+      // a player or spectator, including the account owner.
+      const safePlayer = { ...player };
+      delete safePlayer.accountId;
+      if (revealSecrets || (isMember && player.id === socketId)) {
+        return safePlayer;
+      }
+      delete safePlayer.secretNumber;
       return safePlayer;
     });
     const safe = { ...room, players };
@@ -339,7 +371,7 @@ class GameServer {
         !isValidDifficulty(botDifficulty) || typeof isPrivate !== 'boolean' ||
         !isValidTimerSeconds(turnTimerSeconds)) return this.reject(socket);
       const roomId = generateRoomId();
-      const player = { id: socket.id, name: normalizedName, isConnected: true, isReady: false };
+      const player = this.createPlayer(socket, normalizedName);
       const players = [player];
       if (isSinglePlayer) {
         await buildConfigs();
@@ -370,11 +402,21 @@ class GameServer {
   }
 
   admitPlayer(room, socket, playerName, { byCode = false } = {}) {
-    const existingPlayer = room.players.find(p => p.name === playerName);
-    if (existingPlayer && existingPlayer.isConnected) {
-      return { error: 'SERVER_ERROR:duplicateName' };
-    }
-    if (existingPlayer && !existingPlayer.isConnected) {
+    const identity = this.socketIdentity(socket);
+    const existingAccountPlayer = identity.kind === 'account'
+      ? room.players.find(p => p.accountId === identity.userId)
+      : null;
+    const sameNamePlayer = room.players.find(p => p.name === playerName);
+    const existingPlayer = existingAccountPlayer || sameNamePlayer;
+
+    if (existingPlayer?.isConnected) return { error: 'SERVER_ERROR:duplicateName' };
+
+    // Account reconnects are authorized by the verified internal user ID, not
+    // by the mutable display name. Guests intentionally retain the existing
+    // name-based reconnect behavior until a separate guest identity exists.
+    const mayReconnect = existingAccountPlayer
+      || (identity.kind === 'guest' && sameNamePlayer && !sameNamePlayer.accountId);
+    if (existingPlayer && mayReconnect) {
       const oldId = existingPlayer.id;
       existingPlayer.id = socket.id;
       existingPlayer.isConnected = true;
@@ -390,13 +432,14 @@ class GameServer {
       this.broadcastRoomList();
       return { reconnected: true };
     }
+    if (existingPlayer) return { error: 'SERVER_ERROR:duplicateName' };
     if (room.players.length >= 2) {
       return { error: 'SERVER_ERROR:roomFull' };
     }
     if (room.players.filter(p => p.isConnected).length >= 2) {
       return { error: 'SERVER_ERROR:roomFull' };
     }
-    const player = { id: socket.id, name: playerName, isConnected: true, isReady: false };
+    const player = this.createPlayer(socket, playerName);
     room.players.push(player);
     this.playerRoomMap.set(socket.id, room.id);
     socket.join(room.id);

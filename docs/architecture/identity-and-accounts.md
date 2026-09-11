@@ -149,8 +149,18 @@ Socket.IO will derive an authenticated identity only by validating the
 application session during the connection handshake. The client will not send a
 user ID, email, OAuth token, or session token in an event payload. The server
 will represent every socket explicitly as either authenticated (internal user
-ID) or guest (opaque guest context), and reconnect/rematch/room membership will
+ID) or guest (non-account context), and reconnect/rematch/room membership will
 use that server-side identity. This is implemented in [#63](https://github.com/alyakhtar/guessx/issues/63).
+
+The Socket.IO middleware reads the Auth.js session cookie from the handshake,
+looks up a non-expired database session and its user document, then stores only
+the internal user ID in server-only socket state. The raw session token is never
+logged, saved to a room, or emitted to any client. Room records retain an
+internal account ID only for authorization; sanitization strips it from every
+member and spectator payload. Account reconnects match that internal user ID,
+not the name supplied by the reconnecting client. Guest reconnects retain the
+documented guest policy until a separately approved durable guest identity is
+introduced.
 
 ## Delivery sequence
 

@@ -32,6 +32,7 @@ function createRematch(gs, sourceRoomId) {
   const newRoomId = generateRoomId();
   const players = connected.map(p => ({
     id: p.id, name: p.name, isConnected: true, isReady: false,
+    ...(p.accountId ? { accountId: p.accountId } : {}),
     ...(p.isBot ? { isBot: true, botDifficulty: p.botDifficulty, numberLength: src.numberLength, winThreshold: null } : {})
   }));
 
