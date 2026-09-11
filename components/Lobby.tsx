@@ -156,22 +156,20 @@ export default function Lobby() {
 
   return (
     <div className="card p-2 p-sm-4 shadow">
-      <div className="d-flex justify-content-end align-items-center gap-2 mb-3">
-        <div className="flex-grow-1" style={{ minWidth: 0 }}>
-          <AuthControls />
-        </div>
-        <SettingsCog />
-      </div>
       <div className="text-center mb-4">
         <h1 className="display-5 display-sm-4 fw-bold text-primary mb-2">
           Guess<span className="text-info">X</span>
         </h1>
         <p className="text-muted mb-3 small">{t('subtitle')}</p>
-        <div className="d-flex justify-content-center align-items-center gap-2 mb-3">
+        <div className="d-flex justify-content-center align-items-center gap-2 mb-2">
           <span className={`badge ${socket?.connected ? 'bg-success' : 'bg-danger'}`}>●</span>
           <span className="small text-muted">
             {socket?.connected ? t('connectionStatus.connected') : t('connectionStatus.connecting')}
           </span>
+        </div>
+        <div className="d-flex flex-wrap justify-content-center align-items-center gap-2">
+          <AuthControls />
+          <SettingsCog />
         </div>
       </div>
 
