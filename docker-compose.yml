@@ -1,3 +1,5 @@
+name: ${COMPOSE_PROJECT_NAME:-guessx}
+
 services:
   guessx:
     # IMAGE can be overridden at deploy time so a feature branch can run a
@@ -11,8 +13,9 @@ services:
       # HOST port is variable (default 8082); container always listens on 8082.
       - "${PORT:-8082}:8082"
     env_file:
-      # Optional: don't fail if .env is missing in a dev checkout.
-      - path: ./.env
+      # Production uses ./.env by default. Set ENV_FILE=./.dev-env for a
+      # development deployment from the same checkout.
+      - path: ${ENV_FILE:-./.env}
         required: false
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8082/"]

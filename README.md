@@ -114,6 +114,41 @@ IMAGE=ghcr.io/alyakhtar/guessx:sha-<previous-production-sha> \
   docker compose up -d --force-recreate
 ```
 
+### One checkout, production and development
+
+The default deployment reads `./.env`, uses the `guessx` Compose project, and
+publishes port `8082`—this is production. Keep development credentials in
+`./.dev-env` in the same checkout (it is intentionally not committed).
+
+Always give development a separate Compose project name as well as its own
+container and port. This prevents a development `docker compose down` from
+affecting production:
+
+```bash
+COMPOSE_PROJECT_NAME=guessx-dev \
+ENV_FILE=./.dev-env \
+IMAGE=ghcr.io/alyakhtar/guessx:feature-example \
+PORT=8084 \
+CONTAINER_NAME=guessx-feature-example \
+docker compose pull
+
+COMPOSE_PROJECT_NAME=guessx-dev \
+ENV_FILE=./.dev-env \
+IMAGE=ghcr.io/alyakhtar/guessx:feature-example \
+PORT=8084 \
+CONTAINER_NAME=guessx-feature-example \
+docker compose down
+
+COMPOSE_PROJECT_NAME=guessx-dev \
+ENV_FILE=./.dev-env \
+IMAGE=ghcr.io/alyakhtar/guessx:feature-example \
+PORT=8084 \
+CONTAINER_NAME=guessx-feature-example \
+docker compose up -d
+```
+
+Production continues to use the normal commands without these overrides.
+
 ---
 
 ## 🌐 Internationalization
