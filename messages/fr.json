@@ -26,6 +26,13 @@
       "signingOut": "Déconnexion…",
       "failure": "La connexion n’a pas pu démarrer. Réessayez ou continuez en invité."
     },
+    "guestNotice": {
+      "title": "Vous jouez en invité",
+      "description": "Vos résultats ne seront pas liés à un compte ni inclus dans vos statistiques personnelles. Connectez-vous pour enregistrer vos futurs progrès.",
+      "signIn": "Se connecter",
+      "signInWithGoogle": "Se connecter avec Google",
+      "signingIn": "Ouverture de Google…"
+    },
     "createGame": {
       "heading": "Créer une nouvelle partie",
       "nameLabel": "Votre nom",

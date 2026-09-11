@@ -26,6 +26,13 @@
       "signingOut": "Signing out…",
       "failure": "Sign-in could not be started. Please try again or continue as a guest."
     },
+    "guestNotice": {
+      "title": "Playing as a guest",
+      "description": "Your results will not be linked to an account or included in personal stats. Sign in to save future progress.",
+      "signIn": "Sign in",
+      "signInWithGoogle": "Sign in with Google",
+      "signingIn": "Opening Google…"
+    },
     "createGame": {
       "heading": "Create New Game",
       "nameLabel": "Your Name",
