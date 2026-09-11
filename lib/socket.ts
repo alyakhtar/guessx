@@ -27,7 +27,7 @@ interface ServerToClientEvents {
   rematch_offer: (payload: { roomId: string; from: string }) => void;
   rematch_offer_sent: () => void;
   rematch_declined: () => void;
-  rematch_room_ready: (payload: { roomId: string; accessCode?: string; solo?: boolean }) => void;
+  rematch_room_ready: (payload: { roomId: string; accessCode?: string }) => void;
   matchup_stats: (stats: MatchupStats | null) => void;
   error: (message: string) => void;
 }

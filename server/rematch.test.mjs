@@ -69,4 +69,36 @@ describe('rematch socket validation', () => {
       id: 'socket-a', accountId: '64b64c4fd6d7e7d6f7d6e001', name: 'Alice',
     });
   });
+
+  it('moves a requester into the fresh room when a disconnected opponent later needs to rejoin', () => {
+    const handlers = {};
+    const requester = { id: 'socket-a', on: (event, handler) => { handlers[event] = handler; }, emit: vi.fn(), join: vi.fn() };
+    const sourceRoom = {
+      id: 'ABC123', gameStatus: 'finished', isSinglePlayer: false, isPrivate: false,
+      numberLength: 4, spectatorModeEnabled: false, turnTimerSeconds: 0,
+      players: [
+        { id: 'socket-a', name: 'Alice', isConnected: true, isReady: true },
+        { id: 'socket-b', name: 'Bob', isConnected: false, isReady: true },
+      ],
+    };
+    const gameServer = {
+      io: {
+        on: (_event, callback) => callback(requester),
+        sockets: { sockets: new Map([['socket-a', requester]]) },
+      },
+      allow: vi.fn(() => true),
+      reject: vi.fn(),
+      rooms: new Map([[sourceRoom.id, sourceRoom]]),
+      playerRoomMap: new Map([['socket-a', sourceRoom.id]]),
+      broadcastRoomList: vi.fn(),
+    };
+    attachRematch(gameServer);
+
+    handlers.rematch_request(sourceRoom.id);
+
+    const rematchRoom = [...gameServer.rooms.values()][0];
+    expect(gameServer.playerRoomMap.get('socket-a')).toBe(rematchRoom.id);
+    expect(requester.join).toHaveBeenCalledWith(rematchRoom.id);
+    expect(requester.emit).toHaveBeenCalledWith('rematch_room_ready', { roomId: rematchRoom.id, accessCode: undefined });
+  });
 });

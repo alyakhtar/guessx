@@ -27,9 +27,8 @@ type FlowState = { roomId: string; access: RoomAccessState };
 //   idle     -> show "Rematch" button
 //   sent     -> I requested; waiting for opponent to accept/decline
 //   incoming -> opponent requested; I see Accept/Decline
-//   ready    -> new room created; navigate (or show code if solo)
-type RematchStatus = 'idle' | 'sent' | 'incoming' | 'declined' | 'ready';
-interface RematchInfo { roomId: string; accessCode?: string; solo?: boolean }
+//   ready    -> new room created; navigate there
+type RematchStatus = 'idle' | 'sent' | 'incoming' | 'declined';
 
 export default function GameRoom() {
   const params = useParams();
@@ -51,7 +50,6 @@ export default function GameRoom() {
   const [joinError, setJoinError] = useState<{ roomId: string; message: string } | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
   const [rematchStatus, setRematchStatus] = useState<RematchStatus>('idle');
-  const [rematchInfo, setRematchInfo] = useState<RematchInfo | null>(null);
   const [matchupStats, setMatchupStats] = useState<MatchupStats | null>(null);
   const controllerRef = useRef<ReturnType<typeof openRoomAccess> | null>(null);
   const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -114,16 +112,10 @@ export default function GameRoom() {
     const handleRematchOffer = () => setRematchStatus('incoming');
     const handleRematchOfferSent = () => setRematchStatus('sent');
     const handleRematchDeclined = () => setRematchStatus('declined');
-    const handleRematchReady = (info: RematchInfo) => {
-      if (info.solo) {
-        // Only I am connected — show the new room id / code so the other
-        // player can rejoin from the list or by code.
-        setRematchInfo(info);
-        setRematchStatus('ready');
-      } else {
-        // Both connected — auto-invited: navigate to the fresh room.
-        router.push(`/${locale}/game/${info.roomId}`);
-      }
+    const handleRematchReady = (info: { roomId: string }) => {
+      // This includes a solo rematch. The socket already belongs to the new
+      // room, so staying on the old route would discard its future updates.
+      router.push(`/${locale}/game/${info.roomId}`);
     };
 
     const handleTurnStarted = (payload: TurnStartedPayload) => {
@@ -370,7 +362,7 @@ export default function GameRoom() {
               {room.isPrivate && room.accessCode && (
                 <div className="fs-5 fw-bold">
                   {t('accessCode.label')}: <span className="badge text-bg-warning text-dark">{room.accessCode}</span>
-                  {!(rematchStatus === 'ready' && rematchInfo?.solo) && <CopyCodeButton code={room.accessCode} />}
+                  <CopyCodeButton code={room.accessCode} />
                 </div>
               )}
             </div>
@@ -461,19 +453,6 @@ export default function GameRoom() {
                           {t('rematch.decline')}
                         </button>
                       </div>
-                    </div>
-                  )}
-                  {rematchStatus === 'ready' && rematchInfo?.solo && (
-                    <div className="alert alert-info mb-0">
-                      <p className="mb-1">{t('rematch.soloHint')}</p>
-                      {rematchInfo.accessCode ? (
-                        <p className="mb-0">
-                          {t('rematch.soloCode')}: <code className="fs-5">{rematchInfo.accessCode}</code>
-                          <CopyCodeButton code={rematchInfo.accessCode} />
-                        </p>
-                      ) : (
-                        <p className="mb-0">{t('rematch.soloRoom')}: <code className="fs-5">{rematchInfo.roomId}</code></p>
-                      )}
                     </div>
                   )}
                 </div>

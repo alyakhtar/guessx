@@ -196,10 +196,7 @@
       "incoming": "Votre adversaire propose une revanche !",
       "accept": "✅ Accepter",
       "decline": "❌ Refuser",
-      "declined": "L'adversaire a refusé la revanche.",
-      "soloHint": "Votre adversaire n'est pas connecté. Partagez la nouvelle salle pour qu'il puisse rejoindre :",
-      "soloCode": "Code de salle",
-      "soloRoom": "ID de salle"
+      "declined": "L'adversaire a refusé la revanche."
     },
     "stats": {
       "viewMyStats": "Voir mes statistiques"
