@@ -117,8 +117,17 @@ The admin Player Statistics view will expose separate **Accounts** and
 **Guests** tabs. Account statistics aggregate by internal user ID. Guest
 statistics retain the existing name-based operational aggregation and are
 clearly labelled as non-account data; same-name guests can therefore be grouped
-together. Guest records can never be retroactively claimed by a later account.
-This reporting policy is implemented in [#64](https://github.com/alyakhtar/guessx/issues/64).
+together. The Guests view separates current guest results from a clearly marked
+Legacy subsection for pre-migration results. Guest records can never be
+retroactively claimed by a later account or merged into account totals based on
+a matching display name. This reporting policy is implemented in [#64](https://github.com/alyakhtar/guessx/issues/64).
+
+The #64 migration is a manual, explicit operation. It defaults to a dry run,
+adds only identity metadata to existing `gameresults` documents, stamps records
+that it changed, and supports a rollback of only those stamped changes. It must
+be run against development first and production second; it is never part of
+application startup. The execution and verification procedure is documented in
+[`docs/runbooks/game-result-identity-migration.md`](../runbooks/game-result-identity-migration.md).
 
 ### Account lifecycle
 
@@ -172,7 +181,7 @@ introduced.
    explicitly guest-first and offer optional sign-in.
 4. [#63](https://github.com/alyakhtar/guessx/issues/63), then
    [#64](https://github.com/alyakhtar/guessx/issues/64): secure socket identity
-   and persist results by user ID.
+   and persist results by user ID, including the reviewed legacy migration.
 5. [#65](https://github.com/alyakhtar/guessx/issues/65),
    [#66](https://github.com/alyakhtar/guessx/issues/66), and
    [#67](https://github.com/alyakhtar/guessx/issues/67): complete admin,

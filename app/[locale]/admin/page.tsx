@@ -14,7 +14,9 @@ interface Config {
 }
 
 interface PlayerStats {
+    id: string;
     name: string;
+    identityKind: 'account' | 'guest' | 'legacy-guest';
     totalGames: number;
     wins: number;
     losses: number;
@@ -27,19 +29,72 @@ interface PlayerStats {
     totalGuesses: number;
     fastestWin: number | null;
     slowestWin: number | null;
-    recentGames: any[];
+    recentGames: unknown[];
+}
+
+interface PlayerStatsResponse {
+    accounts: PlayerStats[];
+    guests: {
+        current: PlayerStats[];
+        legacy: PlayerStats[];
+    };
+}
+
+function StatsTable({ players, formatDuration }: { players: PlayerStats[]; formatDuration: (ms: number | null) => string }) {
+    if (players.length === 0) {
+        return <p className="text-muted mb-0">No statistics available yet.</p>;
+    }
+
+    return (
+        <div className="table-responsive">
+            <table className="table table-striped table-hover mb-0">
+                <thead className="table-dark">
+                    <tr>
+                        <th>Player</th>
+                        <th>Games</th>
+                        <th>Wins</th>
+                        <th>Losses</th>
+                        <th>Win Rate</th>
+                        <th>Vs Human</th>
+                        <th>Vs Bot</th>
+                        <th>Avg Guesses</th>
+                        <th>Fastest Win</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {players.map((player) => (
+                        <tr key={`${player.identityKind}-${player.id}`}>
+                            <td className="fw-bold">{player.name}</td>
+                            <td>{player.totalGames}</td>
+                            <td className="text-success">{player.wins}</td>
+                            <td className="text-danger">{player.losses}</td>
+                            <td>{player.winRate.toFixed(1)}%</td>
+                            <td>{player.vsHumanWins}/{player.vsHumanGames}</td>
+                            <td>{player.vsBotWins}/{player.vsBotGames}</td>
+                            <td>{player.averageGuesses.toFixed(1)}</td>
+                            <td>{formatDuration(player.fastestWin)}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
 }
 
 export default function AdminPage() {
     const t = useTranslations('admin');
     const [configs, setConfigs] = useState<Record<string, Config>>({});
-    const [playerStats, setPlayerStats] = useState<PlayerStats[]>([]);
+    const [playerStats, setPlayerStats] = useState<PlayerStatsResponse>({
+        accounts: [],
+        guests: { current: [], legacy: [] },
+    });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
     const { darkMode } = useUserSettings();
     const [selectedNumberLength, setSelectedNumberLength] = useState(4);
     const [activeTab, setActiveTab] = useState<'configs' | 'stats'>('configs');
+    const [statsTab, setStatsTab] = useState<'accounts' | 'guests'>('accounts');
     const [statsLoading, setStatsLoading] = useState(false);
 
     const fetchConfigs = async () => {
@@ -98,7 +153,16 @@ export default function AdminPage() {
             if (!response.ok) {
                 throw new Error(data.error || 'Failed to load player stats');
             }
-            setPlayerStats(Array.isArray(data) ? data : []);
+            if (!data || !Array.isArray(data.accounts) || !data.guests) {
+                throw new Error('Unexpected player statistics response');
+            }
+            setPlayerStats({
+                accounts: data.accounts,
+                guests: {
+                    current: Array.isArray(data.guests.current) ? data.guests.current : [],
+                    legacy: Array.isArray(data.guests.legacy) ? data.guests.legacy : [],
+                },
+            });
             setMessage({ type: '', text: '' });
         } catch (error) {
             setMessage({ type: 'error', text: 'Failed to load player stats' });
@@ -288,44 +352,48 @@ export default function AdminPage() {
                                     <div className="spinner-border" role="status"></div>
                                     <div className="mt-2">Loading player statistics...</div>
                                 </div>
-                            ) : playerStats.length === 0 ? (
-                                <div className="text-center py-4">
-                                    <p className="text-muted">No player statistics available yet.</p>
-                                    <small className="text-muted">Statistics will appear here once games have been played.</small>
-                                </div>
                             ) : (
-                                <div className="table-responsive">
-                                    <table className="table table-striped table-hover">
-                                        <thead className="table-dark">
-                                            <tr>
-                                                <th>Player</th>
-                                                <th>Games</th>
-                                                <th>Wins</th>
-                                                <th>Losses</th>
-                                                <th>Win Rate</th>
-                                                <th>Vs Human</th>
-                                                <th>Vs Bot</th>
-                                                <th>Avg Guesses</th>
-                                                <th>Fastest Win</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {playerStats.map((player) => (
-                                                <tr key={player.name}>
-                                                    <td className="fw-bold">{player.name}</td>
-                                                    <td>{player.totalGames}</td>
-                                                    <td className="text-success">{player.wins}</td>
-                                                    <td className="text-danger">{player.losses}</td>
-                                                    <td>{player.winRate.toFixed(1)}%</td>
-                                                    <td>{player.vsHumanWins}/{player.vsHumanGames}</td>
-                                                    <td>{player.vsBotWins}/{player.vsBotGames}</td>
-                                                    <td>{player.averageGuesses.toFixed(1)}</td>
-                                                    <td>{formatDuration(player.fastestWin)}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                <>
+                                    <ul className="nav nav-pills mb-3" role="tablist">
+                                        <li className="nav-item" role="presentation">
+                                            <button
+                                                type="button"
+                                                className={`nav-link ${statsTab === 'accounts' ? 'active' : ''}`}
+                                                onClick={() => setStatsTab('accounts')}
+                                            >
+                                                Accounts
+                                            </button>
+                                        </li>
+                                        <li className="nav-item" role="presentation">
+                                            <button
+                                                type="button"
+                                                className={`nav-link ${statsTab === 'guests' ? 'active' : ''}`}
+                                                onClick={() => setStatsTab('guests')}
+                                            >
+                                                Guests
+                                            </button>
+                                        </li>
+                                    </ul>
+
+                                    {statsTab === 'accounts' ? (
+                                        <StatsTable players={playerStats.accounts} formatDuration={formatDuration} />
+                                    ) : (
+                                        <div className="d-grid gap-4">
+                                            <div className="alert alert-secondary mb-0">
+                                                Guest statistics are admin-only operational data. They are grouped by display name and are never treated as account identity.
+                                            </div>
+                                            <section>
+                                                <h2 className="h5">Current guest results</h2>
+                                                <StatsTable players={playerStats.guests.current} formatDuration={formatDuration} />
+                                            </section>
+                                            <section>
+                                                <h2 className="h5">Legacy guest results</h2>
+                                                <p className="small text-muted">Results created before identity-aware persistence. They remain unattributed and cannot be claimed by a later account.</p>
+                                                <StatsTable players={playerStats.guests.legacy} formatDuration={formatDuration} />
+                                            </section>
+                                        </div>
+                                    )}
+                                </>
                             )}
                             <div className="mt-3">
                                 <button

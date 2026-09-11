@@ -1,6 +1,6 @@
 # GuessX Product Roadmap
 
-_Last updated: 2026-09-08. Owner: PM of record. Update this file whenever a milestone opens, closes, or changes goal._
+_Last updated: 2026-09-11. Owner: PM of record. Update this file whenever a milestone opens, closes, or changes goal._
 
 ## Release gate: v1.0.1 — Production Baseline
 
@@ -47,7 +47,7 @@ leaderboard a fresh audience every morning.
 | [v1.1 — Settings & Timer](https://github.com/alyakhtar/guessx/milestone/1) | Kill pre-game friction and stalled games | No game can stall; options persist | Built on `feature/turn-timer`, awaiting merge (#12, #13) |
 | [v1.2 — Social](https://github.com/alyakhtar/guessx/milestone/2) | A finished game leads to another game with the same human | Rematch rate ≥30% of finished PvP games | Next up |
 | [v1.3 — Retention](https://github.com/alyakhtar/guessx/milestone/3) | A daily reason to open the app without a friend online | D1/D7 return of daily-challenge players | Planned |
-| [v1.4 — Identity & Accounts](https://github.com/alyakhtar/guessx/milestone/5) | Optional accounts that preserve guest-first play | Authenticated results are attributable by stable user ID; casual guest games remain frictionless | Active — architecture in #59, then #61 → #60 → #62 → #63 → #64 → #65 |
+| [v1.4 — Identity & Accounts](https://github.com/alyakhtar/guessx/milestone/5) | Optional accounts that preserve guest-first play | Authenticated results are attributable by stable user ID; casual guest games remain frictionless | Active — #61 → #60 → #62 → #63 merged; #64 in review; #65 next |
 
 Milestone descriptions on GitHub carry per-train scope, exit criteria, and pull
 order — they are the working source of truth; this file carries the why.

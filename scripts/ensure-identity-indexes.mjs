@@ -14,6 +14,31 @@ export async function ensureIdentityIndexes(db) {
     { userId: 1, provider: 1 },
     { name: 'user_provider_unique', unique: true },
   );
+  const gameResults = db.collection('gameresults');
+  await gameResults.createIndex(
+    { player1UserId: 1, createdAt: -1 },
+    { name: 'player1_account_history' },
+  );
+  await gameResults.createIndex(
+    { player2UserId: 1, createdAt: -1 },
+    { name: 'player2_account_history' },
+  );
+  await gameResults.createIndex(
+    { winnerUserId: 1, createdAt: -1 },
+    { name: 'winner_account_results' },
+  );
+  await gameResults.createIndex(
+    { player1IdentityKind: 1, createdAt: -1 },
+    { name: 'player1_identity_reporting' },
+  );
+  await gameResults.createIndex(
+    { player2IdentityKind: 1, createdAt: -1 },
+    { name: 'player2_identity_reporting' },
+  );
+  await gameResults.createIndex(
+    { identityVersion: 1, createdAt: -1 },
+    { name: 'identity_migration_status' },
+  );
 }
 
 async function main() {
