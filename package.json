@@ -8,7 +8,8 @@
     "test": "vitest run",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
-    "db:ensure-identity-indexes": "node scripts/ensure-identity-indexes.mjs"
+    "db:ensure-identity-indexes": "node scripts/ensure-identity-indexes.mjs",
+    "db:migrate-game-result-identities": "node scripts/migrate-game-result-identities.mjs"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.11.3",
