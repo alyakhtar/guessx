@@ -11,6 +11,7 @@ import SettingsCog from './SettingsCog';
 import ShareRoomButton from './ShareRoomButton';
 import AuthControls from './AuthControls';
 import { PLAYER_NAME_UPDATED_EVENT } from '../lib/auth/playerName';
+import GuestIdentityControls from './GuestIdentityControls';
 
 // Minimal shape of a room payload the lobby receives on socket callbacks.
 type RoomSummary = { id: string; isPrivate?: boolean; accessCode?: string };
@@ -175,6 +176,7 @@ export default function Lobby() {
       {/* Create Room */}
       <div className="mb-4">
         <h2 className="h5 fw-semibold mb-3">{t('createGame.heading')}</h2>
+        <GuestIdentityControls onNameChange={setPlayerName} />
         <div className="mb-3">
           <label className="form-label fw-medium small">{t('createGame.nameLabel')}</label>
           <input
@@ -183,6 +185,7 @@ export default function Lobby() {
             onChange={(e) => setPlayerName(e.target.value)}
             className="form-control form-control-lg"
             placeholder={t('createGame.namePlaceholder')}
+            maxLength={32}
           />
         </div>
         <div className="mb-3">
@@ -363,6 +366,7 @@ export default function Lobby() {
                     handleJoinByCode();
                   }}
                 >
+                  <GuestIdentityControls onNameChange={setPlayerName} />
                   <div className="d-flex justify-content-center gap-2 mb-3">
                     {[0, 1, 2].map((i) => (
                       <input

@@ -26,6 +26,13 @@
       "signingOut": "Déconnexion…",
       "failure": "La connexion n’a pas pu démarrer. Réessayez ou continuez en invité."
     },
+    "guest": {
+      "title": "Jouer en invité",
+      "description": "Choisissez un nom d’affichage et commencez immédiatement. Les parties invité sont conservées séparément et ne sont pas liées à un compte joueur.",
+      "continue": "Continuer en invité",
+      "generate": "Générer un autre nom d’invité",
+      "ready": "Nom d’invité : {name}"
+    },
     "createGame": {
       "heading": "Créer une nouvelle partie",
       "nameLabel": "Votre nom",
@@ -143,6 +150,13 @@
   },
   "gameRoom": {
     "turnAlertTitle": "(À vous !) GuessX",
+    "guest": {
+      "title": "Conserver vos prochaines parties avec un compte",
+      "description": "Cette partie a été jouée en invité et n’est pas liée à un compte. Connectez-vous avant votre prochaine partie pour commencer à utiliser votre compte.",
+      "signIn": "Se connecter",
+      "signInWithGoogle": "Se connecter avec Google",
+      "signingIn": "Ouverture de Google…"
+    },
     "opponentHistoryTitle": "Tentatives de {name}",
     "share": {
       "button": "Partager la salle",

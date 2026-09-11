@@ -105,14 +105,21 @@ name equality:
 
 | Participants | Persistence rule |
 | --- | --- |
-| Guest vs guest | Do not create durable player-history data. |
-| Authenticated vs guest | Persist the authenticated participant's history; retain only a non-account guest snapshot needed to describe that game. |
+| Guest vs guest | Persist an admin-only operational result record keyed by opaque guest IDs and display-name snapshots. Do not create public/profile history or User documents. |
+| Authenticated vs guest | Persist authenticated player history and a separate admin-only guest result entry; retain a non-account guest snapshot needed to describe that game. |
 | Authenticated vs authenticated | Persist both participants by internal user ID. |
 
 Existing name-based `GameResult` records remain readable as legacy data. They
 are not automatically assigned to an account, even when a later user chooses
 the same display name or email. A future, explicit account-claim feature would
 need a separate security review.
+
+The admin Player Statistics view will expose separate **Accounts** and
+**Guests** tabs. Account statistics aggregate by internal user ID; guest
+statistics aggregate by opaque guest ID. Neither tab may group two records by
+display name alone, and guest records can never be retroactively claimed by a
+later account. This operational reporting policy is implemented in
+[#64](https://github.com/alyakhtar/guessx/issues/64).
 
 ### Account lifecycle
 
