@@ -155,7 +155,10 @@ export default function Lobby() {
   };
 
   return (
-    <div className="card p-2 p-sm-4 shadow">
+    <div className="card p-2 p-sm-4 shadow position-relative">
+      <div className="position-absolute top-0 end-0 m-2">
+        <SettingsCog />
+      </div>
       <div className="text-center mb-4">
         <h1 className="display-5 display-sm-4 fw-bold text-primary mb-2">
           Guess<span className="text-info">X</span>
@@ -169,7 +172,6 @@ export default function Lobby() {
         </div>
         <div className="d-flex flex-wrap justify-content-center align-items-center gap-2">
           <AuthControls />
-          <SettingsCog />
         </div>
       </div>
 
