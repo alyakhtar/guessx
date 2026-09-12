@@ -23,6 +23,7 @@
       "signedInAs": "Connecté en tant que {name}",
       "playerFallback": "joueur",
       "stats": "Mes statistiques",
+      "admin": "Admin",
       "signOut": "Se déconnecter",
       "signingOut": "Déconnexion…",
       "failure": "La connexion n’a pas pu démarrer. Réessayez ou continuez en invité."

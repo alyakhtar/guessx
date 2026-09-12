@@ -23,6 +23,7 @@
       "signedInAs": "Signed in as {name}",
       "playerFallback": "player",
       "stats": "My stats",
+      "admin": "Admin",
       "signOut": "Sign out",
       "signingOut": "Signing out…",
       "failure": "Sign-in could not be started. Please try again or continue as a guest."

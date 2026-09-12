@@ -8,20 +8,41 @@ export type AdminIdentity = {
     subject?: string;
 };
 
-type AdminAuthResult =
+export type AdminAuthResult =
     | { ok: true; identity: AdminIdentity }
     | { ok: false; status: 401 | 403 | 503; reason: string };
 
-function getConfig() {
+export type AdminSession = {
+    user?: {
+        id?: string;
+        email?: string | null;
+    } | null;
+} | null;
+
+function getAllowedEmails() {
+    // CF_ACCESS_ALLOWED_EMAILS is preserved for existing deployments. New
+    // deployments should use the provider-neutral ADMIN_ALLOWED_EMAILS name.
+    const configuredEmails = process.env.ADMIN_ALLOWED_EMAILS?.trim()
+        || process.env.CF_ACCESS_ALLOWED_EMAILS
+        || '';
+    return configuredEmails
+        .split(',')
+        .map((email) => email.trim().toLowerCase())
+        .filter(Boolean);
+}
+
+export function isAdminEmail(value: unknown): value is string {
+    if (typeof value !== 'string') return false;
+    return getAllowedEmails().includes(value.trim().toLowerCase());
+}
+
+function getAccessConfig() {
     const teamDomain = process.env.CF_ACCESS_TEAM_DOMAIN?.trim().replace(/\/$/, '');
     const audiences = (process.env.CF_ACCESS_AUDIENCE ?? '')
         .split(',')
         .map((audience) => audience.trim())
         .filter(Boolean);
-    const allowedEmails = (process.env.CF_ACCESS_ALLOWED_EMAILS ?? '')
-        .split(',')
-        .map((email) => email.trim().toLowerCase())
-        .filter(Boolean);
+    const allowedEmails = getAllowedEmails();
 
     if (!teamDomain || audiences.length === 0 || allowedEmails.length === 0) return null;
     return { teamDomain, audiences, allowedEmails };
@@ -43,7 +64,7 @@ function getEmail(payload: JWTPayload): string | null {
 }
 
 export async function authorizeAdminHeaders(headers: Headers): Promise<AdminAuthResult> {
-    const config = getConfig();
+    const config = getAccessConfig();
     if (!config) {
         return { ok: false, status: 503, reason: 'Admin authentication is not configured' };
     }
@@ -76,6 +97,30 @@ export async function authorizeAdminHeaders(headers: Headers): Promise<AdminAuth
     }
 }
 
-export async function authorizeAdminRequest(request: Request): Promise<AdminAuthResult> {
-    return authorizeAdminHeaders(request.headers);
+export function authorizeAdminSession(session: AdminSession): AdminAuthResult {
+    const email = session?.user?.email?.trim().toLowerCase();
+    const userId = session?.user?.id;
+
+    if (!userId || !email) {
+        return { ok: false, status: 401, reason: 'Missing GuessX application session' };
+    }
+    if (!isAdminEmail(email)) {
+        return { ok: false, status: 403, reason: 'Authenticated identity is not an administrator' };
+    }
+    return { ok: true, identity: { email, subject: userId } };
+}
+
+export async function authorizeAdmin(headers: Headers, session: AdminSession): Promise<AdminAuthResult> {
+    const accessAuthorization = await authorizeAdminHeaders(headers);
+    if (!accessAuthorization.ok) return accessAuthorization;
+
+    const sessionAuthorization = authorizeAdminSession(session);
+    if (!sessionAuthorization.ok) return sessionAuthorization;
+
+    // A valid admin session and a valid Access JWT are not interchangeable:
+    // bind the two independent authentication layers to the same person.
+    if (accessAuthorization.identity.email !== sessionAuthorization.identity.email) {
+        return { ok: false, status: 403, reason: 'Admin identities do not match' };
+    }
+    return sessionAuthorization;
 }

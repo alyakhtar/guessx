@@ -7,6 +7,7 @@ import {
   isVerifiedGoogleProfile,
   safeAuthRedirect,
 } from './lib/auth/config';
+import { isAdminEmail } from './lib/adminAuth';
 
 const googleCredentials = getGoogleAuthCredentials();
 
@@ -32,6 +33,7 @@ export const authConfig = {
       if (session.user) {
         session.user.id = user.id;
         session.user.name = user.name;
+        session.user.isAdmin = isAdminEmail(user.email);
       }
       return session;
     },

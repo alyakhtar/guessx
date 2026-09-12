@@ -43,6 +43,11 @@ function AvailableAuthControl() {
         <Link className="btn btn-outline-primary btn-sm" href={`/${locale}/stats`}>
           {t('stats')}
         </Link>
+        {session.user.isAdmin && (
+          <Link className="btn btn-outline-secondary btn-sm" href="/admin">
+            {t('admin')}
+          </Link>
+        )}
         <button
           type="button"
           className="btn btn-outline-secondary btn-sm"

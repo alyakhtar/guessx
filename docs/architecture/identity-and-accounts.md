@@ -156,12 +156,13 @@ Cloudflare Access remains a defense-in-depth perimeter for narrowly scoped
 admin routes. It is independent from public player Google OAuth: public game
 routes and `/api/auth/*` must not be placed behind an Access challenge.
 
-After [#65](https://github.com/alyakhtar/guessx/issues/65), administration will
-also require a verified GuessX application session whose email is in the
-server-side admin allowlist. UI visibility is advisory only; pages and APIs
-enforce authorization server-side. Cloudflare Access must continue to be
-configured for `/admin`, `/admin/*`, and `/api/admin/*`, and must not protect a
-broad `/api/*` path.
+After [#65](https://github.com/alyakhtar/guessx/issues/65), administration
+requires both a verified GuessX application session and a verified Cloudflare
+Access JWT. Their emails must match and be present in the server-side admin
+allowlist. UI visibility is advisory only; pages and APIs enforce authorization
+server-side. Cloudflare Access must continue to be configured for `/admin`,
+`/admin/*`, and `/api/admin/*`, and must not protect a broad `/api/*` path or
+`/api/auth/*`, which must remain reachable for Google OAuth callbacks.
 
 ### Socket.IO boundary
 
