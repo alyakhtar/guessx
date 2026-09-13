@@ -380,6 +380,12 @@
       "buttonWithGoogle": "Se connecter avec Google pour enregistrer le résultat du jour",
       "working": "Ouverture de Google…"
     },
+    "share": {
+      "title": "Partagez votre résultat du Défi quotidien",
+      "button": "Partager le résultat",
+      "copied": "Résultat copié",
+      "failed": "Nous n'avons pas pu copier votre résultat. Réessayez."
+    },
     "errors": {
       "unavailable": "Le Défi quotidien est indisponible pour le moment. Réessayez plus tard.",
       "submit": "Votre proposition n'a pas pu être enregistrée. Réessayez."

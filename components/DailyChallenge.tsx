@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from 'next-intl';
 
 import GoogleIcon from './GoogleIcon';
 import { useApplicationAuthAvailable } from './AuthProvider';
+import DailyChallengeShareButton from './DailyChallengeShareButton';
 
 type DailyGuess = {
   guess: string;
@@ -191,6 +192,7 @@ export default function DailyChallenge() {
             )}
 
             {error && <div className="alert alert-danger mt-3 mb-0" role="alert">{error}</div>}
+            {complete && <DailyChallengeShareButton attempt={attempt} />}
             {complete && applicationAuthAvailable && <DailyChallengeSignInPrompt />}
 
             <section className="mt-4" aria-labelledby="daily-history-heading">
