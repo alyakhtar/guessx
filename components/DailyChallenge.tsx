@@ -58,7 +58,7 @@ function DailyChallengeSignInPrompt() {
         </div>
         <button
           type="button"
-          className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1 align-self-start align-self-sm-center"
+          className="btn btn-outline-primary btn-sm d-inline-flex align-items-center justify-content-center gap-1 text-nowrap flex-shrink-0 align-self-stretch align-self-sm-center"
           aria-label={t('buttonWithGoogle')}
           disabled={isWorking}
           onClick={startSignIn}

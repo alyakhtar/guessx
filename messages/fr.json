@@ -207,7 +207,7 @@
     "secretNumber": {
       "title": "Définissez votre nombre secret",
       "label": "Votre nombre secret à {length} chiffres",
-      "help": "Entrez chaque chiffre dans les cases - le curseur avance automatiquement",
+      "help": "Entrez chaque chiffre dans les cases ou collez le nombre entier.",
       "button": "Définir le nombre secret et commencer"
     },
     "gameRules": {
@@ -233,6 +233,17 @@
     },
     "validation": {
       "invalidNumber": "Veuillez entrer un nombre valide à {length} chiffres"
+    }
+  },
+  "digitTracker": {
+    "title": "Suivi des chiffres",
+    "help": "Touchez un chiffre pour changer son état.",
+    "legend": "Inconnu → éliminé → confirmé",
+    "digitLabel": "Chiffre {digit} : {state}",
+    "states": {
+      "unknown": "inconnu",
+      "eliminated": "éliminé",
+      "confirmed": "confirmé"
     }
   },
   "spectator": {
