@@ -35,6 +35,29 @@
       "signInWithGoogle": "Se connecter avec Google",
       "signingIn": "Ouverture de Google…"
     },
+    "onboarding": {
+      "open": "Comment jouer",
+      "title": "Comment jouer à GuessX",
+      "close": "Fermer l'aide de jeu",
+      "progress": "Étape {current} sur {total}",
+      "back": "Retour",
+      "next": "Suivant",
+      "done": "Jouer",
+      "steps": {
+        "secret": {
+          "title": "Choisissez un nombre secret",
+          "description": "Choisissez un nombre que votre adversaire devra deviner. Gardez-le secret."
+        },
+        "turns": {
+          "title": "Devinez à tour de rôle",
+          "description": "Chaque joueur soumet une proposition à son tour. Le premier qui devine le nombre exact gagne."
+        },
+        "feedback": {
+          "title": "Utilisez les indices",
+          "description": "Après chaque proposition, vous verrez combien de chiffres correspondent au nombre secret et sont à la bonne position. Utilisez cet indice pour réduire les possibilités."
+        }
+      }
+    },
     "createGame": {
       "heading": "Créer une nouvelle partie",
       "nameLabel": "Votre nom",

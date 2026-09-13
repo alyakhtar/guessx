@@ -35,6 +35,29 @@
       "signInWithGoogle": "Sign in with Google",
       "signingIn": "Opening Google…"
     },
+    "onboarding": {
+      "open": "How to play",
+      "title": "How to play GuessX",
+      "close": "Close how-to-play",
+      "progress": "Step {current} of {total}",
+      "back": "Back",
+      "next": "Next",
+      "done": "Let's play",
+      "steps": {
+        "secret": {
+          "title": "Pick a secret number",
+          "description": "Choose a number for your opponent to guess. Keep it secret."
+        },
+        "turns": {
+          "title": "Take turns guessing",
+          "description": "Each player submits a guess on their turn. The first player to guess the exact number wins."
+        },
+        "feedback": {
+          "title": "Use the feedback",
+          "description": "After every guess, you will see how many digits match the secret in the correct position. Use that clue to narrow it down."
+        }
+      }
+    },
     "createGame": {
       "heading": "Create New Game",
       "nameLabel": "Your Name",

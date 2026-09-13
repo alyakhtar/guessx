@@ -13,6 +13,7 @@ import AuthControls from './AuthControls';
 import { PLAYER_NAME_UPDATED_EVENT } from '../lib/auth/playerName';
 import GuestNotice from './GuestNotice';
 import DailyChallengeCard from './DailyChallengeCard';
+import FirstVisitOnboarding from './FirstVisitOnboarding';
 
 // Minimal shape of a room payload the lobby receives on socket callbacks.
 type RoomSummary = { id: string; isPrivate?: boolean; accessCode?: string };
@@ -174,6 +175,7 @@ export default function Lobby() {
           </div>
           <div className="d-flex flex-wrap justify-content-center align-items-center gap-2">
             <AuthControls />
+            <FirstVisitOnboarding />
           </div>
         </div>
 
