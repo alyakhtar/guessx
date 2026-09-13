@@ -18,6 +18,7 @@ describe('daily challenge', () => {
     expect(challengeNumber('2026-01-01')).toBe(1);
     expect(deriveDailySecret('2026-09-12', 'secret-a')).toBe(deriveDailySecret('2026-09-12', 'secret-a'));
     expect(deriveDailySecret('2026-09-12', 'secret-a')).not.toBe(deriveDailySecret('2026-09-13', 'secret-a'));
+    expect(deriveDailySecret('2026-09-11', 'secret-a')).not.toBe(deriveDailySecret('2026-09-12', 'secret-a'));
   });
 
   it('does not persist a raw guest identifier in the guest participant key', () => {

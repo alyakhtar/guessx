@@ -122,12 +122,12 @@ export default function DailyChallenge() {
                   <span className="badge text-bg-primary fs-6">{t('remaining', { remaining: attempt.remainingGuesses, max: attempt.maxGuesses })}</span>
                 </div>
                 <form onSubmit={submit} noValidate>
-                  <label htmlFor="daily-guess" className="form-label fw-semibold">{t('guessLabel')}</label>
+                  <label htmlFor="daily-guess" className="form-label fw-semibold">{t('guessLabel', { length: attempt.numberLength })}</label>
                   <div className="d-flex flex-column flex-sm-row gap-2">
                     <input
                       ref={inputRef}
                       id="daily-guess"
-                      className="form-control form-control-lg text-center font-monospace fs-3"
+                      className="form-control form-control-lg text-center font-monospace fs-3 flex-grow-1"
                       type="text"
                       inputMode="numeric"
                       pattern="[0-9]*"
@@ -136,8 +136,9 @@ export default function DailyChallenge() {
                       value={guess}
                       onChange={(event) => setGuess(event.target.value.replace(/\D/g, '').slice(0, attempt.numberLength))}
                       aria-describedby="daily-guess-help"
+                      style={{ minWidth: 0 }}
                     />
-                    <button className="btn btn-primary btn-lg px-sm-4" disabled={submitting || guess.length !== attempt.numberLength}>
+                    <button className="btn btn-primary btn-lg px-sm-4 flex-shrink-0 text-nowrap" disabled={submitting || guess.length !== attempt.numberLength}>
                       {submitting ? t('submitting') : t('submit')}
                     </button>
                   </div>

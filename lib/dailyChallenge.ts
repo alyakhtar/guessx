@@ -3,7 +3,7 @@ import { createHash, createHmac, randomUUID } from 'node:crypto';
 import { calculateCorrectPositions, validateNumber } from './gameLogic';
 
 export const DAILY_CHALLENGE_LENGTH = 4;
-export const DAILY_CHALLENGE_MAX_GUESSES = 8;
+export const DAILY_CHALLENGE_MAX_GUESSES = 10;
 const DAILY_CHALLENGE_EPOCH = Date.UTC(2026, 0, 1);
 
 export type DailyChallengeStatus = 'active' | 'won' | 'exhausted';
@@ -33,14 +33,34 @@ export function challengeNumber(challengeDate: string) {
   return Math.floor((date.getTime() - DAILY_CHALLENGE_EPOCH) / 86_400_000) + 1;
 }
 
+function dailyCandidate(challengeDate: string, secret: string) {
+  const digest = createHmac('sha256', secret)
+    .update(`guessx:daily-challenge:v1:${challengeDate}`)
+    .digest();
+  return 1000 + (digest.readUInt32BE(0) % 9000);
+}
+
 export function deriveDailySecret(challengeDate: string, secret: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(challengeDate)) throw new Error('Invalid challenge date');
   if (!secret.trim()) throw new Error('DAILY_CHALLENGE_SECRET is required');
 
-  const digest = createHmac('sha256', secret)
-    .update(`guessx:daily-challenge:v1:${challengeDate}`)
-    .digest();
-  return String(1000 + (digest.readUInt32BE(0) % 9000));
+  // A date is part of the HMAC input, so every day selects a fresh opaque
+  // candidate. Walk from the fixed epoch so the rare HMAC collision cannot
+  // make two adjacent UTC days use the same answer.
+  const target = Date.parse(`${challengeDate}T00:00:00.000Z`);
+  if (target < DAILY_CHALLENGE_EPOCH) return String(dailyCandidate(challengeDate, secret));
+
+  let previous: number | null = null;
+  let current = DAILY_CHALLENGE_EPOCH;
+  let selected = 1000;
+  while (current <= target) {
+    const currentDate = new Date(current).toISOString().slice(0, 10);
+    selected = dailyCandidate(currentDate, secret);
+    if (selected === previous) selected = selected === 9999 ? 1000 : selected + 1;
+    previous = selected;
+    current += 86_400_000;
+  }
+  return String(selected);
 }
 
 export function createGuestIdentifier() {
