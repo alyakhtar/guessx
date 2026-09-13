@@ -18,6 +18,13 @@ type PersonalStats = {
   averageGuessesToWin: number | null;
   bestWinGuesses: number | null;
   fastestWin: number | null;
+  dailyChallenge: {
+    completed: number;
+    wins: number;
+    winRate: number;
+    averageGuesses: number | null;
+    bestWinGuesses: number | null;
+  };
 };
 
 function formatDuration(ms: number | null) {
@@ -109,7 +116,19 @@ export default function PlayerStatsPage() {
               </div>
             </div>
           </section>
-          {stats.totalGames === 0 && <p className="text-muted text-center mt-4">{t('noGames')}</p>}
+          <section className="card shadow-sm mt-3" aria-labelledby="daily-stats-title">
+            <div className="card-body">
+              <h2 className="h5" id="daily-stats-title">{t('daily.title')}</h2>
+              <div className="row row-cols-2 row-cols-md-5 g-3 text-center">
+                <Metric label={t('daily.completed')} value={stats.dailyChallenge.completed} />
+                <Metric label={t('daily.wins')} value={stats.dailyChallenge.wins} accent="text-success" />
+                <Metric label={t('daily.winRate')} value={`${stats.dailyChallenge.winRate.toFixed(1)}%`} />
+                <Metric label={t('daily.averageGuesses')} value={stats.dailyChallenge.averageGuesses?.toFixed(1) ?? '—'} />
+                <Metric label={t('daily.bestWin')} value={stats.dailyChallenge.bestWinGuesses ?? '—'} />
+              </div>
+            </div>
+          </section>
+          {stats.totalGames === 0 && stats.dailyChallenge.completed === 0 && <p className="text-muted text-center mt-4">{t('noGames')}</p>}
         </>
       )}
     </main>

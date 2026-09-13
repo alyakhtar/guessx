@@ -12,6 +12,7 @@ import ShareRoomButton from './ShareRoomButton';
 import AuthControls from './AuthControls';
 import { PLAYER_NAME_UPDATED_EVENT } from '../lib/auth/playerName';
 import GuestNotice from './GuestNotice';
+import DailyChallengeCard from './DailyChallengeCard';
 
 // Minimal shape of a room payload the lobby receives on socket callbacks.
 type RoomSummary = { id: string; isPrivate?: boolean; accessCode?: string };
@@ -174,6 +175,8 @@ export default function Lobby() {
           <AuthControls />
         </div>
       </div>
+
+      <DailyChallengeCard />
 
       {/* Create Room */}
       <div className="mb-4">
