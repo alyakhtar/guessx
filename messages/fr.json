@@ -156,6 +156,7 @@
     "close": "Fermer",
     "openAriaLabel": "Ouvrir les paramètres",
     "language": "Langue",
+    "howToPlay": "Comment jouer",
     "darkMode": {
       "label": "Mode sombre",
       "description": "Utiliser le thème sombre sur tous les écrans."

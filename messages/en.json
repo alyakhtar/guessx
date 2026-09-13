@@ -156,6 +156,7 @@
     "close": "Close",
     "openAriaLabel": "Open settings",
     "language": "Language",
+    "howToPlay": "How to play",
     "darkMode": {
       "label": "Dark mode",
       "description": "Use the dark colour theme on every screen."

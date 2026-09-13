@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { SETTINGS_SCHEMA, setSetting } from '../lib/userSettings';
 import { useUserSettings } from '../lib/useUserSettings';
 import LocaleSelector from './LocaleSelector';
+import { openOnboarding } from '../lib/onboarding';
 
 interface SettingsPanelProps {
   open: boolean;
@@ -58,6 +59,16 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
               <span className="form-label mb-0">{t('settings.language')}</span>
               <LocaleSelector />
             </div>
+            <button
+              type="button"
+              className="btn btn-link btn-sm p-0 mb-3"
+              onClick={() => {
+                onClose();
+                openOnboarding();
+              }}
+            >
+              {t('settings.howToPlay')}
+            </button>
             {SETTINGS_SCHEMA.map((setting) => (
               <div className="form-check form-switch mb-3" key={setting.key}>
                 <input

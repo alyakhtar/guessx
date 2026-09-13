@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
-import { hasSeenOnboarding, markOnboardingSeen } from '../lib/onboarding';
+import { OPEN_ONBOARDING_EVENT } from '../lib/onboarding';
 
 const STEP_KEYS = ['secret', 'turns', 'feedback'] as const;
 
@@ -12,19 +12,16 @@ export default function FirstVisitOnboarding() {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
 
-  const close = () => {
-    markOnboardingSeen(window.localStorage);
-    setOpen(false);
-  };
-
-  const reopen = () => {
-    setStep(0);
-    setOpen(true);
-  };
-
   useEffect(() => {
-    if (!hasSeenOnboarding(window.localStorage)) setOpen(true);
+    const openFromAnywhere = () => {
+      setStep(0);
+      setOpen(true);
+    };
+    window.addEventListener(OPEN_ONBOARDING_EVENT, openFromAnywhere);
+    return () => window.removeEventListener(OPEN_ONBOARDING_EVENT, openFromAnywhere);
   }, []);
+
+  const close = () => setOpen(false);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -40,10 +37,6 @@ export default function FirstVisitOnboarding() {
 
   return (
     <>
-      <button type="button" className="btn btn-link btn-sm p-0" onClick={reopen} aria-haspopup="dialog">
-        {t('open')}
-      </button>
-
       {open && (
         <div
           className="modal show d-block"
