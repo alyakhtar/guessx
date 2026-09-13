@@ -156,30 +156,34 @@ export default function Lobby() {
   };
 
   return (
-    <div className="card p-2 p-sm-4 shadow position-relative">
-      <div className="position-absolute top-0 end-0 m-2">
-        <SettingsCog />
-      </div>
-      <div className="text-center mb-4">
-        <h1 className="display-5 display-sm-4 fw-bold text-primary mb-2">
-          Guess<span className="text-info">X</span>
-        </h1>
-        <p className="text-muted mb-3 small">{t('subtitle')}</p>
-        <div className="d-flex justify-content-center align-items-center gap-2 mb-2">
-          <span className={`badge ${socket?.connected ? 'bg-success' : 'bg-danger'}`}>●</span>
-          <span className="small text-muted">
-            {socket?.connected ? t('connectionStatus.connected') : t('connectionStatus.connecting')}
-          </span>
+    <div className="mx-auto" style={{ maxWidth: '72rem' }}>
+      <section className="card p-3 p-sm-4 shadow position-relative mb-4">
+        <div className="position-absolute top-0 end-0 m-2">
+          <SettingsCog />
         </div>
-        <div className="d-flex flex-wrap justify-content-center align-items-center gap-2">
-          <AuthControls />
+        <div className="text-center mb-4">
+          <h1 className="display-5 display-sm-4 fw-bold text-primary mb-2">
+            Guess<span className="text-info">X</span>
+          </h1>
+          <p className="text-muted mb-3 small">{t('subtitle')}</p>
+          <div className="d-flex justify-content-center align-items-center gap-2 mb-2">
+            <span className={`badge ${socket?.connected ? 'bg-success' : 'bg-danger'}`}>●</span>
+            <span className="small text-muted">
+              {socket?.connected ? t('connectionStatus.connected') : t('connectionStatus.connecting')}
+            </span>
+          </div>
+          <div className="d-flex flex-wrap justify-content-center align-items-center gap-2">
+            <AuthControls />
+          </div>
         </div>
-      </div>
 
-      <DailyChallengeCard />
+        <DailyChallengeCard />
+      </section>
 
+      <div className="row g-4 align-items-start">
+        <section className="col-12 col-lg-5">
+          <div className="card p-3 p-sm-4 shadow h-100 mx-lg-auto" style={{ maxWidth: '35rem' }}>
       {/* Create Room */}
-      <div className="mb-4">
         <h2 className="h5 fw-semibold mb-3">{t('createGame.heading')}</h2>
         <GuestNotice />
         <div className="mb-3">
@@ -279,11 +283,13 @@ export default function Lobby() {
           {!socket?.connected ? t('createGame.buttons.connecting') :
             isCreating ? t('createGame.buttons.creating') : t('createGame.buttons.create')}
         </button>
-      </div>
+          </div>
+        </section>
 
+        <section className="col-12 col-lg-7">
+          <div className="card p-3 p-sm-4 shadow h-100">
       {/* Unified room list: public + private, distinguished by a Room Type badge.
           Public rows join directly; private rows open the code-entry modal. */}
-      <div className="mb-4">
         <h2 className="h5 fw-semibold mb-3">{t('joinGame.heading')}</h2>
         {rooms.length > 0 ? (
           <div className="table-responsive">
@@ -351,6 +357,8 @@ export default function Lobby() {
         ) : (
           <p className="text-muted">{t('joinGame.noRooms')}</p>
         )}
+          </div>
+        </section>
       </div>
 
       {/* Private-room access-code modal: 3-box input, errors shown in-modal (no alerts) */}

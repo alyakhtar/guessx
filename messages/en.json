@@ -207,7 +207,7 @@
     "secretNumber": {
       "title": "Set Your Secret Number",
       "label": "Your {length}-digit secret number",
-      "help": "Enter each digit in the boxes - cursor moves automatically",
+      "help": "Enter each digit in the boxes, or paste the full number.",
       "button": "Set Secret Number & Start Game"
     },
     "gameRules": {
@@ -233,6 +233,17 @@
     },
     "validation": {
       "invalidNumber": "Please enter a valid {length}-digit number"
+    }
+  },
+  "digitTracker": {
+    "title": "Digit tracker",
+    "help": "Tap a digit to cycle its status.",
+    "legend": "Unknown → eliminated → confirmed",
+    "digitLabel": "Digit {digit}: {state}",
+    "states": {
+      "unknown": "unknown",
+      "eliminated": "eliminated",
+      "confirmed": "confirmed"
     }
   },
   "spectator": {

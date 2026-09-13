@@ -14,6 +14,7 @@ import Celebration from './Celebration';
 import CopyCodeButton from './CopyCodeButton';
 import GameHistory from './GameHistory';
 import GuessInput from './GuessInput';
+import DigitTracker from './DigitTracker';
 import PlayerList from './PlayerList';
 import ShareRoomButton from './ShareRoomButton';
 import TurnTimer from './TurnTimer';
@@ -407,10 +408,10 @@ export default function GameRoom() {
         )}
 
         <div className={settings.sideBySideBoard && opponent ? 'row row-cols-1 row-cols-md-2 g-3' : 'row row-cols-1 row-cols-lg-3 g-3'}>
-          <div className="col">
+          <div className="col order-3 order-lg-1">
             <PlayerList room={room} currentPlayerId={currentPlayerId} matchupStats={matchupStats} />
           </div>
-          <div className="col">
+          <div className="col order-1 order-lg-2">
             <div className="card p-4 shadow h-100">
               <GuessInput
                 room={room}
@@ -419,6 +420,7 @@ export default function GameRoom() {
                 numberLength={room.numberLength}
                 onNewGame={handleNewGame}
               />
+              {room.gameStatus === 'playing' && <DigitTracker />}
               {room.gameStatus === 'finished' && (
                 <div className="mt-3" aria-live="polite">
                   {matchupStats && (
@@ -459,12 +461,12 @@ export default function GameRoom() {
               )}
             </div>
           </div>
-          <div className="col">
+          <div className="col order-2 order-lg-3">
             <GameHistory gameHistory={room.gameHistory} currentPlayerName={currentPlayer?.name} />
           </div>
 
           {settings.sideBySideBoard && opponent && (
-            <div className="col">
+            <div className="col order-4">
               <GameHistory
                 gameHistory={room.gameHistory}
                 currentPlayerName={opponent.name}

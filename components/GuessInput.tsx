@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import { useTranslations } from 'next-intl';
 import { socketService } from '../lib/socket';
 import { showToast } from '../lib/toast';
 import { GameRoom, Player } from '../types/game';
 import { validateNumber } from '../lib/gameLogic';
+import { areDigitBoxesComplete, emptyDigitBoxes, fillDigitBoxes } from '../lib/digitInput';
 
 interface GuessInputProps {
   room: GameRoom;
@@ -17,9 +18,28 @@ interface GuessInputProps {
 
 export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength, onNewGame }: GuessInputProps) {
   const t = useTranslations('guessInput');
-  const [secretNumber, setSecretNumber] = useState('');
-  const [guess, setGuess] = useState('');
+  const [secretDigits, setSecretDigits] = useState(() => emptyDigitBoxes(numberLength));
+  const [guessDigits, setGuessDigits] = useState(() => emptyDigitBoxes(numberLength));
   const [isSettingSecret, setIsSettingSecret] = useState(false);
+  const secretRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const guessRefs = useRef<Array<HTMLInputElement | null>>([]);
+
+  const secretNumber = secretDigits.join('');
+  const guess = guessDigits.join('');
+  const secretComplete = areDigitBoxesComplete(secretDigits);
+  const guessComplete = areDigitBoxesComplete(guessDigits);
+
+  const applyDigits = (
+    current: string[],
+    setDigits: Dispatch<SetStateAction<string[]>>,
+    refs: MutableRefObject<Array<HTMLInputElement | null>>,
+    index: number,
+    rawValue: string,
+  ) => {
+    const result = fillDigitBoxes(current, index, rawValue);
+    setDigits(result.digits);
+    if (result.filled > 0) refs.current[Math.min(index + result.filled, numberLength - 1)]?.focus();
+  };
 
   useEffect(() => {
     // Reset secret number input if player is already ready
@@ -49,7 +69,7 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
     const socket = socketService.getSocket();
     if (socket) {
       socket.emit('make_guess', guess);
-      setGuess('');
+      setGuessDigits(emptyDigitBoxes(numberLength));
     }
   };
 
@@ -72,36 +92,19 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
                 key={i}
                 type="tel"
                 inputMode="numeric"
-                pattern="[0-9]"
+                pattern="[0-9]*"
                 maxLength={1}
-                value={secretNumber[i] || ''}
-                onChange={(e) => {
-                  const digit = e.target.value.replace(/\D/g, '');
-                  const newSecret = secretNumber.split('');
-                  newSecret[i] = digit;
-                  const updatedSecret = newSecret.join('');
-
-                  // Only allow updating if it's a valid digit
-                  if (digit === '' || /\d/.test(digit)) {
-                    setSecretNumber(updatedSecret);
-
-                    // Auto-focus next box
-                    if (digit !== '' && i < numberLength - 1) {
-                      const nextInput = e.target.nextElementSibling as HTMLInputElement;
-                      if (nextInput && nextInput.tagName === 'INPUT') {
-                        nextInput.focus();
-                      }
-                    }
-                  }
+                ref={(element) => { secretRefs.current[i] = element; }}
+                value={secretDigits[i]}
+                onChange={(e) => applyDigits(secretDigits, setSecretDigits, secretRefs, i, e.target.value)}
+                onPaste={(e) => {
+                  e.preventDefault();
+                  applyDigits(secretDigits, setSecretDigits, secretRefs, i, e.clipboardData.getData('text'));
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === 'Backspace' && !secretNumber[i] && i > 0) {
-                    // Focus previous box on backspace
-                    const target = e.target as HTMLElement;
-                    if (target.previousElementSibling && target.previousElementSibling.tagName === 'INPUT') {
-                      (target.previousElementSibling as HTMLInputElement).focus();
-                    }
-                  } else if (e.key === 'Enter' && secretNumber.length === numberLength) {
+                  if (e.key === 'Backspace' && !secretDigits[i] && i > 0) {
+                    secretRefs.current[i - 1]?.focus();
+                  } else if (e.key === 'Enter' && secretComplete) {
                     handleSetSecretNumber();
                   }
                 }}
@@ -118,7 +121,7 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
 
         <button
           onClick={handleSetSecretNumber}
-          disabled={secretNumber.length !== numberLength}
+          disabled={!secretComplete}
           className="btn btn-primary btn-lg w-100"
         >
           {t('secretNumber.button')}
@@ -202,37 +205,19 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
                   key={i}
                   type="tel"
                   inputMode="numeric"
-                  pattern="[0-9]"
+                  pattern="[0-9]*"
                   maxLength={1}
-                  value={guess[i] || ''}
-                  onChange={(e) => {
-                    const digit = e.target.value.replace(/\D/g, '');
-                    const newGuess = guess.split('');
-                    newGuess[i] = digit;
-                    const updatedGuess = newGuess.join('');
-
-                    // Only allow updating if it's a valid digit
-                    if (digit === '' || /\d/.test(digit)) {
-                      setGuess(updatedGuess);
-
-                      // Auto-focus next box
-                      if (digit !== '' && i < numberLength - 1) {
-                        const nextInput = e.target.nextElementSibling as HTMLInputElement;
-                        if (nextInput && nextInput.tagName === 'INPUT') {
-                          nextInput.focus();
-                        }
-                      }
-                    }
+                  ref={(element) => { guessRefs.current[i] = element; }}
+                  value={guessDigits[i]}
+                  onChange={(e) => applyDigits(guessDigits, setGuessDigits, guessRefs, i, e.target.value)}
+                  onPaste={(e) => {
+                    e.preventDefault();
+                    applyDigits(guessDigits, setGuessDigits, guessRefs, i, e.clipboardData.getData('text'));
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === 'Backspace' && !guess[i] && i > 0) {
-                      // Focus previous box on backspace
-                      const target = e.target as HTMLElement;
-                      const prevInput = target.previousElementSibling as HTMLInputElement;
-                      if (prevInput && prevInput.tagName === 'INPUT') {
-                        prevInput.focus();
-                      }
-                    } else if (e.key === 'Enter' && guess.length === numberLength) {
+                    if (e.key === 'Backspace' && !guessDigits[i] && i > 0) {
+                      guessRefs.current[i - 1]?.focus();
+                    } else if (e.key === 'Enter' && guessComplete) {
                       handleMakeGuess();
                     }
                   }}
@@ -250,7 +235,7 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
 
           <button
             onClick={handleMakeGuess}
-            disabled={guess.length !== numberLength || room.gameStatus !== 'playing'}
+            disabled={!guessComplete || room.gameStatus !== 'playing'}
             className="btn btn-success btn-lg w-100"
           >
             {room.gameStatus === 'playing' ? t('turn.submitGuess') : t('turn.waitingForBoth')}
