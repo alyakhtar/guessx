@@ -98,7 +98,7 @@ export function submitDailyGuess(
   };
 }
 
-export function toDailyChallengeResponse(attempt: DailyChallengeAttempt, secret: string) {
+export function toDailyChallengeResponse(attempt: DailyChallengeAttempt, secret: string, streak?: number) {
   const completed = attempt.status !== 'active';
   return {
     challengeDate: attempt.challengeDate,
@@ -110,6 +110,7 @@ export function toDailyChallengeResponse(attempt: DailyChallengeAttempt, secret:
     status: attempt.status,
     completedAt: attempt.completedAt ?? null,
     remainingGuesses: Math.max(DAILY_CHALLENGE_MAX_GUESSES - attempt.guesses.length, 0),
+    ...(typeof streak === 'number' ? { streak } : {}),
     ...(completed ? { answer: secret } : {}),
   };
 }

@@ -8,6 +8,7 @@ import {
 import DailyChallengeAttemptModel from '../../../../lib/models/DailyChallengeAttempt.model';
 import {
   applyGuestCookie,
+  accountDailyChallengeStreak,
   dailyParticipant,
   getCurrentDailyAttempt,
   toAttempt,
@@ -54,8 +55,10 @@ export async function POST(request: Request) {
       return clientError('This daily attempt was updated elsewhere. Refresh and try again.', 409);
     }
 
+    const updatedAttempt = toAttempt(updated);
+    const streak = await accountDailyChallengeStreak(participant, updatedAttempt.challengeDate);
     return applyGuestCookie(
-      NextResponse.json(toDailyChallengeResponse(toAttempt(updated), secret), { headers: { 'Cache-Control': 'no-store' } }),
+      NextResponse.json(toDailyChallengeResponse(updatedAttempt, secret, streak), { headers: { 'Cache-Control': 'no-store' } }),
       participant,
     );
   } catch (error) {
