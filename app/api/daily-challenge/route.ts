@@ -13,6 +13,7 @@ import {
   type DailyChallengeAttempt,
 } from '../../../lib/dailyChallenge';
 import DailyChallengeAttemptModel from '../../../lib/models/DailyChallengeAttempt.model';
+import { currentDailyChallengeStreak } from '../../../lib/dailyChallengeStreak';
 
 export const runtime = 'nodejs';
 
@@ -169,11 +170,22 @@ export async function getCurrentDailyAttempt(participant: DailyParticipant, now 
   return { attempt: toAttempt(attempt), secret: deriveDailySecret(challengeDate, secret) };
 }
 
+export async function accountDailyChallengeStreak(participant: DailyParticipant, today: string) {
+  if (participant.kind !== 'account' || !participant.userId) return undefined;
+
+  const completed = await DailyChallengeAttemptModel.find({
+    userId: participant.userId,
+    status: { $in: ['won', 'exhausted'] },
+  }).select({ challengeDate: 1, _id: 0 }).lean();
+  return currentDailyChallengeStreak(completed.map((attempt) => attempt.challengeDate), today);
+}
+
 export async function GET() {
   try {
     const participant = await dailyParticipant();
     const { attempt, secret } = await getCurrentDailyAttempt(participant);
-    return applyGuestCookie(NextResponse.json(toDailyChallengeResponse(attempt, secret), { headers: { 'Cache-Control': 'no-store' } }), participant);
+    const streak = await accountDailyChallengeStreak(participant, attempt.challengeDate);
+    return applyGuestCookie(NextResponse.json(toDailyChallengeResponse(attempt, secret, streak), { headers: { 'Cache-Control': 'no-store' } }), participant);
   } catch (error) {
     console.error('Unable to load daily challenge:', error);
     return NextResponse.json({ error: 'Daily Challenge is unavailable' }, { status: 503 });

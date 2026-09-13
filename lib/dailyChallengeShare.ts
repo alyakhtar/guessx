@@ -8,6 +8,7 @@ export type DailyChallengeShareAttempt = {
   maxGuesses: number;
   guesses: DailyChallengeShareGuess[];
   status: 'won' | 'exhausted';
+  streak?: number;
 };
 
 export function dailyChallengeFeedbackRow(correctPositions: number, numberLength: number) {
@@ -19,7 +20,7 @@ export function buildDailyChallengeShareText(attempt: DailyChallengeShareAttempt
   const result = attempt.status === 'won'
     ? `${attempt.guesses.length}/${attempt.maxGuesses}`
     : `X/${attempt.maxGuesses}`;
-  const header = `GuessX Daily #${attempt.challengeNumber} · ${result}`;
+  const header = `GuessX Daily #${attempt.challengeNumber} · ${result}${attempt.streak ? ` · 🔥 ${attempt.streak}` : ''}`;
   const rows = attempt.guesses.map((guess) => dailyChallengeFeedbackRow(guess.correctPositions, attempt.numberLength));
 
   return [header, ...rows].join('\n');

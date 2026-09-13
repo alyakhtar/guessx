@@ -8,7 +8,7 @@ import { canNativeShare, copyToClipboard } from '../lib/share';
 
 type DailyChallengeShareButtonAttempt = DailyChallengeShareAttempt | (Omit<DailyChallengeShareAttempt, 'status'> & { status: 'active' });
 
-export default function DailyChallengeShareButton({ attempt }: { attempt: DailyChallengeShareButtonAttempt }) {
+export default function DailyChallengeShareButton({ attempt, streak }: { attempt: DailyChallengeShareButtonAttempt; streak?: number }) {
   const locale = useLocale();
   const t = useTranslations('daily.share');
   const [copied, setCopied] = useState(false);
@@ -17,7 +17,7 @@ export default function DailyChallengeShareButton({ attempt }: { attempt: DailyC
   if (attempt.status === 'active') return null;
 
   const result = () => buildDailyChallengeShareMessage(
-    attempt,
+    { ...attempt, ...(streak ? { streak } : {}) },
     new URL(`/${locale}/daily`, window.location.origin).toString(),
   );
 

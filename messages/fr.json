@@ -400,7 +400,8 @@
       "won": "Terminé — voir votre résultat",
       "exhausted": "Terminé — voir votre résultat",
       "play": "Jouer",
-      "view": "Voir le résultat"
+      "view": "Voir le résultat",
+      "streak": "🔥 Série de {count} jours"
     }
   },
   "admin": {

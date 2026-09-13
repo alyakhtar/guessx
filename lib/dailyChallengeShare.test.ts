@@ -43,4 +43,15 @@ describe('Daily Challenge sharing', () => {
       status: 'won',
     }, 'https://guessx.example/en/daily')).toBe('GuessX Daily #256 · 1/10\n🟩⬛⬛⬛\nhttps://guessx.example/en/daily');
   });
+
+  it('includes a completed Daily Challenge streak without changing feedback rows', () => {
+    expect(buildDailyChallengeShareText({
+      challengeNumber: 256,
+      numberLength: 4,
+      maxGuesses: 10,
+      guesses: [{ correctPositions: 2 }],
+      status: 'won',
+      streak: 12,
+    })).toBe('GuessX Daily #256 · 1/10 · 🔥 12\n🟩🟩⬛⬛');
+  });
 });

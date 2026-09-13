@@ -8,6 +8,10 @@ import { useLocale, useTranslations } from 'next-intl';
 import GoogleIcon from './GoogleIcon';
 import { useApplicationAuthAvailable } from './AuthProvider';
 import DailyChallengeShareButton from './DailyChallengeShareButton';
+import {
+  guestDailyChallengeStreak,
+  recordGuestDailyChallengeCompletion,
+} from '../lib/dailyChallengeStreak';
 
 type DailyGuess = {
   guess: string;
@@ -23,6 +27,8 @@ type DailyAttempt = {
   guesses: DailyGuess[];
   status: 'active' | 'won' | 'exhausted';
   remainingGuesses: number;
+  participantKind: 'account' | 'guest';
+  streak?: number;
   answer?: string;
 };
 
@@ -73,6 +79,7 @@ export default function DailyChallenge() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [guestStreak, setGuestStreak] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const loadAttempt = useCallback(async () => {
@@ -82,6 +89,12 @@ export default function DailyChallenge() {
       const response = await fetch('/api/daily-challenge', { cache: 'no-store' });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || t('errors.unavailable'));
+      if (payload.participantKind === 'guest') {
+        const streak = payload.status === 'active'
+          ? guestDailyChallengeStreak(window.localStorage, payload.challengeDate)
+          : recordGuestDailyChallengeCompletion(window.localStorage, payload.challengeDate);
+        setGuestStreak(streak);
+      }
       setAttempt(payload);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : t('errors.unavailable'));
@@ -113,6 +126,9 @@ export default function DailyChallenge() {
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || t('errors.submit'));
+      if (payload.participantKind === 'guest' && payload.status !== 'active') {
+        setGuestStreak(recordGuestDailyChallengeCompletion(window.localStorage, payload.challengeDate));
+      }
       setAttempt(payload);
       setGuess('');
     } catch (submitError) {
@@ -192,7 +208,7 @@ export default function DailyChallenge() {
             )}
 
             {error && <div className="alert alert-danger mt-3 mb-0" role="alert">{error}</div>}
-            {complete && <DailyChallengeShareButton attempt={attempt} />}
+            {complete && <DailyChallengeShareButton attempt={attempt} streak={attempt.participantKind === 'account' ? attempt.streak : guestStreak} />}
             {complete && applicationAuthAvailable && <DailyChallengeSignInPrompt />}
 
             <section className="mt-4" aria-labelledby="daily-history-heading">

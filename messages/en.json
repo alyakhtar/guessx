@@ -400,7 +400,8 @@
       "won": "Completed — view your result",
       "exhausted": "Completed — view your result",
       "play": "Play now",
-      "view": "View result"
+      "view": "View result",
+      "streak": "🔥 {count}-day streak"
     }
   },
   "admin": {
