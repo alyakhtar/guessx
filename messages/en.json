@@ -380,6 +380,13 @@
       "buttonWithGoogle": "Sign in with Google to save today’s result",
       "working": "Opening Google…"
     },
+    "share": {
+      "title": "Share your Daily Challenge result",
+      "button": "Share result",
+      "copy": "Copy result",
+      "copied": "Result copied",
+      "failed": "We couldn’t copy your result. Please try again."
+    },
     "errors": {
       "unavailable": "The Daily Challenge is unavailable right now. Please try again later.",
       "submit": "We could not record that guess. Please try again."

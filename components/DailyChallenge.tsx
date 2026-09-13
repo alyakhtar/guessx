@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from 'next-intl';
 
 import GoogleIcon from './GoogleIcon';
 import { useApplicationAuthAvailable } from './AuthProvider';
+import DailyChallengeShareButton from './DailyChallengeShareButton';
 
 type DailyGuess = {
   guess: string;
@@ -191,6 +192,7 @@ export default function DailyChallenge() {
             )}
 
             {error && <div className="alert alert-danger mt-3 mb-0" role="alert">{error}</div>}
+            {complete && <DailyChallengeShareButton attempt={attempt} />}
             {complete && applicationAuthAvailable && <DailyChallengeSignInPrompt />}
 
             <section className="mt-4" aria-labelledby="daily-history-heading">
@@ -198,9 +200,10 @@ export default function DailyChallenge() {
               {attempt.guesses.length === 0 ? (
                 <p className="text-muted mb-0">{t('history.empty')}</p>
               ) : (
-                <ol className="list-group list-group-numbered">
-                  {attempt.guesses.map((entry, index) => (
-                    <li className="list-group-item d-flex align-items-center justify-content-between gap-3" key={`${entry.guess}-${index}`}>
+                <ol className="list-group mb-0">
+                  {[...attempt.guesses].reverse().map((entry, index) => (
+                    <li className="list-group-item d-flex align-items-center justify-content-between gap-3" key={`${entry.guess}-${attempt.guesses.length - index}`} value={attempt.guesses.length - index}>
+                      <span className="text-muted fw-semibold" aria-hidden="true">{attempt.guesses.length - index}.</span>
                       <code className="fs-5">{entry.guess}</code>
                       <span className={entry.correctPositions === attempt.numberLength ? 'badge text-bg-success fs-6' : 'badge text-bg-secondary fs-6'}>
                         {t('history.correct', { count: entry.correctPositions, length: attempt.numberLength })}
