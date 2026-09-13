@@ -2,7 +2,11 @@
 
 import Link from 'next/link';
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { signIn, useSession } from 'next-auth/react';
 import { useLocale, useTranslations } from 'next-intl';
+
+import GoogleIcon from './GoogleIcon';
+import { useApplicationAuthAvailable } from './AuthProvider';
 
 type DailyGuess = {
   guess: string;
@@ -21,9 +25,48 @@ type DailyAttempt = {
   answer?: string;
 };
 
+function DailyChallengeSignInPrompt() {
+  const locale = useLocale();
+  const t = useTranslations('daily.signIn');
+  const { status } = useSession();
+  const [isWorking, setIsWorking] = useState(false);
+
+  if (status !== 'unauthenticated') return null;
+
+  const startSignIn = async () => {
+    setIsWorking(true);
+    try {
+      await signIn('google', { redirectTo: `/${locale}/daily` });
+    } catch {
+      setIsWorking(false);
+    }
+  };
+
+  return (
+    <aside className="alert alert-info mt-3 mb-0" aria-label={t('title')}>
+      <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+        <div>
+          <h2 className="h6 mb-1">{t('title')}</h2>
+          <p className="small mb-0">{t('description')}</p>
+        </div>
+        <button
+          type="button"
+          className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1 align-self-start align-self-sm-center"
+          aria-label={t('buttonWithGoogle')}
+          disabled={isWorking}
+          onClick={startSignIn}
+        >
+          {isWorking ? t('working') : <><GoogleIcon /> <span>{t('button')}</span></>}
+        </button>
+      </div>
+    </aside>
+  );
+}
+
 export default function DailyChallenge() {
   const locale = useLocale();
   const t = useTranslations('daily');
+  const applicationAuthAvailable = useApplicationAuthAvailable();
   const [attempt, setAttempt] = useState<DailyAttempt | null>(null);
   const [guess, setGuess] = useState('');
   const [error, setError] = useState('');
@@ -148,6 +191,7 @@ export default function DailyChallenge() {
             )}
 
             {error && <div className="alert alert-danger mt-3 mb-0" role="alert">{error}</div>}
+            {complete && applicationAuthAvailable && <DailyChallengeSignInPrompt />}
 
             <section className="mt-4" aria-labelledby="daily-history-heading">
               <h2 className="h5" id="daily-history-heading">{t('history.title')}</h2>

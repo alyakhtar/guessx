@@ -50,8 +50,20 @@ DailyChallengeAttemptSchema.index(
 );
 DailyChallengeAttemptSchema.index({ challengeDate: 1, status: 1 }, { name: 'daily_attempt_status_reporting' });
 DailyChallengeAttemptSchema.index({ userId: 1, challengeDate: -1 }, { name: 'daily_account_attempt_history', sparse: true });
+// One durable account result per UTC daily challenge. The participant-key index
+// still prevents duplicate guest/browser attempts; this index prevents an
+// account from receiving a second result after switching devices or signing in.
+DailyChallengeAttemptSchema.index(
+  { challengeDate: 1, userId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { userId: { $exists: true } },
+    name: 'daily_attempt_per_account',
+  },
+);
 
 const DailyChallengeAttemptModel = (models.DailyChallengeAttempt
   || model<DailyChallengeAttemptDocument>('DailyChallengeAttempt', DailyChallengeAttemptSchema)) as mongoose.Model<DailyChallengeAttemptDocument>;
 
+export { DailyChallengeAttemptSchema };
 export default DailyChallengeAttemptModel;

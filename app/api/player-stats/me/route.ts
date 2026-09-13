@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 
 import { auth } from '../../../../auth';
 import { buildAccountStats, type GameResultRecord } from '../../../../lib/gameResults/stats';
+import { buildDailyChallengeStats, type DailyChallengeStatsRecord } from '../../../../lib/dailyChallengeStats';
+import DailyChallengeAttemptModel from '../../../../lib/models/DailyChallengeAttempt.model';
 import GameResultModel from '../../../../lib/models/GameResult.model';
 import connectToDatabase from '../../../../lib/mongodb';
 
@@ -18,8 +20,15 @@ export async function GET() {
     const gameResults = await gameResultModel.find({
       $or: [{ player1UserId: userId }, { player2UserId: userId }],
     }).lean();
+    const dailyChallengeModel = DailyChallengeAttemptModel as unknown as {
+      find(filter: Record<string, unknown>): { lean(): Promise<DailyChallengeStatsRecord[]> };
+    };
+    const dailyChallenges = await dailyChallengeModel.find({ userId }).lean();
     const displayName = session.user.name || session.user.email || 'Player';
-    return NextResponse.json(buildAccountStats(gameResults, userId, displayName), {
+    return NextResponse.json({
+      ...buildAccountStats(gameResults, userId, displayName),
+      dailyChallenge: buildDailyChallengeStats(dailyChallenges),
+    }, {
       headers: { 'Cache-Control': 'private, no-store' },
     });
   } catch (error) {

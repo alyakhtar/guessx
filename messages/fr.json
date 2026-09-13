@@ -337,6 +337,14 @@
       "averageWinningGuesses": "Moy. de tentatives pour gagner",
       "bestWin": "Meilleure victoire",
       "fastestWin": "Victoire la plus rapide"
+    },
+    "daily": {
+      "title": "Défis quotidiens",
+      "completed": "Terminés",
+      "wins": "Résolus",
+      "winRate": "Taux de réussite",
+      "averageGuesses": "Moy. d'essais",
+      "bestWin": "Meilleure résolution"
     }
   },
   "daily": {
@@ -364,6 +372,13 @@
       "exhaustedTitle": "Le défi du jour est terminé",
       "exhaustedBody": "Vous avez utilisé tous vos essais. Revenez demain pour un nouveau nombre.",
       "answer": "Le nombre du jour était {answer}."
+    },
+    "signIn": {
+      "title": "Enregistrez le résultat du jour",
+      "description": "Connectez-vous pour associer ce Défi quotidien à votre compte et conserver vos statistiques quotidiennes.",
+      "button": "Se connecter pour enregistrer",
+      "buttonWithGoogle": "Se connecter avec Google pour enregistrer le résultat du jour",
+      "working": "Ouverture de Google…"
     },
     "errors": {
       "unavailable": "Le Défi quotidien est indisponible pour le moment. Réessayez plus tard.",

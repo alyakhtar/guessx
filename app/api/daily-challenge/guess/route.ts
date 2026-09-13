@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Daily Challenge is unavailable';
-    if (message.includes('four-digit') || message.includes('already complete') || message.includes('no guesses remaining')) {
+    if (message.includes('four-digit') || message.includes('already complete') || message.includes('no guesses remaining') || message.includes('already tried')) {
       return clientError(message, 409);
     }
     console.error('Unable to submit daily challenge guess:', error);

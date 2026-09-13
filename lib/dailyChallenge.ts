@@ -84,6 +84,7 @@ export function submitDailyGuess(
   if (attempt.status !== 'active') throw new Error('Daily challenge is already complete');
   if (attempt.guesses.length >= DAILY_CHALLENGE_MAX_GUESSES) throw new Error('Daily challenge has no guesses remaining');
   if (!validateNumber(guess, DAILY_CHALLENGE_LENGTH)) throw new Error('Guess must be a four-digit number');
+  if (attempt.guesses.some((entry) => entry.guess === guess)) throw new Error('You already tried this number');
 
   const correctPositions = calculateCorrectPositions(guess, secret);
   const guessEntry: DailyChallengeGuess = { guess, correctPositions, createdAt: now };

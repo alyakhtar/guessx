@@ -22,6 +22,7 @@ type DailyParticipant = {
   kind: 'account' | 'guest';
   participantKey: string;
   userId?: string;
+  guestParticipantKey?: string;
   newGuestIdentifier?: string;
 };
 
@@ -32,12 +33,21 @@ function configuredSecret() {
 export async function dailyParticipant(): Promise<DailyParticipant> {
   const session = await auth().catch(() => null);
   const userId = session?.user?.id;
-  if (userId) {
-    return { kind: 'account', userId, participantKey: accountParticipantKey(userId) };
-  }
-
   const cookieStore = await cookies();
   const existing = cookieStore.get(DAILY_CHALLENGE_GUEST_COOKIE)?.value;
+  const existingGuestParticipantKey = existing && /^[a-f0-9-]{36}$/i.test(existing)
+    ? guestParticipantKey(existing)
+    : undefined;
+
+  if (userId) {
+    return {
+      kind: 'account',
+      userId,
+      participantKey: accountParticipantKey(userId),
+      ...(existingGuestParticipantKey ? { guestParticipantKey: existingGuestParticipantKey } : {}),
+    };
+  }
+
   const identifier = existing && /^[a-f0-9-]{36}$/i.test(existing) ? existing : createGuestIdentifier();
   return {
     kind: 'guest',
@@ -80,13 +90,12 @@ function toAttempt(value: StoredAttempt): DailyChallengeAttempt {
   };
 }
 
-export async function getCurrentDailyAttempt(participant: DailyParticipant, now = new Date()) {
-  const secret = configuredSecret();
-  if (!secret) throw new Error('Daily Challenge is unavailable');
+function isDuplicateKeyError(error: unknown) {
+  return typeof error === 'object' && error !== null && 'code' in error && (error as { code?: unknown }).code === 11000;
+}
 
-  const challengeDate = utcChallengeDate(now);
-  await connectToDatabase();
-  const attempt = await DailyChallengeAttemptModel.findOneAndUpdate(
+async function createAttempt(participant: DailyParticipant, challengeDate: string) {
+  return DailyChallengeAttemptModel.findOneAndUpdate(
     { challengeDate, participantKey: participant.participantKey },
     {
       $setOnInsert: {
@@ -100,6 +109,63 @@ export async function getCurrentDailyAttempt(participant: DailyParticipant, now 
     },
     { new: true, upsert: true, setDefaultsOnInsert: true },
   ).lean();
+}
+
+async function accountAttemptForToday(participant: DailyParticipant, challengeDate: string) {
+  const existing = await DailyChallengeAttemptModel.findOne({
+    challengeDate,
+    participantKey: participant.participantKey,
+  }).lean();
+  if (existing) return existing;
+
+  // A guest who signs in from this browser keeps the exact same attempt.
+  // If the account already completed the day elsewhere, the unique index wins
+  // and the unclaimed guest record cannot add a second account result.
+  if (participant.guestParticipantKey) {
+    try {
+      const claimed = await DailyChallengeAttemptModel.findOneAndUpdate(
+        {
+          challengeDate,
+          participantKey: participant.guestParticipantKey,
+          participantKind: 'guest',
+        },
+        {
+          $set: {
+            participantKind: 'account',
+            participantKey: participant.participantKey,
+            userId: participant.userId,
+          },
+        },
+        { new: true },
+      ).lean();
+      if (claimed) return claimed;
+    } catch (error) {
+      if (!isDuplicateKeyError(error)) throw error;
+    }
+  }
+
+  try {
+    return await createAttempt(participant, challengeDate);
+  } catch (error) {
+    if (!isDuplicateKeyError(error)) throw error;
+    const accountAttempt = await DailyChallengeAttemptModel.findOne({
+      challengeDate,
+      participantKey: participant.participantKey,
+    }).lean();
+    if (accountAttempt) return accountAttempt;
+    throw error;
+  }
+}
+
+export async function getCurrentDailyAttempt(participant: DailyParticipant, now = new Date()) {
+  const secret = configuredSecret();
+  if (!secret) throw new Error('Daily Challenge is unavailable');
+
+  const challengeDate = utcChallengeDate(now);
+  await connectToDatabase();
+  const attempt = participant.kind === 'account'
+    ? await accountAttemptForToday(participant, challengeDate)
+    : await createAttempt(participant, challengeDate);
   return { attempt: toAttempt(attempt), secret: deriveDailySecret(challengeDate, secret) };
 }
 

@@ -59,4 +59,12 @@ describe('daily challenge', () => {
   it('rejects invalid guesses before calculating feedback', () => {
     expect(() => submitDailyGuess({ guesses: [], status: 'active' }, '123', '1234')).toThrow('four-digit');
   });
+
+  it('rejects a number already used in the same attempt', () => {
+    const attempt = {
+      guesses: [{ guess: '1234', correctPositions: 0, createdAt: new Date() }],
+      status: 'active' as const,
+    };
+    expect(() => submitDailyGuess(attempt, '1234', '5678')).toThrow('already tried');
+  });
 });
