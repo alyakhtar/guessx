@@ -339,6 +339,48 @@
       "fastestWin": "Victoire la plus rapide"
     }
   },
+  "daily": {
+    "eyebrow": "Défi quotidien",
+    "title": "Défi quotidien",
+    "titleWithNumber": "Défi #{number}",
+    "backToLobby": "Retour à l'accueil",
+    "loading": "Chargement du défi du jour…",
+    "retry": "Réessayer",
+    "instructions": "Trouvez le nombre partagé de {length} chiffres en {max} essais ou moins.",
+    "progress": "Votre progression",
+    "remaining": "{remaining} essais sur {max} restants",
+    "guessLabel": "Entrez une proposition de {length} chiffres",
+    "guessHelp": "Nous indiquerons combien de chiffres sont à la bonne position.",
+    "submit": "Valider la proposition",
+    "submitting": "Vérification…",
+    "history": {
+      "title": "Vos propositions",
+      "empty": "Vos propositions apparaîtront ici.",
+      "correct": "{count} sur {length} correct"
+    },
+    "complete": {
+      "wonTitle": "Vous avez trouvé !",
+      "wonBody": "Vous avez trouvé le nombre du jour en {count} essais.",
+      "exhaustedTitle": "Le défi du jour est terminé",
+      "exhaustedBody": "Vous avez utilisé tous vos essais. Revenez demain pour un nouveau nombre.",
+      "answer": "Le nombre du jour était {answer}."
+    },
+    "errors": {
+      "unavailable": "Le Défi quotidien est indisponible pour le moment. Réessayez plus tard.",
+      "submit": "Votre proposition n'a pas pu être enregistrée. Réessayez."
+    },
+    "card": {
+      "eyebrow": "Une énigme partagée chaque jour",
+      "title": "Défi quotidien du jour",
+      "titleWithNumber": "Défi #{number}",
+      "loading": "Préparation du défi du jour…",
+      "ready": "{remaining} essais restants",
+      "won": "Terminé — voir votre résultat",
+      "exhausted": "Terminé — voir votre résultat",
+      "play": "Jouer",
+      "view": "Voir le résultat"
+    }
+  },
   "admin": {
     "title": "Panneau d'administration",
     "nav": {

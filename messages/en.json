@@ -339,6 +339,48 @@
       "fastestWin": "Fastest win"
     }
   },
+  "daily": {
+    "eyebrow": "Daily Challenge",
+    "title": "Daily Challenge",
+    "titleWithNumber": "Daily #{number}",
+    "backToLobby": "Back to lobby",
+    "loading": "Loading today’s challenge…",
+    "retry": "Try again",
+    "instructions": "Find the shared {length}-digit number in {max} guesses or fewer.",
+    "progress": "Your progress",
+    "remaining": "{remaining} of {max} guesses left",
+    "guessLabel": "Enter a {length}-digit guess",
+    "guessHelp": "We’ll show how many digits are in the correct position.",
+    "submit": "Submit guess",
+    "submitting": "Checking…",
+    "history": {
+      "title": "Your guesses",
+      "empty": "Your guesses will appear here.",
+      "correct": "{count} of {length} correct"
+    },
+    "complete": {
+      "wonTitle": "You solved it!",
+      "wonBody": "You found today’s number in {count} guesses.",
+      "exhaustedTitle": "That’s today’s challenge",
+      "exhaustedBody": "You used all of your guesses. Come back tomorrow for a new number.",
+      "answer": "Today’s number was {answer}."
+    },
+    "errors": {
+      "unavailable": "The Daily Challenge is unavailable right now. Please try again later.",
+      "submit": "We could not record that guess. Please try again."
+    },
+    "card": {
+      "eyebrow": "One shared puzzle every day",
+      "title": "Today’s Daily Challenge",
+      "titleWithNumber": "Daily #{number}",
+      "loading": "Preparing today’s challenge…",
+      "ready": "{remaining} guesses remaining",
+      "won": "Completed — view your result",
+      "exhausted": "Completed — view your result",
+      "play": "Play now",
+      "view": "View result"
+    }
+  },
   "admin": {
     "title": "Admin Panel",
     "nav": {
