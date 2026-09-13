@@ -383,6 +383,7 @@
     "share": {
       "title": "Partagez votre résultat du Défi quotidien",
       "button": "Partager le résultat",
+      "copy": "Copier le résultat",
       "copied": "Résultat copié",
       "failed": "Nous n'avons pas pu copier votre résultat. Réessayez."
     },

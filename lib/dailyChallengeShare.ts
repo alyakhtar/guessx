@@ -24,3 +24,7 @@ export function buildDailyChallengeShareText(attempt: DailyChallengeShareAttempt
 
   return [header, ...rows].join('\n');
 }
+
+export function buildDailyChallengeShareMessage(attempt: DailyChallengeShareAttempt, url: string) {
+  return `${buildDailyChallengeShareText(attempt)}\n${url}`;
+}

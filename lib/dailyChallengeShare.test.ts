@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildDailyChallengeShareText, dailyChallengeFeedbackRow } from './dailyChallengeShare';
+import { buildDailyChallengeShareMessage, buildDailyChallengeShareText, dailyChallengeFeedbackRow } from './dailyChallengeShare';
 
 describe('Daily Challenge sharing', () => {
   it('builds a stable spoiler-free result for a win', () => {
@@ -32,5 +32,15 @@ describe('Daily Challenge sharing', () => {
 
   it('renders zero-correct-position feedback as neutral squares', () => {
     expect(dailyChallengeFeedbackRow(0, 4)).toBe('⬛⬛⬛⬛');
+  });
+
+  it('keeps the complete result and Daily Challenge link in one share message', () => {
+    expect(buildDailyChallengeShareMessage({
+      challengeNumber: 256,
+      numberLength: 4,
+      maxGuesses: 10,
+      guesses: [{ correctPositions: 1 }],
+      status: 'won',
+    }, 'https://guessx.example/en/daily')).toBe('GuessX Daily #256 · 1/10\n🟩⬛⬛⬛\nhttps://guessx.example/en/daily');
   });
 });

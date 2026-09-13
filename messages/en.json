@@ -383,6 +383,7 @@
     "share": {
       "title": "Share your Daily Challenge result",
       "button": "Share result",
+      "copy": "Copy result",
       "copied": "Result copied",
       "failed": "We couldn’t copy your result. Please try again."
     },
