@@ -206,6 +206,25 @@ function generateHardBotGuess(length, gameHistory, minGuess, maxGuess) {
   return possibleCandidates[Math.floor(Math.random() * possibleCandidates.length)];
 }
 
+// Genius is deliberately separate from Hard. Hard remains the existing
+// configurable pacing mode; Genius derives every guess exclusively from the
+// bot's own previous guesses and their server-provided feedback.
+function generateGeniusBotGuess(length, botHistory, minGuess = 10 ** (length - 1), maxGuess = 10 ** length - 1) {
+  const previousGuesses = new Set(botHistory.map(history => history.guess));
+  let possibleCandidates = [];
+  for (let i = minGuess; i <= maxGuess; i++) {
+    const candidate = i.toString();
+    if (!previousGuesses.has(candidate)) possibleCandidates.push(candidate);
+  }
+  botHistory.forEach(({ guess, correctPositions }) => {
+    possibleCandidates = possibleCandidates.filter(candidate =>
+      calculateCorrectPositions(guess, candidate) === correctPositions,
+    );
+  });
+  if (possibleCandidates.length === 0) return generateRandomGuess(length, botHistory, minGuess, maxGuess);
+  return possibleCandidates[Math.floor(Math.random() * possibleCandidates.length)];
+}
+
 function isConsistentWithHistory(numStr, gameHistory) {
   return gameHistory.every(history => calculateCorrectPositions(history.guess, numStr) >= history.correctPositions);
 }
@@ -529,9 +548,18 @@ class GameServer {
       const player = this.createPlayer(socket, normalizedName);
       const players = [player];
       if (isSinglePlayer) {
-        await buildConfigs();
+        if (botDifficulty !== 'genius') await buildConfigs();
         const botId = `bot_${roomId}`;
-        const bot = { id: botId, name: 'Bot', isConnected: true, isReady: false, isBot: true, botDifficulty: botDifficulty, numberLength: numberLength, winThreshold: null };
+        const bot = {
+          id: botId,
+          name: 'Bot',
+          isConnected: true,
+          isReady: false,
+          isBot: true,
+          botDifficulty,
+          numberLength,
+          ...(botDifficulty === 'genius' ? {} : { winThreshold: null }),
+        };
         players.push(bot);
       }
       let accessCode;
@@ -685,7 +713,9 @@ class GameServer {
       const currentPlayer = room.players.find(p => p.id === room.currentTurn);
       if (currentPlayer && currentPlayer.isBot) {
         setTimeout(() => this.makeBotGuess(roomId), 1000);
-        if (Date.now() - lastConfigLoad > 5000) buildConfigs().catch(console.error);
+        if (currentPlayer.botDifficulty !== 'genius' && Date.now() - lastConfigLoad > 5000) {
+          buildConfigs().catch(console.error);
+        }
       }
     }
     this.emitRoomEvent(room, 'room_updated');
@@ -697,21 +727,35 @@ class GameServer {
     let bot = room.players.find(p => p.id === room.currentTurn && p.isBot);
     if (!bot) return;
     const botId = bot.id;
-    const config = await getDifficultyConfig(bot.botDifficulty, bot.numberLength);
-    room = this.rooms.get(roomId);
-    if (!room || room.gameStatus !== 'playing' || room.currentTurn !== botId) return;
-    bot = room.players.find(p => p.id === botId && p.isBot);
-    const opponent = room.players.find(p => p.id !== botId);
-    if (!bot || !opponent || !opponent.secretNumber) return;
-    const botGuessCount = room.gameHistory.filter(g => g.playerName === bot.name).length;
-    if (bot.winThreshold === null) {
-      bot.winThreshold = Math.floor(Math.random() * (config.maxGuesses - config.minGuesses + 1)) + config.minGuesses;
-      console.log(`Bot threshold set to: ${bot.winThreshold}`);
-    }
-    const currentGuessNumber = botGuessCount + 1;
     let guess;
-    if (currentGuessNumber >= bot.winThreshold) guess = opponent.secretNumber;
-    else guess = generateBotGuess(bot.botDifficulty, room.numberLength, room.gameHistory);
+    let opponent;
+
+    if (bot.botDifficulty === 'genius') {
+      opponent = room.players.find(player => player.id !== botId);
+      if (!opponent) return;
+      const botHistory = room.gameHistory.filter(guessRecord => guessRecord.playerName === bot.name);
+      guess = generateGeniusBotGuess(bot.numberLength, botHistory);
+    } else {
+      const config = await getDifficultyConfig(bot.botDifficulty, bot.numberLength);
+      room = this.rooms.get(roomId);
+      if (!room || room.gameStatus !== 'playing' || room.currentTurn !== botId) return;
+      bot = room.players.find(player => player.id === botId && player.isBot);
+      opponent = room.players.find(player => player.id !== botId);
+      if (!bot || !opponent || !opponent.secretNumber) return;
+      const botGuessCount = room.gameHistory.filter(guessRecord => guessRecord.playerName === bot.name).length;
+      if (bot.winThreshold === null) {
+        bot.winThreshold = Math.floor(Math.random() * (config.maxGuesses - config.minGuesses + 1)) + config.minGuesses;
+        console.log(`Bot threshold set to: ${bot.winThreshold}`);
+      }
+      const currentGuessNumber = botGuessCount + 1;
+      guess = currentGuessNumber >= bot.winThreshold
+        ? opponent.secretNumber
+        : generateBotGuess(bot.botDifficulty, room.numberLength, room.gameHistory);
+    }
+
+    // Genius reaches this authoritative scoring step only after selecting a
+    // candidate. It has no threshold and never uses this secret to choose one.
+    if (!opponent || !opponent.secretNumber) return;
     console.log(`Bot ${bot.name} guesses: ${guess}`);
     this.clearRoomTimer(roomId);
     const correctPositions = calculateCorrectPositions(guess, opponent.secretNumber);
@@ -793,3 +837,4 @@ class GameServer {
 module.exports = GameServer;
 module.exports.buildGameResultPayload = buildGameResultPayload;
 module.exports.buildMatchupStats = buildMatchupStats;
+module.exports.generateGeniusBotGuess = generateGeniusBotGuess;

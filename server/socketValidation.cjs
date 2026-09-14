@@ -1,7 +1,7 @@
 const NAME_MAX_LENGTH = 32;
 const ROOM_ID_PATTERN = /^[A-Z0-9]{6}$/;
 const ACCESS_CODE_PATTERN = /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{3}$/;
-const DIFFICULTIES = new Set(['easy', 'medium', 'hard']);
+const DIFFICULTIES = new Set(['easy', 'medium', 'hard', 'genius']);
 const NUMBER_LENGTHS = new Set([3, 4, 5, 6]);
 const TIMER_VALUES = new Set([0, 15, 30, 60]);
 

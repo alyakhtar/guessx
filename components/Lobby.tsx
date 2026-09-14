@@ -40,7 +40,7 @@ export default function Lobby() {
   const [spectatorModeEnabled, setSpectatorModeEnabled] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [isSinglePlayer, setIsSinglePlayer] = useState(false);
-  const [botDifficulty, setBotDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
+  const [botDifficulty, setBotDifficulty] = useState<'easy' | 'medium' | 'hard' | 'genius'>('easy');
   const [socket, setSocket] = useState<ReturnType<typeof socketService.connect> | null>(null);
   const [rooms, setRooms] = useState<GameRoom[]>([]);
   // Private room toggle (default off, per issue AC)
@@ -246,12 +246,13 @@ export default function Lobby() {
                     <label className="form-label fw-medium small">{t('createGame.botDifficultyLabel')}</label>
                     <select
                       value={botDifficulty}
-                      onChange={(e) => setBotDifficulty(e.target.value as 'easy' | 'medium' | 'hard')}
+                      onChange={(e) => setBotDifficulty(e.target.value as 'easy' | 'medium' | 'hard' | 'genius')}
                       className="form-select form-select-lg lobby-compact-control"
                     >
                       <option value="easy">{t('createGame.botDifficultyOptions.easy')}</option>
                       <option value="medium">{t('createGame.botDifficultyOptions.medium')}</option>
                       <option value="hard">{t('createGame.botDifficultyOptions.hard')}</option>
+                      <option value="genius">{t('createGame.botDifficultyOptions.genius')}</option>
                     </select>
                   </div>
                 ) : (

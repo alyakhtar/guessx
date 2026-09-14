@@ -8,7 +8,7 @@ export interface Player {
   botDifficulty?: BotDifficulty;
 }
 
-export type BotDifficulty = 'easy' | 'medium' | 'hard';
+export type BotDifficulty = 'easy' | 'medium' | 'hard' | 'genius';
 export type TurnTimerSeconds = 0 | 15 | 30 | 60;
 
 export interface Guess {
