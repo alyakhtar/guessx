@@ -51,12 +51,7 @@ export default function GameHistory({ gameHistory, currentPlayerName, opponentPl
             <tr>
               <th className="text-center">{showComparison ? t('table.yourGuess') : t('table.guess')}</th>
               <th className="text-center game-history-result-column">{t('table.correct')}</th>
-              {showComparison && (
-                <>
-                  <th className="text-center">{t('table.opponentGuess', { name: opponentPlayerName })}</th>
-                  <th className="text-center game-history-result-column">{t('table.correct')}</th>
-                </>
-              )}
+              {showComparison && <th className="text-center">{t('table.opponentGuess')}</th>}
             </tr>
           </thead>
           <tbody>
@@ -70,17 +65,18 @@ export default function GameHistory({ gameHistory, currentPlayerName, opponentPl
                     {myGuess ? <code className={showComparison ? 'fs-6' : 'fs-5'}>{myGuess.guess}</code> : <span className="text-muted">—</span>}
                   </td>
                   <td className="text-center align-middle game-history-result-column">
-                    <GuessResult guess={myGuess} compact={showComparison} />
+                    {showComparison ? (
+                      <div className="game-history-correct-pair">
+                        <GuessResult guess={myGuess} compact />
+                        <span className="game-history-correct-divider" aria-hidden="true" />
+                        <GuessResult guess={opponentGuess} compact />
+                      </div>
+                    ) : <GuessResult guess={myGuess} compact={false} />}
                   </td>
                   {showComparison && (
-                    <>
-                      <td className="text-center align-middle">
-                        {opponentGuess ? <code className="fs-6">{opponentGuess.guess}</code> : <span className="text-muted">—</span>}
-                      </td>
-                      <td className="text-center align-middle game-history-result-column">
-                        <GuessResult guess={opponentGuess} compact />
-                      </td>
-                    </>
+                    <td className="text-center align-middle">
+                      {opponentGuess ? <code className="fs-6">{opponentGuess.guess}</code> : <span className="text-muted">—</span>}
+                    </td>
                   )}
                 </tr>
               );

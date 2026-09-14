@@ -367,7 +367,7 @@
     "table": {
       "guess": "Supposition",
       "yourGuess": "Votre supposition",
-      "opponentGuess": "Supposition de {name}",
+      "opponentGuess": "Supp. adverse",
       "correct": "Correct"
     },
     "summary": {
