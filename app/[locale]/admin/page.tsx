@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useUserSettings } from '../../../lib/useUserSettings';
@@ -262,7 +262,7 @@ export default function AdminPage() {
         }
     };
 
-    const fetchDailyStats = async (date = selectedDailyDate) => {
+    const fetchDailyStats = useCallback(async (date = selectedDailyDate) => {
         setDailyStatsLoading(true);
         try {
             const response = await fetch(`/api/admin/daily-stats?date=${encodeURIComponent(date)}`, { cache: 'no-store' });
@@ -277,7 +277,7 @@ export default function AdminPage() {
         } finally {
             setDailyStatsLoading(false);
         }
-    };
+    }, [selectedDailyDate, t]);
 
     const formatDuration = (ms: number | null) => {
         if (!ms) return 'N/A';
@@ -294,7 +294,7 @@ export default function AdminPage() {
         if (activeTab === 'daily') {
             fetchDailyStats();
         }
-    }, [activeTab]);
+    }, [activeTab, fetchDailyStats]);
 
     if (loading) {
         return (
