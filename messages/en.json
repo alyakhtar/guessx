@@ -365,13 +365,15 @@
       "subtitle": "Your guesses will appear here"
     },
     "table": {
-      "number": "#",
       "guess": "Guess",
+      "yourGuess": "Your guess",
+      "opponentGuess": "{name}'s guess",
       "correct": "Correct"
     },
     "summary": {
-      "total": "Total Guesses:",
-      "last": "Last Guess:"
+      "total": "Total guesses",
+      "yourTotal": "Your total",
+      "opponentTotal": "{name}'s total"
     }
   },
   "playerStats": {

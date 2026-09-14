@@ -365,13 +365,15 @@
       "subtitle": "Vos suppositions apparaîtront ici"
     },
     "table": {
-      "number": "#",
       "guess": "Supposition",
+      "yourGuess": "Votre supposition",
+      "opponentGuess": "Supposition de {name}",
       "correct": "Correct"
     },
     "summary": {
-      "total": "Total des suppositions :",
-      "last": "Dernière supposition :"
+      "total": "Total des suppositions",
+      "yourTotal": "Votre total",
+      "opponentTotal": "Total de {name}"
     }
   },
   "playerStats": {

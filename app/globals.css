@@ -199,29 +199,6 @@ input[type="number"]::-webkit-inner-spin-button {
     padding-top: 0.75rem !important;
   }
 
-  /* The side-by-side preference renders a two-by-two board. Let that layout
-     grow normally so both history cards remain reachable instead of clipping
-     the second row inside the single-viewport three-column workspace. */
-  .game-room-shell--side-by-side {
-    height: auto;
-    overflow: visible;
-  }
-
-  .game-room-shell--side-by-side > .w-100 {
-    display: block;
-    flex: initial;
-    height: auto;
-  }
-
-  .game-room-shell--side-by-side .game-room-grid {
-    flex: initial;
-    overflow: visible;
-  }
-
-  .game-room-shell--side-by-side .game-room-column {
-    height: auto;
-  }
-
 }
 
 @layer utilities {
@@ -247,6 +224,24 @@ input[type="number"]::-webkit-inner-spin-button {
 
 .quick-reaction-button {
   line-height: 1.15;
+}
+
+.game-history-result-column {
+  width: 4.5rem;
+}
+
+.game-history-latest > * {
+  background-color: color-mix(in srgb, var(--bs-info) 22%, transparent) !important;
+}
+
+.game-history-table--comparison th,
+.game-history-table--comparison td {
+  padding: 0.5rem 0.25rem;
+  overflow-wrap: anywhere;
+}
+
+.game-history-table--comparison .game-history-result-column {
+  width: 3.5rem;
 }
 
 @media (min-width: 992px) and (min-height: 760px) {
