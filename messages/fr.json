@@ -177,6 +177,10 @@
     "quickReactions": {
       "label": "Réactions rapides",
       "description": "Afficher et envoyer des réactions prédéfinies pendant une partie."
+    },
+    "digitTracker": {
+      "label": "Suivi des chiffres",
+      "description": "Afficher le suivi des chiffres pendant la partie."
     }
   },
   "quickReactions": {

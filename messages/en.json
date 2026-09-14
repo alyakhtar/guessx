@@ -177,6 +177,10 @@
     "quickReactions": {
       "label": "Quick reactions",
       "description": "Show and send preset reactions during a game."
+    },
+    "digitTracker": {
+      "label": "Digit tracker",
+      "description": "Show the digit tracker while you play."
     }
   },
   "quickReactions": {

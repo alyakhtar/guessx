@@ -6,6 +6,7 @@ export interface UserSettings {
   revealSecretsOnWin: boolean;
   turnAlertSound: boolean;
   quickReactions: boolean;
+  digitTracker: boolean;
 }
 
 export const DEFAULTS: UserSettings = {
@@ -14,6 +15,7 @@ export const DEFAULTS: UserSettings = {
   revealSecretsOnWin: false,
   turnAlertSound: true,
   quickReactions: true,
+  digitTracker: true,
 };
 
 export const SETTINGS_SCHEMA = [
@@ -37,6 +39,11 @@ export const SETTINGS_SCHEMA = [
     key: 'quickReactions',
     labelKey: 'settings.quickReactions.label',
     descriptionKey: 'settings.quickReactions.description',
+  },
+  {
+    key: 'digitTracker',
+    labelKey: 'settings.digitTracker.label',
+    descriptionKey: 'settings.digitTracker.description',
   },
 ] as const;
 

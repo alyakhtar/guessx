@@ -442,7 +442,7 @@ export default function GameRoom() {
                   <QuickReactionButtons onReact={(reaction) => socketService.getSocket()?.emit('send_reaction', roomId, reaction)} />
                 </div>
               )}
-              {room.gameStatus === 'playing' && <DigitTracker />}
+              {settings.digitTracker && room.gameStatus === 'playing' && <DigitTracker />}
               {room.gameStatus === 'finished' && (
                 <div className="mt-3" aria-live="polite">
                   {matchupStats && (
