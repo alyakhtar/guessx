@@ -548,7 +548,7 @@ class GameServer {
       const player = this.createPlayer(socket, normalizedName);
       const players = [player];
       if (isSinglePlayer) {
-        await buildConfigs();
+        if (botDifficulty !== 'genius') await buildConfigs();
         const botId = `bot_${roomId}`;
         const bot = {
           id: botId,
@@ -713,7 +713,9 @@ class GameServer {
       const currentPlayer = room.players.find(p => p.id === room.currentTurn);
       if (currentPlayer && currentPlayer.isBot) {
         setTimeout(() => this.makeBotGuess(roomId), 1000);
-        if (Date.now() - lastConfigLoad > 5000) buildConfigs().catch(console.error);
+        if (currentPlayer.botDifficulty !== 'genius' && Date.now() - lastConfigLoad > 5000) {
+          buildConfigs().catch(console.error);
+        }
       }
     }
     this.emitRoomEvent(room, 'room_updated');
