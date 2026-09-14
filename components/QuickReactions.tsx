@@ -3,8 +3,21 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { QuickReaction, QuickReactionEvent } from '../types/game';
+import { showToast } from '../lib/toast';
 
-const reactions: QuickReaction[] = ['nice', 'close', 'gg'];
+const reactions: QuickReaction[] = ['nice', 'close', 'gg', 'fire', 'wow', 'lol', 'thumbsUp', 'thumbsDown', 'heart'];
+const REACTION_COOLDOWN_MS = 10_000;
+const reactionEmoji: Record<QuickReaction, string> = {
+  nice: '👏',
+  close: '😱',
+  gg: '🤝',
+  fire: '🔥',
+  wow: '🤯',
+  lol: '😂',
+  thumbsUp: '👍',
+  thumbsDown: '👎',
+  heart: '❤️',
+};
 
 export function QuickReactionButtons({ disabled, onReact }: { disabled?: boolean; onReact: (reaction: QuickReaction) => void }) {
   const t = useTranslations('quickReactions');
@@ -12,7 +25,7 @@ export function QuickReactionButtons({ disabled, onReact }: { disabled?: boolean
 
   useEffect(() => {
     if (!coolingDown) return;
-    const timer = setTimeout(() => setCoolingDown(false), 2000);
+    const timer = setTimeout(() => setCoolingDown(false), REACTION_COOLDOWN_MS);
     return () => clearTimeout(timer);
   }, [coolingDown]);
 
@@ -22,9 +35,14 @@ export function QuickReactionButtons({ disabled, onReact }: { disabled?: boolean
         <button
           type="button"
           key={reaction}
-          className="btn btn-sm btn-outline-secondary"
-          disabled={disabled || coolingDown}
+          className={`btn btn-sm btn-outline-secondary ${disabled || coolingDown ? 'disabled' : ''}`}
+          aria-disabled={disabled || coolingDown}
           onClick={() => {
+            if (coolingDown) {
+              showToast(t('cooldown'), { variant: 'info' });
+              return;
+            }
+            if (disabled) return;
             onReact(reaction);
             setCoolingDown(true);
           }}
@@ -44,6 +62,24 @@ export function QuickReactionOverlay({ reaction }: { reaction: QuickReactionEven
       <span className="badge rounded-pill text-bg-primary shadow-sm px-3 py-2" role="status" aria-live="polite">
         {t(`presets.${reaction.reaction}`)}
       </span>
+    </div>
+  );
+}
+
+export function QuickReactionCelebration({ reaction }: { reaction: QuickReactionEvent }) {
+  const t = useTranslations('quickReactions');
+  const emoji = reactionEmoji[reaction.reaction];
+
+  return (
+    <div className="quick-reaction-celebration" role="status" aria-live="polite">
+      <div className="quick-reaction-celebration__wash" aria-hidden="true" />
+      <div className="quick-reaction-celebration__content">
+        <span className="quick-reaction-celebration__emoji" aria-hidden="true">{emoji}</span>
+        <span className="quick-reaction-celebration__label">{t(`presets.${reaction.reaction}`)}</span>
+      </div>
+      <span className="quick-reaction-celebration__burst quick-reaction-celebration__burst--one" aria-hidden="true">{emoji}</span>
+      <span className="quick-reaction-celebration__burst quick-reaction-celebration__burst--two" aria-hidden="true">{emoji}</span>
+      <span className="quick-reaction-celebration__burst quick-reaction-celebration__burst--three" aria-hidden="true">{emoji}</span>
     </div>
   );
 }

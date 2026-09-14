@@ -10,7 +10,7 @@ export interface Player {
 
 export type BotDifficulty = 'easy' | 'medium' | 'hard' | 'genius';
 export type TurnTimerSeconds = 0 | 15 | 30 | 60;
-export type QuickReaction = 'nice' | 'close' | 'gg';
+export type QuickReaction = 'nice' | 'close' | 'gg' | 'fire' | 'wow' | 'lol' | 'thumbsUp' | 'thumbsDown' | 'heart';
 
 export interface QuickReactionEvent {
   fromPlayerId: string;

@@ -9,7 +9,7 @@ import { shouldRevealSecret } from '../lib/userSettings';
 import { GameRoom, QuickReactionEvent, TurnTimerSeconds } from '../types/game';
 import TurnTimer from './TurnTimer';
 import SettingsCog from './SettingsCog';
-import { QuickReactionOverlay } from './QuickReactions';
+import { QuickReactionCelebration, QuickReactionOverlay } from './QuickReactions';
 
 export default function Spectator() {
     const params = useParams();
@@ -349,6 +349,7 @@ export default function Spectator() {
 
 
             </div>
+            {settings.quickReactions && quickReaction && <QuickReactionCelebration reaction={quickReaction} />}
         </div>
     );
 }

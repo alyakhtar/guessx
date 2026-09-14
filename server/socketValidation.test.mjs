@@ -40,14 +40,16 @@ describe('Socket.IO input validation', () => {
     expect(isValidQuickReaction('nice')).toBe(true);
     expect(isValidQuickReaction('close')).toBe(true);
     expect(isValidQuickReaction('gg')).toBe(true);
+    expect(isValidQuickReaction('thumbsDown')).toBe(true);
+    expect(isValidQuickReaction('heart')).toBe(true);
     expect(isValidQuickReaction('hello everyone')).toBe(false);
     expect(isValidQuickReaction({ reaction: 'nice' })).toBe(false);
   });
 });
 
 describe('quick-reaction rate limit', () => {
-  it('allows only one reaction every two seconds per socket', () => {
-    expect(RATE_LIMITS.reaction).toEqual({ limit: 1, windowMs: 2_000 });
+  it('allows only one reaction every ten seconds per socket', () => {
+    expect(RATE_LIMITS.reaction).toEqual({ limit: 1, windowMs: 10_000 });
     const limiter = new ExpiringRateLimiter();
     expect(limiter.consume('socket-a:reaction', RATE_LIMITS.reaction.limit, RATE_LIMITS.reaction.windowMs)).toBe(true);
     expect(limiter.consume('socket-a:reaction', RATE_LIMITS.reaction.limit, RATE_LIMITS.reaction.windowMs)).toBe(false);

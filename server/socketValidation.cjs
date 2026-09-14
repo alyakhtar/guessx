@@ -4,7 +4,7 @@ const ACCESS_CODE_PATTERN = /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{3}$/;
 const DIFFICULTIES = new Set(['easy', 'medium', 'hard', 'genius']);
 const NUMBER_LENGTHS = new Set([3, 4, 5, 6]);
 const TIMER_VALUES = new Set([0, 15, 30, 60]);
-const QUICK_REACTIONS = new Set(['nice', 'close', 'gg']);
+const QUICK_REACTIONS = new Set(['nice', 'close', 'gg', 'fire', 'wow', 'lol', 'thumbsUp', 'thumbsDown', 'heart']);
 
 function normalizePlayerName(value) {
   if (typeof value !== 'string') return null;
@@ -58,7 +58,7 @@ const RATE_LIMITS = {
   hydration: { limit: 30, windowMs: 10_000 },
   stats: { limit: 12, windowMs: 60_000 },
   rematch: { limit: 10, windowMs: 60_000 },
-  reaction: { limit: 1, windowMs: 2_000 },
+  reaction: { limit: 1, windowMs: 10_000 },
 };
 
 module.exports = {

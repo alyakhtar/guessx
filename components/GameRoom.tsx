@@ -21,7 +21,7 @@ import TurnTimer from './TurnTimer';
 import SettingsCog from './SettingsCog';
 import { PLAYER_NAME_UPDATED_EVENT } from '../lib/auth/playerName';
 import GuestNotice from './GuestNotice';
-import { QuickReactionButtons } from './QuickReactions';
+import { QuickReactionButtons, QuickReactionCelebration } from './QuickReactions';
 
 type FlowState = { roomId: string; access: RoomAccessState };
 
@@ -499,6 +499,9 @@ export default function GameRoom() {
       </div>
 
       {celebrationType && showCelebration && <Celebration type={celebrationType} show={showCelebration} />}
+      {settings.quickReactions && quickReaction && quickReaction.fromPlayerId !== currentPlayerId && (
+        <QuickReactionCelebration reaction={quickReaction} />
+      )}
     </div>
   );
 }

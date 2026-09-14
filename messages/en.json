@@ -181,10 +181,17 @@
   },
   "quickReactions": {
     "title": "Quick reactions",
+    "cooldown": "Please wait 10 seconds between reactions.",
     "presets": {
       "nice": "👏 Nice!",
       "close": "😱 So close!",
-      "gg": "🤝 GG"
+      "gg": "🤝 GG",
+      "fire": "🔥 On fire!",
+      "wow": "🤯 Wow!",
+      "lol": "😂 LOL",
+      "thumbsUp": "👍",
+      "thumbsDown": "👎",
+      "heart": "❤️"
     }
   },
   "gameRoom": {
