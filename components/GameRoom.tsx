@@ -341,6 +341,7 @@ export default function GameRoom() {
   const currentPlayer = room.players.find((player) => player.id === currentPlayerId);
   const isMyTurn = room.currentTurn === currentPlayerId;
   const opponent = room.players.find((player) => player.id !== currentPlayerId);
+  const showSideBySideBoard = settings.sideBySideBoard && Boolean(opponent);
   const celebrationType = room.gameStatus === 'finished' && room.winner && currentPlayer?.name
     ? (room.winner === currentPlayer.name ? 'win' : 'lose')
     : null;
@@ -363,7 +364,7 @@ export default function GameRoom() {
   };
 
   return (
-    <div className="container p-2 p-md-4 min-vh-100 d-flex flex-column align-items-center game-room-shell">
+    <div className={`container p-2 p-md-4 min-vh-100 d-flex flex-column align-items-center game-room-shell${showSideBySideBoard ? ' game-room-shell--side-by-side' : ''}`}>
       <div className="w-100">
         <div className="card p-4 mb-4 shadow position-relative game-room-header">
           <div className="d-flex gap-2 position-absolute top-0 end-0 m-2">
@@ -422,7 +423,7 @@ export default function GameRoom() {
           />
         )}
 
-        <div className={`game-room-grid ${settings.sideBySideBoard && opponent ? 'row row-cols-1 row-cols-md-2 g-3' : 'row row-cols-1 row-cols-lg-3 g-3'}`}>
+        <div className={`game-room-grid ${showSideBySideBoard ? 'row row-cols-1 row-cols-md-2 g-3' : 'row row-cols-1 row-cols-lg-3 g-3'}`}>
           <div className="col order-3 order-lg-1 game-room-column">
             <PlayerList room={room} currentPlayerId={currentPlayerId} matchupStats={matchupStats} reaction={quickReaction} />
           </div>
@@ -486,7 +487,7 @@ export default function GameRoom() {
             <GameHistory gameHistory={room.gameHistory} currentPlayerName={currentPlayer?.name} />
           </div>
 
-          {settings.sideBySideBoard && opponent && (
+          {showSideBySideBoard && opponent && (
             <div className="col order-4 game-room-column">
               <GameHistory
                 gameHistory={room.gameHistory}

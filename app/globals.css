@@ -199,6 +199,29 @@ input[type="number"]::-webkit-inner-spin-button {
     padding-top: 0.75rem !important;
   }
 
+  /* The side-by-side preference renders a two-by-two board. Let that layout
+     grow normally so both history cards remain reachable instead of clipping
+     the second row inside the single-viewport three-column workspace. */
+  .game-room-shell--side-by-side {
+    height: auto;
+    overflow: visible;
+  }
+
+  .game-room-shell--side-by-side > .w-100 {
+    display: block;
+    flex: initial;
+    height: auto;
+  }
+
+  .game-room-shell--side-by-side .game-room-grid {
+    flex: initial;
+    overflow: visible;
+  }
+
+  .game-room-shell--side-by-side .game-room-column {
+    height: auto;
+  }
+
 }
 
 @layer utilities {
