@@ -40,6 +40,30 @@ interface PlayerStatsResponse {
     };
 }
 
+interface DailyParticipantMetrics {
+    gamesStarted: number;
+    activeGames: number;
+    completedGames: number;
+    solves: number;
+    exhaustedGames: number;
+    solveRate: number;
+    totalGuesses: number;
+    averageGuessesPerGame: number | null;
+    averageGuessesToSolve: number | null;
+    bestSolveGuesses: number | null;
+}
+
+interface DailyGameplayMetrics extends DailyParticipantMetrics {
+    accounts: DailyParticipantMetrics;
+    guests: DailyParticipantMetrics;
+}
+
+interface DailyStatsResponse {
+    date: string;
+    overall: DailyGameplayMetrics;
+    selectedDay: DailyGameplayMetrics;
+}
+
 function StatsTable({ players, formatDuration }: { players: PlayerStats[]; formatDuration: (ms: number | null) => string }) {
     if (players.length === 0) {
         return <p className="text-muted mb-0">No statistics available yet.</p>;
@@ -81,6 +105,70 @@ function StatsTable({ players, formatDuration }: { players: PlayerStats[]; forma
     );
 }
 
+function DailyMetric({ label, value, accent }: { label: string; value: string | number; accent?: string }) {
+    return (
+        <div className="col">
+            <div className="border rounded p-3 h-100 bg-body-tertiary">
+                <div className="small text-muted">{label}</div>
+                <div className={`h4 mb-0 mt-1 ${accent ?? ''}`}>{value}</div>
+            </div>
+        </div>
+    );
+}
+
+function DailyMetricsSection({ title, metrics, t }: { title: string; metrics: DailyGameplayMetrics; t: (key: string) => string }) {
+    const numberOrDash = (value: number | null) => value === null ? '—' : value.toFixed(1);
+
+    return (
+        <section aria-label={title}>
+            <h2 className="h5 mb-3">{title}</h2>
+            <div className="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3 mb-4">
+                <DailyMetric label={t('daily.gamesStarted')} value={metrics.gamesStarted} />
+                <DailyMetric label={t('daily.completedGames')} value={metrics.completedGames} />
+                <DailyMetric label={t('daily.activeGames')} value={metrics.activeGames} />
+                <DailyMetric label={t('daily.totalGuesses')} value={metrics.totalGuesses} />
+                <DailyMetric label={t('daily.solves')} value={metrics.solves} accent="text-success" />
+                <DailyMetric label={t('daily.exhaustedGames')} value={metrics.exhaustedGames} accent="text-danger" />
+                <DailyMetric label={t('daily.solveRate')} value={`${metrics.solveRate.toFixed(1)}%`} />
+                <DailyMetric label={t('daily.averageGuessesToSolve')} value={numberOrDash(metrics.averageGuessesToSolve)} />
+                <DailyMetric label={t('daily.bestSolveGuesses')} value={metrics.bestSolveGuesses ?? '—'} />
+                <DailyMetric label={t('daily.averageGuessesPerGame')} value={numberOrDash(metrics.averageGuessesPerGame)} />
+            </div>
+
+            <h3 className="h6 mb-2">{t('daily.byParticipant')}</h3>
+            <div className="table-responsive">
+                <table className="table table-striped table-hover mb-0">
+                    <thead className="table-dark">
+                        <tr>
+                            <th>{t('daily.participant')}</th>
+                            <th>{t('daily.gamesStarted')}</th>
+                            <th>{t('daily.totalGuesses')}</th>
+                            <th>{t('daily.solves')}</th>
+                            <th>{t('daily.solveRate')}</th>
+                            <th>{t('daily.averageGuessesToSolve')}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {([
+                            ['accounts', metrics.accounts],
+                            ['guests', metrics.guests],
+                        ] as const).map(([participant, participantMetrics]) => (
+                            <tr key={participant}>
+                                <th scope="row">{t(`daily.${participant}`)}</th>
+                                <td>{participantMetrics.gamesStarted}</td>
+                                <td>{participantMetrics.totalGuesses}</td>
+                                <td className="text-success">{participantMetrics.solves}</td>
+                                <td>{participantMetrics.solveRate.toFixed(1)}%</td>
+                                <td>{numberOrDash(participantMetrics.averageGuessesToSolve)}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    );
+}
+
 export default function AdminPage() {
     const t = useTranslations('admin');
     const [configs, setConfigs] = useState<Record<string, Config>>({});
@@ -93,9 +181,12 @@ export default function AdminPage() {
     const [message, setMessage] = useState({ type: '', text: '' });
     const { darkMode } = useUserSettings();
     const [selectedNumberLength, setSelectedNumberLength] = useState(4);
-    const [activeTab, setActiveTab] = useState<'configs' | 'stats'>('configs');
     const [statsTab, setStatsTab] = useState<'accounts' | 'guests'>('accounts');
     const [statsLoading, setStatsLoading] = useState(false);
+    const [dailyStats, setDailyStats] = useState<DailyStatsResponse | null>(null);
+    const [dailyStatsLoading, setDailyStatsLoading] = useState(false);
+    const [selectedDailyDate, setSelectedDailyDate] = useState(() => new Date().toISOString().slice(0, 10));
+    const [activeTab, setActiveTab] = useState<'configs' | 'stats' | 'daily'>('configs');
 
     const fetchConfigs = async () => {
         try {
@@ -171,6 +262,23 @@ export default function AdminPage() {
         }
     };
 
+    const fetchDailyStats = async (date = selectedDailyDate) => {
+        setDailyStatsLoading(true);
+        try {
+            const response = await fetch(`/api/admin/daily-stats?date=${encodeURIComponent(date)}`, { cache: 'no-store' });
+            const data = await response.json();
+            if (!response.ok || !data?.overall || !data?.selectedDay) {
+                throw new Error(data.error || 'Failed to load Daily Challenge statistics');
+            }
+            setDailyStats(data);
+            setMessage({ type: '', text: '' });
+        } catch (error) {
+            setMessage({ type: 'error', text: t('daily.loadError') });
+        } finally {
+            setDailyStatsLoading(false);
+        }
+    };
+
     const formatDuration = (ms: number | null) => {
         if (!ms) return 'N/A';
         const seconds = Math.floor(ms / 1000);
@@ -182,6 +290,9 @@ export default function AdminPage() {
     useEffect(() => {
         if (activeTab === 'stats') {
             fetchPlayerStats();
+        }
+        if (activeTab === 'daily') {
+            fetchDailyStats();
         }
     }, [activeTab]);
 
@@ -227,6 +338,14 @@ export default function AdminPage() {
                                 onClick={() => setActiveTab('configs')}
                             >
                                 Bot Configurations
+                            </button>
+                        </li>
+                        <li className="nav-item">
+                            <button
+                                className={`nav-link ${activeTab === 'daily' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('daily')}
+                            >
+                                {t('daily.tab')}
                             </button>
                         </li>
                         <li className="nav-item">
@@ -404,6 +523,43 @@ export default function AdminPage() {
                                     Refresh Statistics
                                 </button>
                             </div>
+                        </>
+                    )}
+
+                    {activeTab === 'daily' && (
+                        <>
+                            <div className="d-flex flex-column flex-sm-row align-items-sm-end gap-3 mb-4">
+                                <div>
+                                    <label className="form-label fw-semibold" htmlFor="daily-metrics-date">{t('daily.dateLabel')}</label>
+                                    <input
+                                        id="daily-metrics-date"
+                                        type="date"
+                                        className="form-control"
+                                        value={selectedDailyDate}
+                                        max={new Date().toISOString().slice(0, 10)}
+                                        onChange={(event) => {
+                                            const date = event.target.value;
+                                            setSelectedDailyDate(date);
+                                            if (date) fetchDailyStats(date);
+                                        }}
+                                    />
+                                </div>
+                                <button className="btn btn-secondary" onClick={() => fetchDailyStats()} disabled={dailyStatsLoading}>
+                                    {t('daily.refresh')}
+                                </button>
+                            </div>
+
+                            {dailyStatsLoading && !dailyStats ? (
+                                <div className="text-center py-4">
+                                    <div className="spinner-border" role="status"></div>
+                                    <div className="mt-2">{t('daily.loading')}</div>
+                                </div>
+                            ) : dailyStats && (
+                                <div className="d-grid gap-5">
+                                    <DailyMetricsSection title={t('daily.overallTitle')} metrics={dailyStats.overall} t={t} />
+                                    <DailyMetricsSection title={t('daily.dayTitle', { date: dailyStats.date })} metrics={dailyStats.selectedDay} t={t} />
+                                </div>
+                            )}
                         </>
                     )}
                 </div>

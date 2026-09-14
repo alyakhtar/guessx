@@ -463,6 +463,29 @@
     "errors": {
       "loadError": "Failed to load configs",
       "saveError": "Failed to save configs"
+    },
+    "daily": {
+      "tab": "Daily Gameplay",
+      "dateLabel": "Challenge date",
+      "refresh": "Refresh metrics",
+      "loading": "Loading Daily Challenge metrics…",
+      "loadError": "Failed to load Daily Challenge metrics",
+      "overallTitle": "Overall Daily Challenge metrics",
+      "dayTitle": "Metrics for {date}",
+      "gamesStarted": "Games started",
+      "completedGames": "Completed games",
+      "activeGames": "Unfinished games",
+      "totalGuesses": "Total guesses",
+      "solves": "Solves",
+      "exhaustedGames": "Unsolved games",
+      "solveRate": "Solve rate",
+      "averageGuessesToSolve": "Avg. guesses to solve",
+      "bestSolveGuesses": "Best solve (guesses)",
+      "averageGuessesPerGame": "Avg. guesses per game",
+      "byParticipant": "By player type",
+      "participant": "Player type",
+      "accounts": "Accounts",
+      "guests": "Guests"
     }
   }
 }

@@ -463,6 +463,29 @@
     "errors": {
       "loadError": "Échec du chargement des configurations",
       "saveError": "Échec de l'enregistrement des configurations"
+    },
+    "daily": {
+      "tab": "Parties quotidiennes",
+      "dateLabel": "Date du défi",
+      "refresh": "Actualiser les statistiques",
+      "loading": "Chargement des statistiques du Défi quotidien…",
+      "loadError": "Échec du chargement des statistiques du Défi quotidien",
+      "overallTitle": "Statistiques globales du Défi quotidien",
+      "dayTitle": "Statistiques du {date}",
+      "gamesStarted": "Parties commencées",
+      "completedGames": "Parties terminées",
+      "activeGames": "Parties inachevées",
+      "totalGuesses": "Nombre total de tentatives",
+      "solves": "Résolutions",
+      "exhaustedGames": "Parties non résolues",
+      "solveRate": "Taux de résolution",
+      "averageGuessesToSolve": "Moy. de tentatives pour résoudre",
+      "bestSolveGuesses": "Meilleure résolution (tentatives)",
+      "averageGuessesPerGame": "Moy. de tentatives par partie",
+      "byParticipant": "Par type de joueur",
+      "participant": "Type de joueur",
+      "accounts": "Comptes",
+      "guests": "Invités"
     }
   }
 }
