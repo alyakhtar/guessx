@@ -83,7 +83,8 @@
       "botDifficultyOptions": {
         "easy": "Facile",
         "medium": "Moyen",
-        "hard": "Difficile"
+        "hard": "Difficile",
+        "genius": "Génie — solveur équitable"
       },
     "spectatorMode": {
         "label": "Activer le mode spectateur",

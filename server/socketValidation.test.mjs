@@ -19,6 +19,7 @@ describe('Socket.IO input validation', () => {
     expect(isValidNumberLength(3)).toBe(true);
     expect(isValidNumberLength(7)).toBe(false);
     expect(isValidDifficulty('hard')).toBe(true);
+    expect(isValidDifficulty('genius')).toBe(true);
     expect(isValidDifficulty('cheat')).toBe(false);
     expect(isValidTimerSeconds(60)).toBe(true);
     expect(isValidTimerSeconds(10)).toBe(false);
