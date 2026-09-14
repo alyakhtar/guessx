@@ -13,6 +13,7 @@ import AuthControls from './AuthControls';
 import { PLAYER_NAME_UPDATED_EVENT } from '../lib/auth/playerName';
 import GuestNotice from './GuestNotice';
 import DailyChallengeCard from './DailyChallengeCard';
+import OnboardingLink from './OnboardingLink';
 
 // Minimal shape of a room payload the lobby receives on socket callbacks.
 type RoomSummary = { id: string; isPrivate?: boolean; accessCode?: string };
@@ -157,11 +158,11 @@ export default function Lobby() {
 
   return (
     <div className="mx-auto" style={{ maxWidth: '72rem' }}>
-      <section className="card p-3 p-sm-4 shadow position-relative mb-4">
+      <section className="card p-3 p-sm-4 shadow position-relative mb-4 lobby-hero">
         <div className="position-absolute top-0 end-0 m-2">
           <SettingsCog />
         </div>
-        <div className="text-center mb-4">
+        <div className="text-center mb-4 lobby-hero-content">
           <h1 className="display-5 display-sm-4 fw-bold text-primary mb-2">
             Guess<span className="text-info">X</span>
           </h1>
@@ -174,120 +175,124 @@ export default function Lobby() {
           </div>
           <div className="d-flex flex-wrap justify-content-center align-items-center gap-2">
             <AuthControls />
+            <OnboardingLink />
           </div>
         </div>
 
-        <DailyChallengeCard />
+        <div className="lobby-daily-challenge"><DailyChallengeCard /></div>
       </section>
 
-      <div className="row g-4 align-items-start">
-        <section className="col-12 col-lg-5">
-          <div className="card p-3 p-sm-4 shadow h-100 mx-lg-auto" style={{ maxWidth: '35rem' }}>
-      {/* Create Room */}
-        <h2 className="h5 fw-semibold mb-3">{t('createGame.heading')}</h2>
-        <GuestNotice />
-        <div className="mb-3">
-          <label className="form-label fw-medium small">{t('createGame.nameLabel')}</label>
-          <input
-            type="text"
-            value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
-            className="form-control form-control-lg"
-            placeholder={t('createGame.namePlaceholder')}
-            maxLength={32}
-          />
-        </div>
-        <div className="mb-3">
-          <label className="form-label fw-medium small">{t('createGame.numberLengthLabel')}</label>
-          <select
-            value={numberLength}
-            onChange={(e) => setNumberLength(parseInt(e.target.value))}
-            className="form-select form-select-lg"
-          >
-            <option value={4}>{t('createGame.numberLengthOptions.4')}</option>
-            <option value={5}>{t('createGame.numberLengthOptions.5')}</option>
-            <option value={6}>{t('createGame.numberLengthOptions.6')}</option>
-          </select>
-        </div>
-        <div className="mb-3">
-          <label className="form-label fw-medium small">{t('createGame.turnTimerLabel')}</label>
-          <select
-            value={turnTimerSeconds}
-            onChange={(e) => {
-              const v = parseTurnTimerSeconds(e.target.value);
-              setTurnTimerSeconds(v);
-              localStorage.setItem('guessx.turnTimerSeconds', String(v));
-            }}
-            className="form-select form-select-lg"
-          >
-            <option value={0}>{t('createGame.turnTimerOptions.0')}</option>
-            <option value={15}>{t('createGame.turnTimerOptions.15')}</option>
-            <option value={30}>{t('createGame.turnTimerOptions.30')}</option>
-            <option value={60}>{t('createGame.turnTimerOptions.60')}</option>
-          </select>
-        </div>
-        <div className="mb-3">
-          <div className="form-check form-switch">
-            <input className="form-check-input" type="checkbox" role="switch" id="singlePlayerModeToggle"
-              checked={isSinglePlayer} onChange={(e) => setIsSinglePlayer(e.target.checked)} />
-            <label className="form-check-label fw-medium small" htmlFor="singlePlayerModeToggle">
-              {t('createGame.singlePlayerMode.label')}
-            </label>
-          </div>
-          <div className="form-text small text-muted">{t('createGame.singlePlayerMode.description')}</div>
-        </div>
-        {isSinglePlayer && (
-          <div className="mb-3">
-            <label className="form-label fw-medium small">{t('createGame.botDifficultyLabel')}</label>
-            <select
-              value={botDifficulty}
-              onChange={(e) => setBotDifficulty(e.target.value as 'easy' | 'medium' | 'hard')}
-              className="form-select form-select-lg"
-            >
-              <option value="easy">{t('createGame.botDifficultyOptions.easy')}</option>
-              <option value="medium">{t('createGame.botDifficultyOptions.medium')}</option>
-              <option value="hard">{t('createGame.botDifficultyOptions.hard')}</option>
-            </select>
-          </div>
-        )}
-        {!isSinglePlayer && (
-          <div className="mb-3">
-            <div className="form-check form-switch">
-              <input className="form-check-input" type="checkbox" role="switch" id="spectatorModeToggle"
-                checked={spectatorModeEnabled} onChange={(e) => setSpectatorModeEnabled(e.target.checked)} />
-              <label className="form-check-label fw-medium small" htmlFor="spectatorModeToggle">
-                {t('createGame.spectatorMode.label')}
-              </label>
+      <div className="lobby-panels">
+        <section>
+          <div className="card p-3 p-sm-4 shadow h-100 mx-auto lobby-create-card" style={{ maxWidth: '35rem' }}>
+            <h2 className="h5 fw-semibold mb-3">{t('createGame.heading')}</h2>
+            <GuestNotice />
+            <div className="lobby-create-form">
+              <div className="mb-3">
+                <label className="form-label fw-medium small">{t('createGame.nameLabel')}</label>
+                <input
+                  type="text"
+                  value={playerName}
+                  onChange={(e) => setPlayerName(e.target.value)}
+                  className="form-control form-control-lg lobby-compact-control"
+                  placeholder={t('createGame.namePlaceholder')}
+                  maxLength={32}
+                />
+              </div>
+              <div className="row g-2">
+                <div className="col-12 col-xl-6">
+                  <label className="form-label fw-medium small">{t('createGame.numberLengthLabel')}</label>
+                  <select
+                    value={numberLength}
+                    onChange={(e) => setNumberLength(parseInt(e.target.value))}
+                    className="form-select form-select-lg lobby-compact-control"
+                  >
+                    <option value={4}>{t('createGame.numberLengthOptions.4')}</option>
+                    <option value={5}>{t('createGame.numberLengthOptions.5')}</option>
+                    <option value={6}>{t('createGame.numberLengthOptions.6')}</option>
+                  </select>
+                </div>
+                <div className="col-12 col-xl-6">
+                  <label className="form-label fw-medium small">{t('createGame.turnTimerLabel')}</label>
+                  <select
+                    value={turnTimerSeconds}
+                    onChange={(e) => {
+                      const v = parseTurnTimerSeconds(e.target.value);
+                      setTurnTimerSeconds(v);
+                      localStorage.setItem('guessx.turnTimerSeconds', String(v));
+                    }}
+                    className="form-select form-select-lg lobby-compact-control"
+                  >
+                    <option value={0}>{t('createGame.turnTimerOptions.0')}</option>
+                    <option value={15}>{t('createGame.turnTimerOptions.15')}</option>
+                    <option value={30}>{t('createGame.turnTimerOptions.30')}</option>
+                    <option value={60}>{t('createGame.turnTimerOptions.60')}</option>
+                  </select>
+                </div>
+              </div>
+              <div className="row g-2 mt-1">
+                <div className="col-12 col-xl-6 lobby-option">
+                  <div className="form-check form-switch">
+                    <input className="form-check-input" type="checkbox" role="switch" id="singlePlayerModeToggle"
+                      checked={isSinglePlayer} onChange={(e) => setIsSinglePlayer(e.target.checked)} />
+                    <label className="form-check-label fw-medium small" htmlFor="singlePlayerModeToggle">
+                      {t('createGame.singlePlayerMode.label')}
+                    </label>
+                  </div>
+                  <div className="form-text small text-muted">{t('createGame.singlePlayerMode.description')}</div>
+                </div>
+                {isSinglePlayer ? (
+                  <div className="col-12 col-xl-6">
+                    <label className="form-label fw-medium small">{t('createGame.botDifficultyLabel')}</label>
+                    <select
+                      value={botDifficulty}
+                      onChange={(e) => setBotDifficulty(e.target.value as 'easy' | 'medium' | 'hard')}
+                      className="form-select form-select-lg lobby-compact-control"
+                    >
+                      <option value="easy">{t('createGame.botDifficultyOptions.easy')}</option>
+                      <option value="medium">{t('createGame.botDifficultyOptions.medium')}</option>
+                      <option value="hard">{t('createGame.botDifficultyOptions.hard')}</option>
+                    </select>
+                  </div>
+                ) : (
+                  <>
+                    <div className="col-12 col-xl-6 lobby-option">
+                      <div className="form-check form-switch">
+                        <input className="form-check-input" type="checkbox" role="switch" id="spectatorModeToggle"
+                          checked={spectatorModeEnabled} onChange={(e) => setSpectatorModeEnabled(e.target.checked)} />
+                        <label className="form-check-label fw-medium small" htmlFor="spectatorModeToggle">
+                          {t('createGame.spectatorMode.label')}
+                        </label>
+                      </div>
+                      <div className="form-text small text-muted">{t('createGame.spectatorMode.description')}</div>
+                    </div>
+                    <div className="col-12 col-xl-6 lobby-option">
+                      <div className="form-check form-switch">
+                        <input className="form-check-input" type="checkbox" role="switch" id="privateRoomToggle"
+                          checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} />
+                        <label className="form-check-label fw-medium small" htmlFor="privateRoomToggle">
+                          {t('createGame.privateRoom.label')}
+                        </label>
+                      </div>
+                      <div className="form-text small text-muted">{t('createGame.privateRoom.description')}</div>
+                    </div>
+                  </>
+                )}
+              </div>
+              <button
+                onClick={handleCreateRoom}
+                disabled={isCreating || !socket?.connected}
+                className="btn btn-primary btn-lg w-100 mt-3"
+              >
+                {!socket?.connected ? t('createGame.buttons.connecting') :
+                  isCreating ? t('createGame.buttons.creating') : t('createGame.buttons.create')}
+              </button>
             </div>
-            <div className="form-text small text-muted">{t('createGame.spectatorMode.description')}</div>
-          </div>
-        )}
-        {/* Private room toggle (default off) */}
-        {!isSinglePlayer && (
-          <div className="mb-3">
-            <div className="form-check form-switch">
-              <input className="form-check-input" type="checkbox" role="switch" id="privateRoomToggle"
-                checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} />
-              <label className="form-check-label fw-medium small" htmlFor="privateRoomToggle">
-                {t('createGame.privateRoom.label')}
-              </label>
-            </div>
-            <div className="form-text small text-muted">{t('createGame.privateRoom.description')}</div>
-          </div>
-        )}
-        <button
-          onClick={handleCreateRoom}
-          disabled={isCreating || !socket?.connected}
-          className="btn btn-primary btn-lg w-100 mb-4"
-        >
-          {!socket?.connected ? t('createGame.buttons.connecting') :
-            isCreating ? t('createGame.buttons.creating') : t('createGame.buttons.create')}
-        </button>
           </div>
         </section>
 
-        <section className="col-12 col-lg-7">
-          <div className="card p-3 p-sm-4 shadow h-100">
+        <section>
+          <div className="card p-3 p-sm-4 shadow h-100 lobby-room-card">
       {/* Unified room list: public + private, distinguished by a Room Type badge.
           Public rows join directly; private rows open the code-entry modal. */}
         <h2 className="h5 fw-semibold mb-3">{t('joinGame.heading')}</h2>

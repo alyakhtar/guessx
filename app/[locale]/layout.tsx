@@ -6,6 +6,7 @@ import '../globals.css';
 import Script from 'next/script';
 import ThemeApplier from '../../components/ThemeApplier';
 import AuthProvider from '../../components/AuthProvider';
+import FirstVisitOnboarding from '../../components/FirstVisitOnboarding';
 import { auth } from '../../auth';
 import { isApplicationAuthConfigured } from '../../lib/auth/config';
 
@@ -56,6 +57,7 @@ export default async function RootLayout({ children, params }: LayoutProps) {
                 <AuthProvider available={applicationAuthAvailable} session={session}>
                     <NextIntlClientProvider locale={validLocale} messages={messages}>
                         {children}
+                        <FirstVisitOnboarding />
                         <ToastHost />
                     </NextIntlClientProvider>
                 </AuthProvider>
