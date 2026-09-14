@@ -49,8 +49,7 @@ export function QuickReactionButtons({ disabled, onReact }: { disabled?: boolean
             setCoolingDown(true);
           }}
         >
-          <span aria-hidden="true">{reactionEmoji[reaction]}</span>
-          <span className="visually-hidden">{t(`presets.${reaction}`)}</span>
+          {t(`presets.${reaction}`)}
         </button>
       ))}
     </div>

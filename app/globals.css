@@ -166,10 +166,12 @@ input[type="number"]::-webkit-inner-spin-button {
   .game-room-column {
     display: flex;
     min-height: 0;
+    min-width: 0;
   }
 
   .game-room-column > .card {
     min-height: 0;
+    width: 100%;
   }
 
   .game-room-action-card,
@@ -212,23 +214,20 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 .quick-reaction-buttons {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 0.5rem;
-  margin-inline: auto;
-  max-width: 27rem;
 }
 
 .quick-reaction-button {
-  min-width: 0;
-  font-size: 1.2rem;
   line-height: 1.15;
 }
 
 @media (min-width: 992px) and (min-height: 760px) {
-  .quick-reaction-buttons {
-    grid-template-columns: repeat(9, minmax(0, 1fr));
-    max-width: none;
+  .game-room-grid.row-cols-lg-3 > .game-room-column {
+    flex: 0 0 auto;
+    width: 33.333333%;
   }
 
   .game-history-table {
