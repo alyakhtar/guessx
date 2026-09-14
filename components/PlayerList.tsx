@@ -63,7 +63,7 @@ export default function PlayerList({ room, currentPlayerId, matchupStats, reacti
   };
 
   return (
-    <div className="card p-4 shadow h-100">
+    <div className="card p-4 shadow h-100 game-player-list">
       <h2 className="card-title h5 fw-semibold mb-4">{t('title')}</h2>
 
       <div className="list-group mb-4">

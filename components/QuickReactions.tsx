@@ -7,7 +7,7 @@ import { showToast } from '../lib/toast';
 
 const reactions: QuickReaction[] = ['nice', 'close', 'gg', 'fire', 'wow', 'lol', 'thumbsUp', 'thumbsDown', 'heart'];
 const REACTION_COOLDOWN_MS = 10_000;
-const reactionEmoji: Record<QuickReaction, string> = {
+export const reactionEmoji: Record<QuickReaction, string> = {
   nice: '👏',
   close: '😱',
   gg: '🤝',
@@ -30,13 +30,15 @@ export function QuickReactionButtons({ disabled, onReact }: { disabled?: boolean
   }, [coolingDown]);
 
   return (
-    <div className="d-flex flex-wrap justify-content-center gap-2" aria-label={t('title')}>
+    <div className="quick-reaction-buttons" aria-label={t('title')}>
       {reactions.map((reaction) => (
         <button
           type="button"
           key={reaction}
-          className={`btn btn-sm btn-outline-secondary ${disabled || coolingDown ? 'disabled' : ''}`}
+          className={`btn btn-sm btn-outline-secondary quick-reaction-button ${disabled || coolingDown ? 'disabled' : ''}`}
           aria-disabled={disabled || coolingDown}
+          aria-label={t(`presets.${reaction}`)}
+          title={t(`presets.${reaction}`)}
           onClick={() => {
             if (coolingDown) {
               showToast(t('cooldown'), { variant: 'info' });
@@ -47,7 +49,8 @@ export function QuickReactionButtons({ disabled, onReact }: { disabled?: boolean
             setCoolingDown(true);
           }}
         >
-          {t(`presets.${reaction}`)}
+          <span aria-hidden="true">{reactionEmoji[reaction]}</span>
+          <span className="visually-hidden">{t(`presets.${reaction}`)}</span>
         </button>
       ))}
     </div>

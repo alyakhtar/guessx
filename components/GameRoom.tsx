@@ -363,9 +363,9 @@ export default function GameRoom() {
   };
 
   return (
-    <div className="container p-2 p-md-4 min-vh-100 d-flex flex-column align-items-center">
+    <div className="container p-2 p-md-4 min-vh-100 d-flex flex-column align-items-center game-room-shell">
       <div className="w-100">
-        <div className="card p-4 mb-4 shadow position-relative">
+        <div className="card p-4 mb-4 shadow position-relative game-room-header">
           <div className="d-flex gap-2 position-absolute top-0 end-0 m-2">
             <SettingsCog />
           </div>
@@ -422,12 +422,12 @@ export default function GameRoom() {
           />
         )}
 
-        <div className={settings.sideBySideBoard && opponent ? 'row row-cols-1 row-cols-md-2 g-3' : 'row row-cols-1 row-cols-lg-3 g-3'}>
-          <div className="col order-3 order-lg-1">
+        <div className={`game-room-grid ${settings.sideBySideBoard && opponent ? 'row row-cols-1 row-cols-md-2 g-3' : 'row row-cols-1 row-cols-lg-3 g-3'}`}>
+          <div className="col order-3 order-lg-1 game-room-column">
             <PlayerList room={room} currentPlayerId={currentPlayerId} matchupStats={matchupStats} reaction={quickReaction} />
           </div>
-          <div className="col order-1 order-lg-2">
-            <div className="card p-4 shadow h-100">
+          <div className="col order-1 order-lg-2 game-room-column">
+            <div className="card p-4 shadow h-100 game-room-action-card">
               <GuessInput
                 room={room}
                 currentPlayer={currentPlayer}
@@ -482,12 +482,12 @@ export default function GameRoom() {
               )}
             </div>
           </div>
-          <div className="col order-2 order-lg-3">
+          <div className="col order-2 order-lg-3 game-room-column">
             <GameHistory gameHistory={room.gameHistory} currentPlayerName={currentPlayer?.name} />
           </div>
 
           {settings.sideBySideBoard && opponent && (
-            <div className="col order-4">
+            <div className="col order-4 game-room-column">
               <GameHistory
                 gameHistory={room.gameHistory}
                 currentPlayerName={opponent.name}
