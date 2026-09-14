@@ -10,6 +10,12 @@ export interface Player {
 
 export type BotDifficulty = 'easy' | 'medium' | 'hard' | 'genius';
 export type TurnTimerSeconds = 0 | 15 | 30 | 60;
+export type QuickReaction = 'nice' | 'close' | 'gg';
+
+export interface QuickReactionEvent {
+  fromPlayerId: string;
+  reaction: QuickReaction;
+}
 
 export interface Guess {
   playerName: string;

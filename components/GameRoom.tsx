@@ -9,7 +9,7 @@ import { socketService, TurnStartedPayload } from '../lib/socket';
 import { createChimePlayer, createTitleFlasher, createTurnAlertController } from '../lib/turnAlerts';
 import { getSettings } from '../lib/userSettings';
 import { useUserSettings } from '../lib/useUserSettings';
-import { GameRoom as GameRoomType, MatchupStats, TurnTimerSeconds } from '../types/game';
+import { GameRoom as GameRoomType, MatchupStats, QuickReactionEvent, TurnTimerSeconds } from '../types/game';
 import Celebration from './Celebration';
 import CopyCodeButton from './CopyCodeButton';
 import GameHistory from './GameHistory';
@@ -21,6 +21,7 @@ import TurnTimer from './TurnTimer';
 import SettingsCog from './SettingsCog';
 import { PLAYER_NAME_UPDATED_EVENT } from '../lib/auth/playerName';
 import GuestNotice from './GuestNotice';
+import { QuickReactionButtons } from './QuickReactions';
 
 type FlowState = { roomId: string; access: RoomAccessState };
 
@@ -52,9 +53,11 @@ export default function GameRoom() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [rematchStatus, setRematchStatus] = useState<RematchStatus>('idle');
   const [matchupStats, setMatchupStats] = useState<MatchupStats | null>(null);
+  const [quickReaction, setQuickReaction] = useState<QuickReactionEvent | null>(null);
   const controllerRef = useRef<ReturnType<typeof openRoomAccess> | null>(null);
   const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
   const matchupRequestKeyRef = useRef('');
+  const reactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const translateServerError = (error: string) => {
     if (error === 'SERVER_ERROR:duplicateName') return tLobby('errors.server.duplicateName');
@@ -146,6 +149,15 @@ export default function GameRoom() {
       handleGameplayUpdate(updatedRoom);
     };
     const handleMatchupStats = (stats: MatchupStats | null) => setMatchupStats(stats);
+    const handleReaction = (updatedRoom: GameRoomType, reaction: QuickReactionEvent) => {
+      if (updatedRoom.id !== roomId) return;
+      setQuickReaction(reaction);
+      if (reactionTimerRef.current) clearTimeout(reactionTimerRef.current);
+      reactionTimerRef.current = setTimeout(() => {
+        setQuickReaction(null);
+        reactionTimerRef.current = null;
+      }, 4000);
+    };
 
     const handleVisibilityChange = () => {
       if (!document.hidden) turnAlertController.stop();
@@ -180,6 +192,7 @@ export default function GameRoom() {
     socket.on('rematch_declined', handleRematchDeclined);
     socket.on('rematch_room_ready', handleRematchReady);
     socket.on('matchup_stats', handleMatchupStats);
+    socket.on('reaction_received', handleReaction);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
@@ -196,6 +209,8 @@ export default function GameRoom() {
       socket.off('rematch_declined', handleRematchDeclined);
       socket.off('rematch_room_ready', handleRematchReady);
       socket.off('matchup_stats', handleMatchupStats);
+      socket.off('reaction_received', handleReaction);
+      if (reactionTimerRef.current) clearTimeout(reactionTimerRef.current);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [initialCode, roomId, locale, router, t]);
@@ -409,7 +424,7 @@ export default function GameRoom() {
 
         <div className={settings.sideBySideBoard && opponent ? 'row row-cols-1 row-cols-md-2 g-3' : 'row row-cols-1 row-cols-lg-3 g-3'}>
           <div className="col order-3 order-lg-1">
-            <PlayerList room={room} currentPlayerId={currentPlayerId} matchupStats={matchupStats} />
+            <PlayerList room={room} currentPlayerId={currentPlayerId} matchupStats={matchupStats} reaction={quickReaction} />
           </div>
           <div className="col order-1 order-lg-2">
             <div className="card p-4 shadow h-100">
@@ -420,6 +435,12 @@ export default function GameRoom() {
                 numberLength={room.numberLength}
                 onNewGame={handleNewGame}
               />
+              {settings.quickReactions && room.gameStatus === 'playing' && opponent && !opponent.isBot && (
+                <div className="border-top mt-3 pt-3">
+                  <p className="small text-muted text-center mb-2">{t('quickReactions.prompt', { name: opponent.name })}</p>
+                  <QuickReactionButtons onReact={(reaction) => socketService.getSocket()?.emit('send_reaction', roomId, reaction)} />
+                </div>
+              )}
               {room.gameStatus === 'playing' && <DigitTracker />}
               {room.gameStatus === 'finished' && (
                 <div className="mt-3" aria-live="polite">
