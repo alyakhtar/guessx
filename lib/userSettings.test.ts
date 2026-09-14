@@ -78,6 +78,7 @@ describe('getSettings', () => {
       sideBySideBoard: true,
       revealSecretsOnWin: false,
       turnAlertSound: true,
+      quickReactions: true,
     });
     expect(getSettings()).not.toHaveProperty('futureSetting');
   });
@@ -94,6 +95,7 @@ describe('getSettings', () => {
       sideBySideBoard: false,
       revealSecretsOnWin: true,
       turnAlertSound: true,
+      quickReactions: true,
     });
   });
 
@@ -113,6 +115,7 @@ describe('getSettings', () => {
       sideBySideBoard: false,
       revealSecretsOnWin: false,
       turnAlertSound: true,
+      quickReactions: true,
     });
   });
 
@@ -125,6 +128,7 @@ describe('getSettings', () => {
       sideBySideBoard: false,
       revealSecretsOnWin: false,
       turnAlertSound: true,
+      quickReactions: true,
     });
   });
 
@@ -140,6 +144,7 @@ describe('getSettings', () => {
         sideBySideBoard: false,
         revealSecretsOnWin: false,
         turnAlertSound: true,
+        quickReactions: true,
       });
     } finally {
       schema.unshift(darkModeSetting);
@@ -154,6 +159,15 @@ describe('getSettings', () => {
 });
 
 describe('setSetting', () => {
+  it('defaults quick reactions to on and persists a change', async () => {
+    let settings = await loadSettings();
+    expect(settings.getSettings().quickReactions).toBe(true);
+
+    settings.setSetting('quickReactions', false);
+    settings = await loadSettings();
+    expect(settings.getSettings().quickReactions).toBe(false);
+  });
+
   it('persists a change that a fresh module reads back', async () => {
     let settings = await loadSettings();
     settings.setSetting('sideBySideBoard', true);
@@ -164,6 +178,7 @@ describe('setSetting', () => {
       sideBySideBoard: true,
       revealSecretsOnWin: false,
       turnAlertSound: true,
+      quickReactions: true,
     });
   });
 
@@ -192,6 +207,7 @@ describe('setSetting', () => {
       sideBySideBoard: true,
       revealSecretsOnWin: false,
       turnAlertSound: true,
+      quickReactions: true,
     });
 
     settings.setSetting('revealSecretsOnWin', true);
@@ -201,12 +217,14 @@ describe('setSetting', () => {
       sideBySideBoard: true,
       revealSecretsOnWin: true,
       turnAlertSound: true,
+      quickReactions: true,
     });
     expect(JSON.parse(browser.localStorage.values.get(STORAGE_KEY)!)).toEqual({
       darkMode: true,
       sideBySideBoard: true,
       revealSecretsOnWin: true,
       turnAlertSound: true,
+      quickReactions: true,
     });
   });
 
@@ -246,6 +264,7 @@ describe('storage events', () => {
       sideBySideBoard: false,
       revealSecretsOnWin: true,
       turnAlertSound: true,
+      quickReactions: true,
     });
 
     const otherKeyEvent = new Event('storage') as StorageEvent;

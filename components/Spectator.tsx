@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { socketService, TurnStartedPayload } from '../lib/socket';
 import { useUserSettings } from '../lib/useUserSettings';
 import { shouldRevealSecret } from '../lib/userSettings';
-import { GameRoom, TurnTimerSeconds } from '../types/game';
+import { GameRoom, QuickReactionEvent, TurnTimerSeconds } from '../types/game';
 import TurnTimer from './TurnTimer';
 import SettingsCog from './SettingsCog';
+import { QuickReactionCelebration, QuickReactionOverlay } from './QuickReactions';
 
 export default function Spectator() {
     const params = useParams();
@@ -19,6 +20,8 @@ export default function Spectator() {
 
     const [room, setRoom] = useState<GameRoom | null>(null);
     const [error, setError] = useState<string>('');
+    const [quickReaction, setQuickReaction] = useState<QuickReactionEvent | null>(null);
+    const reactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
         const socket = socketService.getSocket();
@@ -54,6 +57,15 @@ export default function Spectator() {
                 serverNow: payload.serverNow,
             } : currentRoom);
         };
+        const handleReaction = (updatedRoom: GameRoom, reaction: QuickReactionEvent) => {
+            if (updatedRoom.id !== roomId) return;
+            setQuickReaction(reaction);
+            if (reactionTimerRef.current) clearTimeout(reactionTimerRef.current);
+            reactionTimerRef.current = setTimeout(() => {
+                setQuickReaction(null);
+                reactionTimerRef.current = null;
+            }, 4000);
+        };
 
         socket.on('room_updated', handleRoomUpdated);
         socket.on('secret_number_set', handleRoomUpdated);
@@ -63,6 +75,7 @@ export default function Spectator() {
         socket.on('player_left', handleRoomUpdated);
         socket.on('player_reconnected', handleRoomUpdated);
         socket.on('turn_started', handleTurnStarted);
+        socket.on('reaction_received', handleReaction);
         socket.on('error', handleError);
 
         // Request current room state
@@ -78,6 +91,8 @@ export default function Spectator() {
             socket.off('player_left', handleRoomUpdated);
             socket.off('player_reconnected', handleRoomUpdated);
             socket.off('turn_started', handleTurnStarted);
+            socket.off('reaction_received', handleReaction);
+            if (reactionTimerRef.current) clearTimeout(reactionTimerRef.current);
             socket.off('error', handleError);
         };
     }, [roomId, router]);
@@ -189,7 +204,8 @@ export default function Spectator() {
                 <div className="row g-3 mb-4">
                     {/* Player 1 Box */}
                     <div className="col-12 col-md-6">
-                        <div className="card shadow h-100">
+                        <div className="card shadow h-100 position-relative">
+                            {settings.quickReactions && quickReaction?.fromPlayerId === p1?.id && <QuickReactionOverlay reaction={quickReaction} />}
                             <div className="card-header text-center">
                                 <h3 className="card-title h5 mb-0">
                                     {p1?.name} {p1?.isConnected ? '' : t('player.status.disconnected')}
@@ -260,7 +276,8 @@ export default function Spectator() {
 
                     {/* Player 2 Box */}
                     <div className="col-12 col-md-6">
-                        <div className="card shadow h-100">
+                        <div className="card shadow h-100 position-relative">
+                            {settings.quickReactions && quickReaction?.fromPlayerId === p2?.id && <QuickReactionOverlay reaction={quickReaction} />}
                             <div className="card-header text-center">
                                 <h3 className="card-title h5 mb-0">
                                     {p2?.name} {p2?.isConnected ? '' : t('player.status.disconnected')}
@@ -332,6 +349,7 @@ export default function Spectator() {
 
 
             </div>
+            {settings.quickReactions && quickReaction && <QuickReactionCelebration reaction={quickReaction} />}
         </div>
     );
 }

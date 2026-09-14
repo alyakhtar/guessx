@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const {
   ExpiringRateLimiter, isValidDifficulty, isValidNumber, isValidNumberLength,
-  isValidRoomId, isValidTimerSeconds, normalizeAccessCode, normalizePlayerName,
+  isValidQuickReaction, isValidRoomId, isValidTimerSeconds, normalizeAccessCode, normalizePlayerName, RATE_LIMITS,
 } = require('./socketValidation.cjs');
 
 describe('Socket.IO input validation', () => {
@@ -34,6 +34,25 @@ describe('Socket.IO input validation', () => {
     expect(isValidNumber('1234', 4)).toBe(true);
     expect(isValidNumber('0123', 4)).toBe(false);
     expect(isValidNumber('12345', 4)).toBe(false);
+  });
+
+  it('allows only the fixed quick-reaction identifiers', () => {
+    expect(isValidQuickReaction('nice')).toBe(true);
+    expect(isValidQuickReaction('close')).toBe(true);
+    expect(isValidQuickReaction('gg')).toBe(true);
+    expect(isValidQuickReaction('thumbsDown')).toBe(true);
+    expect(isValidQuickReaction('heart')).toBe(true);
+    expect(isValidQuickReaction('hello everyone')).toBe(false);
+    expect(isValidQuickReaction({ reaction: 'nice' })).toBe(false);
+  });
+});
+
+describe('quick-reaction rate limit', () => {
+  it('allows only one reaction every ten seconds per socket', () => {
+    expect(RATE_LIMITS.reaction).toEqual({ limit: 1, windowMs: 10_000 });
+    const limiter = new ExpiringRateLimiter();
+    expect(limiter.consume('socket-a:reaction', RATE_LIMITS.reaction.limit, RATE_LIMITS.reaction.windowMs)).toBe(true);
+    expect(limiter.consume('socket-a:reaction', RATE_LIMITS.reaction.limit, RATE_LIMITS.reaction.windowMs)).toBe(false);
   });
 });
 

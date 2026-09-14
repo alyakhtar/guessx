@@ -173,11 +173,33 @@
     "turnAlertSound": {
       "label": "Sound when it is your turn",
       "description": "Play a sound when it becomes your turn."
+    },
+    "quickReactions": {
+      "label": "Quick reactions",
+      "description": "Show and send preset reactions during a game."
+    }
+  },
+  "quickReactions": {
+    "title": "Quick reactions",
+    "cooldown": "Please wait 10 seconds between reactions.",
+    "presets": {
+      "nice": "👏 Nice!",
+      "close": "😱 So close!",
+      "gg": "🤝 GG",
+      "fire": "🔥 On fire!",
+      "wow": "🤯 Wow!",
+      "lol": "😂 LOL",
+      "thumbsUp": "👍",
+      "thumbsDown": "👎",
+      "heart": "❤️"
     }
   },
   "gameRoom": {
     "turnAlertTitle": "(Your turn!) GuessX",
     "opponentHistoryTitle": "{name}'s Guesses",
+    "quickReactions": {
+      "prompt": "React to {name}"
+    },
     "share": {
       "button": "Share room",
       "title": "Join my GuessX room",

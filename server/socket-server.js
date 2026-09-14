@@ -6,7 +6,7 @@ const { createSocketIdentityResolver, guestIdentity } = require('./socket-auth')
 const {
   ExpiringRateLimiter, RATE_LIMITS, isValidDifficulty, isValidNumber,
   isValidNumberLength, isValidRoomId, isValidTimerSeconds, normalizeAccessCode,
-  normalizePlayerName,
+  normalizePlayerName, isValidQuickReaction,
 } = require('./socketValidation.cjs');
 
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -338,6 +338,11 @@ class GameServer {
         if (!this.allow(socket, 'stats')) return;
         this.sendMatchupStats(socket);
       });
+      socket.on('send_reaction', (roomId, reaction, ...extra) => {
+        if (extra.length) return this.reject(socket);
+        if (!this.allow(socket, 'reaction')) return;
+        this.handleReaction(socket, roomId, reaction);
+      });
       socket.on('disconnect', (reason) => this.handleDisconnect(socket));
       socket.on('new_game', (...args) => {
         if (args.length) return this.reject(socket);
@@ -351,6 +356,17 @@ class GameServer {
   }
 
   reject(socket) { socket.emit('error', 'SERVER_ERROR:invalidRequest'); }
+
+  handleReaction(socket, roomId, reaction) {
+    if (!isValidRoomId(roomId) || !isValidQuickReaction(reaction)) return this.reject(socket);
+    const room = this.rooms.get(roomId);
+    const sender = room?.players.find((player) => player.id === socket.id);
+    if (!room || !sender || room.gameStatus === 'waiting') return this.reject(socket);
+
+    // Reactions intentionally contain only a fixed identifier. The client
+    // translates it locally, so this broadcast can never carry user text.
+    this.emitRoomEvent(room, 'reaction_received', { fromPlayerId: sender.id, reaction });
+  }
 
   socketIdentity(socket) {
     const identity = socket.data.identity;

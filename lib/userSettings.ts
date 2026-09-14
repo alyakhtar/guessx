@@ -5,6 +5,7 @@ export interface UserSettings {
   sideBySideBoard: boolean;
   revealSecretsOnWin: boolean;
   turnAlertSound: boolean;
+  quickReactions: boolean;
 }
 
 export const DEFAULTS: UserSettings = {
@@ -12,6 +13,7 @@ export const DEFAULTS: UserSettings = {
   sideBySideBoard: false,
   revealSecretsOnWin: false,
   turnAlertSound: true,
+  quickReactions: true,
 };
 
 export const SETTINGS_SCHEMA = [
@@ -30,6 +32,11 @@ export const SETTINGS_SCHEMA = [
     key: 'turnAlertSound',
     labelKey: 'settings.turnAlertSound.label',
     descriptionKey: 'settings.turnAlertSound.description',
+  },
+  {
+    key: 'quickReactions',
+    labelKey: 'settings.quickReactions.label',
+    descriptionKey: 'settings.quickReactions.description',
   },
 ] as const;
 

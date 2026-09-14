@@ -4,15 +4,17 @@ import { useTranslations } from 'next-intl';
 import { useSession } from 'next-auth/react';
 import { useUserSettings } from '../lib/useUserSettings';
 import { shouldRevealSecret } from '../lib/userSettings';
-import { GameRoom, MatchupStats, Player } from '../types/game';
+import { GameRoom, MatchupStats, Player, QuickReactionEvent } from '../types/game';
+import { QuickReactionOverlay } from './QuickReactions';
 
 interface PlayerListProps {
   room: GameRoom;
   currentPlayerId: string;
   matchupStats: MatchupStats | null;
+  reaction: QuickReactionEvent | null;
 }
 
-export default function PlayerList({ room, currentPlayerId, matchupStats }: PlayerListProps) {
+export default function PlayerList({ room, currentPlayerId, matchupStats, reaction }: PlayerListProps) {
   const t = useTranslations('playerList');
   const { status: sessionStatus } = useSession();
   const settings = useUserSettings();
@@ -61,16 +63,18 @@ export default function PlayerList({ room, currentPlayerId, matchupStats }: Play
   };
 
   return (
-    <div className="card p-4 shadow h-100">
+    <div className="card p-4 shadow h-100 game-player-list">
       <h2 className="card-title h5 fw-semibold mb-4">{t('title')}</h2>
 
       <div className="list-group mb-4">
         {room.players.map((player) => (
-          <a
+          <div
             key={player.id}
-            href="#"
-            className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center ${player.id === currentPlayerId ? 'list-group-item-info' : ''}`}
+            className={`list-group-item d-flex justify-content-between align-items-center position-relative ${player.id === currentPlayerId ? 'list-group-item-info' : ''}`}
           >
+            {settings.quickReactions && reaction?.fromPlayerId === player.id && player.id !== currentPlayerId && (
+              <QuickReactionOverlay reaction={reaction} />
+            )}
             <div>
               <strong>{player.name}</strong> {player.id === currentPlayerId && <small>{t('indicators.you')}</small>}
             </div>
@@ -80,7 +84,7 @@ export default function PlayerList({ room, currentPlayerId, matchupStats }: Play
               )}
               {getStatusBadge(player)}
             </div>
-          </a>
+          </div>
         ))}
       </div>
 

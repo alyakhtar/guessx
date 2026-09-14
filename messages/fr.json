@@ -173,11 +173,33 @@
     "turnAlertSound": {
       "label": "Son lorsque c’est votre tour",
       "description": "Jouer un son lorsque votre tour commence."
+    },
+    "quickReactions": {
+      "label": "Réactions rapides",
+      "description": "Afficher et envoyer des réactions prédéfinies pendant une partie."
+    }
+  },
+  "quickReactions": {
+    "title": "Réactions rapides",
+    "cooldown": "Veuillez attendre 10 secondes entre les réactions.",
+    "presets": {
+      "nice": "👏 Bien joué !",
+      "close": "😱 Presque !",
+      "gg": "🤝 GG",
+      "fire": "🔥 En feu !",
+      "wow": "🤯 Waouh !",
+      "lol": "😂 MDR",
+      "thumbsUp": "👍",
+      "thumbsDown": "👎",
+      "heart": "❤️"
     }
   },
   "gameRoom": {
     "turnAlertTitle": "(À vous !) GuessX",
     "opponentHistoryTitle": "Tentatives de {name}",
+    "quickReactions": {
+      "prompt": "Réagissez à {name}"
+    },
     "share": {
       "button": "Partager la salle",
       "title": "Rejoignez ma salle GuessX",
