@@ -202,6 +202,30 @@ describe('server turn timer integration', () => {
     expect(room.currentTurn).toBe(firstPlayer.id);
   });
 
+  it('allows a player to use a number previously guessed by their opponent', async () => {
+    const game = await startMultiplayer();
+    const { active: firstPlayer, opponent: secondPlayer } = playersForTurn(game);
+
+    const firstGuess = waitFor(game.first, 'guess_made');
+    firstPlayer.emit('make_guess', '1111');
+    await firstGuess;
+
+    const secondGuess = waitFor(game.first, 'guess_made');
+    secondPlayer.emit('make_guess', '2222');
+    await secondGuess;
+
+    const repeatedByOtherPlayer = waitFor(game.first, 'guess_made');
+    firstPlayer.emit('make_guess', '2222');
+    await repeatedByOtherPlayer;
+
+    const room = gameServer.rooms.get(game.roomId);
+    expect(room.gameHistory).toHaveLength(3);
+    expect(room.gameHistory.at(-1)).toMatchObject({
+      playerName: room.players.find(player => player.id === firstPlayer.id)?.name,
+      guess: '2222',
+    });
+  });
+
   it('rejects an unsupported turn timer value', async () => {
     const { first } = await twoClients();
     const error = waitFor(first, 'error');

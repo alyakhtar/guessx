@@ -284,7 +284,7 @@
     },
     "validation": {
       "invalidNumber": "Please enter a valid {length}-digit number",
-      "duplicateGuess": "Number already played. Try a new number."
+      "duplicateGuess": "You already played this number. Try a new number."
     }
   },
   "digitTracker": {

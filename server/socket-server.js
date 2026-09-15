@@ -713,7 +713,9 @@ class GameServer {
     const opponent = room.players.find(p => p.id !== socket.id);
     if (!guessingPlayer || !opponent || !opponent.secretNumber) return;
     if (!isValidNumber(guess, room.numberLength)) { socket.emit('error', 'SERVER_ERROR:invalidNumber'); return; }
-    if (room.gameHistory.some(previousGuess => previousGuess.guess === guess)) {
+    if (room.gameHistory.some(previousGuess => (
+      previousGuess.playerName === guessingPlayer.name && previousGuess.guess === guess
+    ))) {
       socket.emit('error', 'SERVER_ERROR:duplicateGuess');
       return;
     }

@@ -67,7 +67,9 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
       return;
     }
 
-    if (room.gameHistory.some((previousGuess) => previousGuess.guess === guess)) {
+    if (room.gameHistory.some((previousGuess) => (
+      previousGuess.playerName === currentPlayer?.name && previousGuess.guess === guess
+    ))) {
       // Reset first so a repeated submit restarts the CSS animation.
       setDuplicateGuess(false);
       window.requestAnimationFrame(() => setDuplicateGuess(true));
