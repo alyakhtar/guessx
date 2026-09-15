@@ -177,6 +177,10 @@
     "quickReactions": {
       "label": "Réactions rapides",
       "description": "Afficher et envoyer des réactions prédéfinies pendant une partie."
+    },
+    "digitTracker": {
+      "label": "Suivi des chiffres",
+      "description": "Afficher le suivi des chiffres pendant la partie."
     }
   },
   "quickReactions": {
@@ -279,7 +283,8 @@
       "waitingForGuess": "En attente que {name} fasse une supposition..."
     },
     "validation": {
-      "invalidNumber": "Veuillez entrer un nombre valide à {length} chiffres"
+      "invalidNumber": "Veuillez entrer un nombre valide à {length} chiffres",
+      "duplicateGuess": "Vous avez déjà joué ce nombre. Essayez un nouveau nombre."
     }
   },
   "digitTracker": {
@@ -361,13 +366,15 @@
       "subtitle": "Vos suppositions apparaîtront ici"
     },
     "table": {
-      "number": "#",
       "guess": "Supposition",
+      "yourGuess": "Votre supposition",
+      "opponentGuess": "Supp. adverse",
       "correct": "Correct"
     },
     "summary": {
-      "total": "Total des suppositions :",
-      "last": "Dernière supposition :"
+      "total": "Total des suppositions",
+      "yourTotal": "Votre total",
+      "opponentTotal": "Total de {name}"
     }
   },
   "playerStats": {

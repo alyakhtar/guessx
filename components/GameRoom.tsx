@@ -341,6 +341,7 @@ export default function GameRoom() {
   const currentPlayer = room.players.find((player) => player.id === currentPlayerId);
   const isMyTurn = room.currentTurn === currentPlayerId;
   const opponent = room.players.find((player) => player.id !== currentPlayerId);
+  const showSideBySideBoard = settings.sideBySideBoard && Boolean(opponent);
   const celebrationType = room.gameStatus === 'finished' && room.winner && currentPlayer?.name
     ? (room.winner === currentPlayer.name ? 'win' : 'lose')
     : null;
@@ -422,7 +423,7 @@ export default function GameRoom() {
           />
         )}
 
-        <div className={`game-room-grid ${settings.sideBySideBoard && opponent ? 'row row-cols-1 row-cols-md-2 g-3' : 'row row-cols-1 row-cols-lg-3 g-3'}`}>
+        <div className="game-room-grid row row-cols-1 row-cols-lg-3 g-3">
           <div className="col order-3 order-lg-1 game-room-column">
             <PlayerList room={room} currentPlayerId={currentPlayerId} matchupStats={matchupStats} reaction={quickReaction} />
           </div>
@@ -441,7 +442,7 @@ export default function GameRoom() {
                   <QuickReactionButtons onReact={(reaction) => socketService.getSocket()?.emit('send_reaction', roomId, reaction)} />
                 </div>
               )}
-              {room.gameStatus === 'playing' && <DigitTracker />}
+              {settings.digitTracker && room.gameStatus === 'playing' && <DigitTracker />}
               {room.gameStatus === 'finished' && (
                 <div className="mt-3" aria-live="polite">
                   {matchupStats && (
@@ -483,18 +484,12 @@ export default function GameRoom() {
             </div>
           </div>
           <div className="col order-2 order-lg-3 game-room-column">
-            <GameHistory gameHistory={room.gameHistory} currentPlayerName={currentPlayer?.name} />
+            <GameHistory
+              gameHistory={room.gameHistory}
+              currentPlayerName={currentPlayer?.name}
+              opponentPlayerName={showSideBySideBoard ? opponent?.name : undefined}
+            />
           </div>
-
-          {settings.sideBySideBoard && opponent && (
-            <div className="col order-4 game-room-column">
-              <GameHistory
-                gameHistory={room.gameHistory}
-                currentPlayerName={opponent.name}
-                title={t('opponentHistoryTitle', { name: opponent.name })}
-              />
-            </div>
-          )}
         </div>
       </div>
 

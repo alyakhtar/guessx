@@ -177,6 +177,10 @@
     "quickReactions": {
       "label": "Quick reactions",
       "description": "Show and send preset reactions during a game."
+    },
+    "digitTracker": {
+      "label": "Digit tracker",
+      "description": "Show the digit tracker while you play."
     }
   },
   "quickReactions": {
@@ -279,7 +283,8 @@
       "waitingForGuess": "Waiting for {name} to make a guess..."
     },
     "validation": {
-      "invalidNumber": "Please enter a valid {length}-digit number"
+      "invalidNumber": "Please enter a valid {length}-digit number",
+      "duplicateGuess": "You already played this number. Try a new number."
     }
   },
   "digitTracker": {
@@ -361,13 +366,15 @@
       "subtitle": "Your guesses will appear here"
     },
     "table": {
-      "number": "#",
       "guess": "Guess",
+      "yourGuess": "Your guess",
+      "opponentGuess": "Opp's guess",
       "correct": "Correct"
     },
     "summary": {
-      "total": "Total Guesses:",
-      "last": "Last Guess:"
+      "total": "Total guesses",
+      "yourTotal": "Your total",
+      "opponentTotal": "{name}'s total"
     }
   },
   "playerStats": {

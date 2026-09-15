@@ -79,6 +79,7 @@ describe('getSettings', () => {
       revealSecretsOnWin: false,
       turnAlertSound: true,
       quickReactions: true,
+      digitTracker: true,
     });
     expect(getSettings()).not.toHaveProperty('futureSetting');
   });
@@ -96,6 +97,7 @@ describe('getSettings', () => {
       revealSecretsOnWin: true,
       turnAlertSound: true,
       quickReactions: true,
+      digitTracker: true,
     });
   });
 
@@ -116,6 +118,7 @@ describe('getSettings', () => {
       revealSecretsOnWin: false,
       turnAlertSound: true,
       quickReactions: true,
+      digitTracker: true,
     });
   });
 
@@ -129,6 +132,7 @@ describe('getSettings', () => {
       revealSecretsOnWin: false,
       turnAlertSound: true,
       quickReactions: true,
+      digitTracker: true,
     });
   });
 
@@ -145,6 +149,7 @@ describe('getSettings', () => {
         revealSecretsOnWin: false,
         turnAlertSound: true,
         quickReactions: true,
+        digitTracker: true,
       });
     } finally {
       schema.unshift(darkModeSetting);
@@ -168,6 +173,15 @@ describe('setSetting', () => {
     expect(settings.getSettings().quickReactions).toBe(false);
   });
 
+  it('defaults the digit tracker to on and persists a change', async () => {
+    let settings = await loadSettings();
+    expect(settings.getSettings().digitTracker).toBe(true);
+
+    settings.setSetting('digitTracker', false);
+    settings = await loadSettings();
+    expect(settings.getSettings().digitTracker).toBe(false);
+  });
+
   it('persists a change that a fresh module reads back', async () => {
     let settings = await loadSettings();
     settings.setSetting('sideBySideBoard', true);
@@ -179,6 +193,7 @@ describe('setSetting', () => {
       revealSecretsOnWin: false,
       turnAlertSound: true,
       quickReactions: true,
+      digitTracker: true,
     });
   });
 
@@ -208,6 +223,7 @@ describe('setSetting', () => {
       revealSecretsOnWin: false,
       turnAlertSound: true,
       quickReactions: true,
+      digitTracker: true,
     });
 
     settings.setSetting('revealSecretsOnWin', true);
@@ -218,6 +234,7 @@ describe('setSetting', () => {
       revealSecretsOnWin: true,
       turnAlertSound: true,
       quickReactions: true,
+      digitTracker: true,
     });
     expect(JSON.parse(browser.localStorage.values.get(STORAGE_KEY)!)).toEqual({
       darkMode: true,
@@ -225,6 +242,7 @@ describe('setSetting', () => {
       revealSecretsOnWin: true,
       turnAlertSound: true,
       quickReactions: true,
+      digitTracker: true,
     });
   });
 
@@ -265,6 +283,7 @@ describe('storage events', () => {
       revealSecretsOnWin: true,
       turnAlertSound: true,
       quickReactions: true,
+      digitTracker: true,
     });
 
     const otherKeyEvent = new Event('storage') as StorageEvent;

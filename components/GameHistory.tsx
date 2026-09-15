@@ -6,19 +6,32 @@ import { Guess } from '../types/game';
 interface GameHistoryProps {
   gameHistory: Guess[];
   currentPlayerName?: string;
-  title?: string;
+  opponentPlayerName?: string;
 }
 
-export default function GameHistory({ gameHistory, currentPlayerName, title }: GameHistoryProps) {
-  const t = useTranslations('gameHistory');
-  const heading = title ?? t('title');
-  // Only show current player's guesses, latest first
-  const myGuesses = gameHistory.filter(guess => guess.playerName === currentPlayerName).reverse();
+function GuessResult({ guess, compact }: { guess?: Guess; compact: boolean }) {
+  if (!guess) return <span className="text-muted">—</span>;
 
-  if (myGuesses.length === 0) {
+  return (
+    <span className={`fw-bold lh-1 ${compact ? 'fs-5' : 'fs-4'} ${guess.correctPositions === 0 ? 'text-danger' : 'text-success'}`}>
+      {guess.correctPositions}
+    </span>
+  );
+}
+
+export default function GameHistory({ gameHistory, currentPlayerName, opponentPlayerName }: GameHistoryProps) {
+  const t = useTranslations('gameHistory');
+  const myGuesses = gameHistory.filter((guess) => guess.playerName === currentPlayerName).reverse();
+  const opponentGuesses = opponentPlayerName
+    ? gameHistory.filter((guess) => guess.playerName === opponentPlayerName).reverse()
+    : [];
+  const showComparison = Boolean(opponentPlayerName);
+  const rowCount = Math.max(myGuesses.length, opponentGuesses.length);
+
+  if (rowCount === 0) {
     return (
       <div className="card p-4 shadow h-100 game-history-card">
-        <h2 className="card-title h5 fw-semibold mb-4">{heading}</h2>
+        <h2 className="card-title h5 fw-semibold mb-4">{t('title')}</h2>
         <div className="text-center py-5">
           <div className="fs-1 mb-3">🎯</div>
           <p className="text-muted">{t('empty.title')}</p>
@@ -30,61 +43,67 @@ export default function GameHistory({ gameHistory, currentPlayerName, title }: G
 
   return (
     <div className="card p-4 shadow h-100 d-flex flex-column game-history-card">
-      <h2 className="card-title h5 fw-semibold mb-4">{heading}</h2>
+      <h2 className="card-title h5 fw-semibold mb-4">{t('title')}</h2>
 
-      <div className="table-responsive game-history-table">
+      <div className={`table-responsive game-history-table${showComparison ? ' game-history-table--comparison' : ''}`}>
         <table className="table table-striped table-hover table-bordered mb-0" style={{ tableLayout: 'fixed' }}>
           <thead className="table-dark">
             <tr>
-              <th className="text-center" style={{ width: '3rem' }}>{t('table.number')}</th>
-              <th className="text-center">{t('table.guess')}</th>
-              <th className="text-center" style={{ width: '6rem' }}>{t('table.correct')}</th>
+              <th className="text-center">{showComparison ? t('table.yourGuess') : t('table.guess')}</th>
+              <th className="text-center game-history-result-column">{t('table.correct')}</th>
+              {showComparison && <th className="text-center">{t('table.opponentGuess')}</th>}
             </tr>
           </thead>
           <tbody>
-            {myGuesses.map((guess, index) => (
-              <tr key={index}>
-                <td className="text-center font-mono align-middle">{myGuesses.length - index}</td>
-                <td className="text-center align-middle">
-                  <code className="fs-5">{guess.guess}</code>
-                </td>
-                <td className="text-center align-middle">
-                  <div className="d-flex flex-column align-items-center gap-1">
-                    <span className={`fs-4 fw-bold lh-1 ${guess.correctPositions === 0 ? 'text-danger' : 'text-success'}`}>
-                      {guess.correctPositions}
-                    </span>
-                    <div className="d-flex gap-1" style={{ height: '8px' }}>
-                      {Array.from({ length: guess.guess.length }).map((_, i) => (
-                        <span
-                          key={i}
-                          className={`badge p-0 ${i < guess.correctPositions ? 'bg-success' : 'bg-secondary'}`}
-                          style={{ width: '8px', height: '8px', borderRadius: '50%' }}
-                        ></span>
-                      ))}
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {Array.from({ length: rowCount }, (_, index) => {
+              const myGuess = myGuesses[index];
+              const opponentGuess = opponentGuesses[index];
+
+              return (
+                <tr key={index} className={index === 0 ? 'game-history-latest' : undefined}>
+                  <td className="text-center align-middle">
+                    {myGuess ? <code className={showComparison ? 'fs-6' : 'fs-5'}>{myGuess.guess}</code> : <span className="text-muted">—</span>}
+                  </td>
+                  <td className="text-center align-middle game-history-result-column">
+                    {showComparison ? (
+                      <div className="game-history-correct-pair">
+                        <GuessResult guess={myGuess} compact />
+                        <span className="game-history-correct-divider" aria-hidden="true" />
+                        <GuessResult guess={opponentGuess} compact />
+                      </div>
+                    ) : <GuessResult guess={myGuess} compact={false} />}
+                  </td>
+                  {showComparison && (
+                    <td className="text-center align-middle">
+                      {opponentGuess ? <code className="fs-6">{opponentGuess.guess}</code> : <span className="text-muted">—</span>}
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
-      {/* Summary */}
       <div className="card mt-3">
-        <div className="card-body">
-          <div className="row g-3">
-            <div className="col-12 d-flex justify-content-between align-items-center">
-              <strong className="text-nowrap me-3">{t('summary.total')}</strong>
+        <div className="card-body py-2">
+          {showComparison ? (
+            <div className="row g-2">
+              <div className="col-6 d-flex justify-content-between align-items-center gap-2">
+                <strong className="small">{t('summary.yourTotal')}</strong>
+                <span className="fs-5 fw-bold">{myGuesses.length}</span>
+              </div>
+              <div className="col-6 d-flex justify-content-between align-items-center gap-2">
+                <strong className="small text-truncate">{t('summary.opponentTotal', { name: opponentPlayerName })}</strong>
+                <span className="fs-5 fw-bold">{opponentGuesses.length}</span>
+              </div>
+            </div>
+          ) : (
+            <div className="d-flex justify-content-between align-items-center">
+              <strong>{t('summary.total')}</strong>
               <span className="fs-5 fw-bold">{myGuesses.length}</span>
             </div>
-            {myGuesses.length > 0 && (
-              <div className="col-12 d-flex justify-content-between align-items-center">
-                <strong className="text-nowrap me-3">{t('summary.last')}</strong>
-                <code className="fs-5">{myGuesses[0].guess}</code>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       </div>
     </div>
