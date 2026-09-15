@@ -283,7 +283,8 @@
       "waitingForGuess": "En attente que {name} fasse une supposition..."
     },
     "validation": {
-      "invalidNumber": "Veuillez entrer un nombre valide à {length} chiffres"
+      "invalidNumber": "Veuillez entrer un nombre valide à {length} chiffres",
+      "duplicateGuess": "Nombre déjà joué. Essayez un nouveau nombre."
     }
   },
   "digitTracker": {

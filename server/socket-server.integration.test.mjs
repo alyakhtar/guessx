@@ -181,6 +181,27 @@ describe('server turn timer integration', () => {
     });
   });
 
+  it('rejects a guess that was already played without advancing the turn', async () => {
+    const game = await startMultiplayer();
+    const { active: firstPlayer, opponent: secondPlayer } = playersForTurn(game);
+
+    const firstGuess = waitFor(game.first, 'guess_made');
+    firstPlayer.emit('make_guess', '1111');
+    await firstGuess;
+
+    const secondGuess = waitFor(game.first, 'guess_made');
+    secondPlayer.emit('make_guess', '2222');
+    await secondGuess;
+
+    const error = waitFor(firstPlayer, 'error');
+    firstPlayer.emit('make_guess', '1111');
+    expect(await error).toEqual(['SERVER_ERROR:duplicateGuess']);
+
+    const room = gameServer.rooms.get(game.roomId);
+    expect(room.gameHistory).toHaveLength(2);
+    expect(room.currentTurn).toBe(firstPlayer.id);
+  });
+
   it('rejects an unsupported turn timer value', async () => {
     const { first } = await twoClients();
     const error = waitFor(first, 'error');

@@ -21,6 +21,7 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
   const [secretDigits, setSecretDigits] = useState(() => emptyDigitBoxes(numberLength));
   const [guessDigits, setGuessDigits] = useState(() => emptyDigitBoxes(numberLength));
   const [isSettingSecret, setIsSettingSecret] = useState(false);
+  const [duplicateGuess, setDuplicateGuess] = useState(false);
   const secretRefs = useRef<Array<HTMLInputElement | null>>([]);
   const guessRefs = useRef<Array<HTMLInputElement | null>>([]);
 
@@ -66,11 +67,23 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
       return;
     }
 
+    if (room.gameHistory.some((previousGuess) => previousGuess.guess === guess)) {
+      // Reset first so a repeated submit restarts the CSS animation.
+      setDuplicateGuess(false);
+      window.requestAnimationFrame(() => setDuplicateGuess(true));
+      return;
+    }
+
     const socket = socketService.getSocket();
     if (socket) {
       socket.emit('make_guess', guess);
       setGuessDigits(emptyDigitBoxes(numberLength));
     }
+  };
+
+  const handleGuessDigitChange = (index: number, rawValue: string) => {
+    setDuplicateGuess(false);
+    applyDigits(guessDigits, setGuessDigits, guessRefs, index, rawValue);
   };
 
   // Player hasn't set secret number yet
@@ -199,7 +212,7 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
             <label className="form-label fw-medium small text-center text-md-start">
               {t('turn.guessLabel', { length: numberLength })}
             </label>
-            <div className="d-flex justify-content-center gap-2 mb-3">
+            <div className={`d-flex justify-content-center gap-2 mb-2 guess-digit-inputs${duplicateGuess ? ' guess-digit-inputs--duplicate' : ''}`}>
               {Array.from({ length: numberLength }, (_, i) => (
                 <input
                   key={i}
@@ -209,10 +222,10 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
                   maxLength={1}
                   ref={(element) => { guessRefs.current[i] = element; }}
                   value={guessDigits[i]}
-                  onChange={(e) => applyDigits(guessDigits, setGuessDigits, guessRefs, i, e.target.value)}
+                  onChange={(e) => handleGuessDigitChange(i, e.target.value)}
                   onPaste={(e) => {
                     e.preventDefault();
-                    applyDigits(guessDigits, setGuessDigits, guessRefs, i, e.clipboardData.getData('text'));
+                    handleGuessDigitChange(i, e.clipboardData.getData('text'));
                   }}
                   onKeyDown={(e) => {
                     if (e.key === 'Backspace' && !guessDigits[i] && i > 0) {
@@ -224,10 +237,17 @@ export default function GuessInput({ room, currentPlayer, isMyTurn, numberLength
                   className="form-control form-control-lg text-center font-monospace fs-5"
                   style={{ width: '60px', height: '60px' }}
                   autoFocus={i === 0}
+                  aria-invalid={duplicateGuess}
+                  aria-describedby={duplicateGuess ? 'duplicate-guess-message' : undefined}
                   required
                 />
               ))}
             </div>
+            {duplicateGuess && (
+              <p id="duplicate-guess-message" className="small text-danger fw-semibold text-center mb-2" role="alert">
+                {t('validation.duplicateGuess')}
+              </p>
+            )}
             <div className="form-text text-center">
               {t('secretNumber.help')}
             </div>

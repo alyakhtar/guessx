@@ -713,6 +713,10 @@ class GameServer {
     const opponent = room.players.find(p => p.id !== socket.id);
     if (!guessingPlayer || !opponent || !opponent.secretNumber) return;
     if (!isValidNumber(guess, room.numberLength)) { socket.emit('error', 'SERVER_ERROR:invalidNumber'); return; }
+    if (room.gameHistory.some(previousGuess => previousGuess.guess === guess)) {
+      socket.emit('error', 'SERVER_ERROR:duplicateGuess');
+      return;
+    }
     this.clearRoomTimer(roomId);
     const correctPositions = calculateCorrectPositions(guess, opponent.secretNumber);
     const guessRecord = { playerName: guessingPlayer.name, guess, correctPositions, timestamp: new Date() };
